@@ -1,0 +1,146 @@
+/* =====================================================================
+   LUMEN — cải biên Frost: nền trắng gradient hiện đại (mesh pastel chàm–tím–hồng).
+   Nạp SAU frost.css: giữ nguyên bố cục và hành vi Frost, chỉ đổi màu, nền, độ bo.
+   Canvas 3D trong suốt nên gradient của body hiện xuyên qua đồ thị.
+   ===================================================================== */
+:root{
+  --void:#e7e6f4;
+  --plate:rgba(255,255,255,.66);
+  --plate-solid:#ffffff;
+  --line:rgba(30,34,72,.1);
+  --line-strong:rgba(30,34,72,.22);
+  --holo:#5b5bf0;          /* nhấn chàm */
+  --holo-soft:rgba(91,91,240,.08);
+  --ink:#161a36;
+  --ink-dim:#4a5072;
+  --ink-faint:#7a809e;
+  --hud:var(--ink);
+  --grad:linear-gradient(120deg,#5b5bf0 0%,#9a4dff 52%,#ec4f9c 100%);
+  --grad-soft:linear-gradient(120deg,rgba(91,91,240,.12),rgba(154,77,255,.1) 52%,rgba(236,79,156,.1));
+  --glow:0 12px 30px rgba(108,72,240,.28);
+  --r:12px;
+}
+html,body{background:var(--void)}
+body{background:
+  radial-gradient(60% 50% at 6% 2%,rgba(129,140,248,.55),transparent 70%),
+  radial-gradient(50% 45% at 98% 6%,rgba(244,114,182,.42),transparent 70%),
+  radial-gradient(60% 55% at 90% 96%,rgba(96,165,250,.45),transparent 70%),
+  radial-gradient(55% 50% at 2% 98%,rgba(167,139,250,.5),transparent 70%),
+  linear-gradient(160deg,#e8e6f6 0%,#e3e7f5 50%,#ece3f1 100%);
+  background-attachment:fixed}
+::selection{background:rgba(91,91,240,.18);color:var(--ink)}
+.vignette{background:radial-gradient(55% 50% at 55% 45%,rgba(255,255,255,.22),transparent 70%)}
+
+/* nhãn đỉnh */
+.nl{text-shadow:0 0 3px #fff,0 0 8px #fff}
+.nl.mat .sym{background:rgba(255,255,255,.85);border-color:rgba(255,255,255,1);border-radius:8px;box-shadow:0 6px 18px rgba(76,70,180,.14)}
+.nl .sat{border-radius:6px}
+
+/* chú thích nổi + khung ngắm: HUD trắng → mực chàm */
+.anno .dot{background:var(--holo);box-shadow:0 0 0 4px rgba(91,91,240,.18)}
+.anno polyline{stroke:var(--holo)}
+.anno-box{background:rgba(255,255,255,.82);border:1px solid #fff;border-top:2px solid var(--holo);border-radius:12px;box-shadow:0 18px 40px rgba(60,56,140,.14)}
+.anno.flip .anno-box{border:1px solid #fff;border-top:2px solid var(--holo)}
+.anno-k{color:var(--holo)}
+.chip{border-radius:6px}
+.chip i{border-radius:3px}
+#tip{border-radius:8px;box-shadow:0 10px 24px rgba(60,56,140,.14)}
+.lock i{border-color:var(--holo);filter:none}
+.lock-t{color:var(--ink);text-shadow:0 0 4px #fff,0 0 8px #fff}
+
+/* thanh trên */
+.topbar{background:linear-gradient(180deg,rgba(231,230,244,.88),rgba(231,230,244,0))}
+.brand{color:var(--ink);text-shadow:none}
+.brand b{border:0;background:var(--grad);border-radius:3px;box-shadow:0 0 0 3px rgba(91,91,240,.14)}
+.nav a{color:var(--ink-dim);text-shadow:none;border-radius:999px}
+.nav a:hover{color:var(--ink);background:rgba(91,91,240,.08)}
+.nav a.on{color:#fff;background:var(--grad);box-shadow:var(--glow)}
+
+/* nút */
+.btn{border-radius:999px;color:var(--ink);background:rgba(255,255,255,.7);border-color:rgba(255,255,255,1);box-shadow:0 4px 14px rgba(60,56,140,.08)}
+.btn:hover{background:#fff;box-shadow:0 10px 26px rgba(60,56,140,.14)}
+.btn.primary{background:var(--grad);color:#fff;border-color:transparent;box-shadow:var(--glow)}
+.btn.primary:hover{background:var(--grad);filter:brightness(1.06) saturate(1.05);box-shadow:0 16px 36px rgba(108,72,240,.36)}
+
+/* tấm kính */
+.plate{background:var(--plate);border-color:rgba(255,255,255,.95);border-radius:20px;box-shadow:0 24px 60px rgba(60,56,140,.1),inset 0 1px 0 #fff}
+.plate::before{display:none}
+
+/* hero */
+.hero h1{background:linear-gradient(110deg,var(--ink) 0%,var(--ink) 30%,#5b5bf0 55%,#9a4dff 72%,#ec4f9c 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.eyebrow{color:var(--holo)}
+.lede em{color:var(--holo);font-weight:600}
+.hero-stats{border-top-color:var(--line)}
+.hero-stats dd{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-stats dd small{-webkit-text-fill-color:var(--ink-dim)}
+.frame i{border-color:rgba(91,91,240,.45)}
+.callout{color:var(--ink);text-shadow:0 0 6px #fff}
+.callout.c1,.callout.c3{border-color:rgba(91,91,240,.4)}
+.callout.c1::after{background:rgba(91,91,240,.4)}
+.callout span:first-child{color:var(--holo)}
+.cue i{background:linear-gradient(var(--holo),transparent)}
+
+/* bài toán, mô hình */
+.io-grid > div{background:rgba(255,255,255,.6);border-color:#fff;border-radius:14px}
+.io-grid h3{color:var(--holo)}
+.sample pre,.pens{background:rgba(255,255,255,.72);border-color:#fff;border-radius:14px}
+.pens .tag{border-radius:6px}
+
+/* demo */
+.code li.on{background:linear-gradient(90deg,rgba(91,91,240,.14),rgba(154,77,255,.05) 70%,transparent)}
+.code li.on .ln{color:var(--holo)}
+.code li.on::before{background:var(--grad)}
+.code li.was{background:rgba(91,91,240,.05)}
+.tbtn{border-radius:999px;background:rgba(255,255,255,.7);border-color:#fff}
+.tbtn:hover{background:#fff}
+.tbtn[aria-pressed="true"]{color:var(--holo);background:#fff;border-color:var(--holo)}
+.tbtn.accent{color:#fff;background:var(--grad);border-color:transparent;box-shadow:var(--glow)}
+.pbtn{background:rgba(255,255,255,.7);border-color:#fff}
+.pbtn:hover{background:#fff}
+.pbtn.play{background:var(--grad);border-color:transparent;box-shadow:var(--glow)}
+.pbtn.play:hover{background:var(--grad);filter:brightness(1.06)}
+input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,#5b5bf0,#9a4dff calc(var(--fill,0%) * .6),#ec4f9c var(--fill,0%),rgba(30,34,72,.12) var(--fill,0%));border-radius:999px}
+input[type=range]::-moz-range-track{background:rgba(30,34,72,.12);border-radius:999px}
+input[type=range]::-moz-range-progress{background:var(--grad);border-radius:999px}
+input[type=range]::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--holo),0 3px 8px rgba(91,91,240,.35)}
+input[type=range]::-moz-range-thumb{box-shadow:0 0 0 2px var(--holo),0 3px 8px rgba(91,91,240,.35)}
+
+/* so sánh */
+.pill{border-radius:999px}
+.pill.ok{color:#fff;background:var(--grad)}
+
+/* tuỳ chọn */
+#smoke{background:#e6e5f3}
+.xbtn{border-radius:999px;background:rgba(255,255,255,.75)}
+.xbtn:hover{background:#fff}
+.card{background:rgba(255,255,255,.66);border-color:#fff;border-radius:16px}
+.card:hover{border-color:rgba(91,91,240,.35);box-shadow:0 10px 26px rgba(60,56,140,.1)}
+.card[aria-checked="true"],.card[aria-pressed="true"]{border-color:var(--holo);background:#fff;box-shadow:inset 0 0 0 1px var(--holo),0 12px 28px rgba(91,91,240,.16)}
+.card em{color:var(--holo)}
+.field input[type=number]{border-radius:8px}
+textarea{background:rgba(255,255,255,.82);border-radius:14px}
+textarea:focus{border-color:var(--holo);box-shadow:0 0 0 3px rgba(91,91,240,.16)}
+
+/* nút mũi tên sang trang kế */
+.snap-next{background:rgba(255,255,255,.8);color:var(--holo);box-shadow:0 8px 22px rgba(60,56,140,.16)}
+.snap-next:hover{background:#fff}
+.snap-next:focus-visible{outline-color:var(--holo)}
+
+/* ma trận phản ứng */
+.pairs{border-top-color:rgba(91,91,240,.18)}
+.pairs-n{color:var(--holo)}
+.adj th.hl{background:var(--grad);border-radius:4px}
+.adj td{border-radius:4px;background:rgba(255,255,255,.55)}
+.adj td.z{background:rgba(255,255,255,.28)}
+.adj td.done{background:#fff;color:var(--holo)}
+.adj td.on{background:var(--grad)}
+.adj td:hover{box-shadow:inset 0 0 0 1.5px var(--holo)}
+.pairs-log li{border-radius:6px}
+.pairs-log li.on{background:var(--grad)}
+.pairs-key b{border-radius:4px;background:#fff;color:var(--holo)}
+
+/* ma trận kề + bảng tính tay (demo) */
+.mx th,.mx td,.ht th,.ht td{border-radius:4px}
+.ht td{background:rgba(255,255,255,.55)}
+.mx th.cur,.mx tr.cur > th:first-child,.ht tr.cur > th:first-child,.ht tr.picked td.sel{background:var(--grad)}

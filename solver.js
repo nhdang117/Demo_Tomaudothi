@@ -1,0 +1,458 @@
+/* =====================================================================
+ * solver.js — Bộ giải bài toán Khoang chứa vật chất (tô màu đồ thị) + sinh TRACE
+ *
+ * Mỗi thuật toán chạy được ở 2 chế độ:
+ *   - rec = null      : chạy thuần, dùng cho đo thời gian / kiểm thử
+ *   - rec = Recorder  : ghi lại từng bước (dòng code, thao tác, trạng thái
+ *                       màu sau bước đó, ghi chú) để giao diện phát lại.
+ * Cùng một file chạy được trong trình duyệt và trong Node (test.js).
+ * ===================================================================== */
+const Solver = (() => {
+  'use strict';
+
+  const TRUNC = { reason: 'truncated' };
+  const ABORT = { reason: 'budget' };
+
+  /* ---------------- Trace recorder ---------------- */
+  class Recorder {
+    constructor(limit = 6000) {
+      this.steps = [];
+      this.limit = limit;
+      this.truncated = false;
+    }
+    push(color, ev) {
+      if (this.steps.length >= this.limit) { this.truncated = true; throw TRUNC; }
+      ev.colors = Int16Array.from(color);
+      ev.used = usedCount(color);
+      this.steps.push(ev);
+    }
+  }
+
+  /* ---------------- Graph helpers ---------------- */
+  function makeGraph(n, edges, meta = {}) {
+    const adj = Array.from({ length: n }, () => []);
+    for (const [u, v] of edges) { adj[u].push(v); adj[v].push(u); }
+    for (const a of adj) a.sort((x, y) => x - y);
+    return Object.assign({ n, edges, adj }, meta);
+  }
+
+  function usedCount(color) {
+    let m = -1;
+    for (let i = 0; i < color.length; i++) if (color[i] > m) m = color[i];
+    return m + 1;
+  }
+
+  function setStr(arr) {
+    if (!arr || arr.length === 0) return '∅';
+    return '{' + [...arr].sort((a, b) => a - b).join(', ') + '}';
+  }
+
+  function sortedArr(set) { return [...set].sort((a, b) => a - b); }
+
+  function fmtOrder(order) {
+    if (order.length <= 14) return order.join(' → ');
+    return order.slice(0, 12).join(' → ') + ' → … (' + order.length + ' đỉnh)';
+  }
+
+  /** Phép tô màu có hợp lệ & đầy đủ không? */
+  function isProper(g, colors) {
+    for (let v = 0; v < g.n; v++) if (colors[v] < 0) return false;
+    for (const [u, v] of g.edges) if (colors[u] === colors[v]) return false;
+    return true;
+  }
+
+  /** Tô màu (có thể chưa đầy đủ) có vi phạm cạnh nào không? */
+  function isPartialProper(g, colors) {
+    for (const [u, v] of g.edges) if (colors[u] >= 0 && colors[u] === colors[v]) return false;
+    return true;
+  }
+
+  /* =================================================================
+   * 1) THAM LAM theo bài giảng Buổi 10 (Tô màu bản đồ, slide 18)
+   *    Chọn đỉnh: bậc cao nhất trong BẢNG BẬC, hòa thì chỉ số nhỏ nhất.
+   *    Chọn màu : thử lần lượt các màu đã dùng; hết màu cũ mới sinh màu mới.
+   *    Cập nhật : đỉnh vừa tô gán bậc −1, mỗi đỉnh kề chưa tô giảm bậc 1
+   *               → bậc trong bảng luôn = số đỉnh kề CHƯA tô.
+   *    Độ phức tạp: O(n² + k·m), k = số màu dùng (≤ Δ + 1).
+   * ================================================================= */
+  const GREEDY_CODE = () => [
+    'def greedy(G):',
+    '    deg = [len(G.adj[v]) for v in G.V]  # bảng bậc',
+    '    color = {v: None for v in G.V}',
+    '    used = 0  # số màu đã dùng',
+    '    for step in range(n):',
+    '        v = argmax(deg)  # bậc max, hòa → chỉ số nhỏ',
+    '        c = 0  # thử lần lượt các màu đã dùng',
+    '        while c < used and clash(v, c):',
+    '            c += 1  # trùng màu đỉnh kề → màu sau',
+    '        if c == used:',
+    '            used += 1  # hết màu cũ → sinh màu mới',
+    '        color[v] = c',
+    '        deg[v] = -1  # đánh dấu đã tô',
+    '        for u in G.adj[v]:  # hạ bậc đỉnh kề',
+    '            if deg[u] >= 0: deg[u] -= 1',
+    '    return color',
+    '',
+    'def clash(v, c):  # đỉnh kề của v đã mang màu c?',
+    '    return any(color[u] == c for u in G.adj[v])',
+  ];
+
+  function fmtList(arr, max = 8) {
+    return arr.length <= max ? arr.join(', ') : arr.slice(0, max).join(', ') + ` … (${arr.length} đỉnh)`;
+  }
+
+  function greedy(g, rec) {
+    const { n, adj } = g;
+    const deg = Int16Array.from(adj, a => a.length);
+    const color = new Int16Array(n).fill(-1);
+    let used = 0;
+    // mỗi bước lưu kèm ảnh chụp bảng bậc để giao diện hiện giống bảng cô chạy tay
+    const R = rec ? ev => { ev.degs = Int16Array.from(deg); rec.push(color, ev); } : null;
+    try {
+      R && R({ line: 1, type: 'init', title: 'Lập bảng bậc',
+        note: `Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.` });
+      for (let step = 0; step < n; step++) {
+        let v = -1;
+        for (let x = 0; x < n; x++) if (deg[x] >= 0 && (v < 0 || deg[x] > deg[v])) v = x;
+        const d = deg[v];
+        if (R) {
+          const ties = [];
+          for (let x = 0; x < n; x++) if (deg[x] === d) ties.push(x);
+          R({ line: 5, type: 'select', v, deg: d, ties, title: 'Chọn đỉnh',
+            note: ties.length > 1
+              ? `Bậc cao nhất là ${d}, có ${ties.length} đỉnh cùng bậc: ${fmtList(ties)} → lấy chỉ số nhỏ nhất: đỉnh ${v}.`
+              : `Đỉnh ${v} có bậc cao nhất trong bảng (${d}).` });
+        }
+        let c = 0;
+        R && R({ line: 6, type: 'try', v, c: used ? 0 : null, deg: d, title: used ? 'Thử màu đã dùng' : 'Chưa có màu',
+          note: used ? `Đã dùng ${used} màu (0..${used - 1}). Thử lần lượt từ màu 0.` : 'Chưa dùng màu nào nên không có màu cũ để thử.' });
+        while (c < used) {
+          let clash = -1;
+          for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
+          if (clash < 0) break;
+          R && R({ line: 7, type: 'conflict', v, u: clash, c, deg: d, title: 'Trùng màu',
+            note: `Đỉnh kề ${clash} đã tô màu ${c} → không dùng được màu ${c}.` });
+          c++;
+          if (c < used) R && R({ line: 8, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
+        }
+        if (c < used) {
+          R && R({ line: 7, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
+            note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
+        } else {
+          used++;
+          R && R({ line: 10, type: 'newcolor', v, c, deg: d, title: 'Sinh màu mới',
+            note: c === 0 ? 'Chưa có màu nào → sinh màu 0.' : `Cả ${c} màu cũ đều trùng với đỉnh kề → sinh màu mới ${c}.` });
+        }
+        color[v] = c;
+        R && R({ line: 11, type: 'assign', v, c, deg: d, title: 'Tô màu',
+          note: `Tô đỉnh ${v} màu ${c} → xếp vào ngăn ${c + 1}.` });
+        deg[v] = -1;
+        R && R({ line: 12, type: 'mark', v, c, deg: d, title: 'Đánh dấu đã tô',
+          note: `Gán bậc của đỉnh ${v} = −1 để không bị chọn lại.` });
+        const dec = [];
+        for (const u of adj[v]) if (deg[u] >= 0) { deg[u]--; dec.push(u); }
+        R && R({ line: 14, type: 'dec', v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
+          note: dec.length
+            ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
+            : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
+      }
+      R && R({ line: 15, type: 'done', title: 'Hoàn tất',
+        note: `Đã tô ${n} đỉnh, dùng ${used} màu.` });
+    } catch (e) { if (e !== TRUNC) throw e; }
+    return { colors: color, k: usedCount(color) };
+  }
+
+  /* =================================================================
+   * 2) QUAY LUI tìm sắc số χ(G) — thử k = 1, 2, … ; với mỗi k, gán màu
+   *    lần lượt theo thứ tự bậc giảm dần. Phá đối xứng: đỉnh thứ i chỉ
+   *    được dùng các màu 0..used (không mở "màu mới" thứ hai cùng lúc).
+   *    Độ phức tạp xấu nhất: O(k^n · Δ) cho mỗi k — hàm mũ (NP-khó).
+   * ================================================================= */
+  const BT_CODE = () => [
+    'def chromatic_number(G):',
+    '    order = sorted(G.V, key=deg, reverse=True)',
+    '    for k in range(1, n + 1):  # k tăng dần',
+    '        if try_color(0, k, used=0):',
+    '            return k',
+    '',
+    'def try_color(i, k, used):',
+    '    if i == n: return True  # đủ n đỉnh',
+    '    v = order[i]',
+    '    for c in range(min(k, used+1)):  # đối xứng',
+    '        if all(color[u] != c for u in G.adj[v]):',
+    '            color[v] = c',
+    '            if try_color(i+1, k, max(used, c+1)):',
+    '                return True',
+    '            color[v] = None  # quay lui',
+    '    return False  # hết màu để thử',
+  ];
+
+  function backtrack(g, rec, opts = {}) {
+    const { n, adj } = g;
+    const deg = adj.map(a => a.length);
+    const order = [...Array(n).keys()].sort((a, b) => deg[b] - deg[a] || a - b);
+    const color = new Int16Array(n).fill(-1);
+    const budget = opts.budget ?? 5e6;
+    let calls = 0, bts = 0, aborted = false, found = -1;
+    const R = rec ? ev => rec.push(color, ev) : null;
+
+    function tryColor(i, k, used) {
+      if (++calls > budget) throw ABORT;
+      if (i === n) {
+        R && R({ line: 7, type: 'found', k, depth: i, backtracks: bts, title: 'Tìm thấy',
+          note: `Đã tô đủ ${n} đỉnh chỉ với ${k} màu.` });
+        return true;
+      }
+      const v = order[i];
+      R && R({ line: 8, type: 'select', v, k, depth: i, deg: deg[v], backtracks: bts, title: 'Chọn đỉnh',
+        note: `Độ sâu ${i}: xét đỉnh ${v} (bậc ${deg[v]}).` });
+      const lim = Math.min(k, used + 1);
+      for (let c = 0; c < lim; c++) {
+        let clash = -1;
+        for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
+        if (clash >= 0) {
+          R && R({ line: 10, type: 'conflict', v, u: clash, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Xung đột',
+            note: `Màu ${c} trùng với hàng xóm ${clash} → loại.` });
+          continue;
+        }
+        color[v] = c;
+        R && R({ line: 11, type: 'assign', v, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Gán màu',
+          note: `Màu ${c} không trùng hàng xóm nào → tô đỉnh ${v}.` });
+        if (tryColor(i + 1, k, Math.max(used, c + 1))) return true;
+        color[v] = -1;
+        bts++;
+        R && R({ line: 14, type: 'backtrack', v, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Quay lui',
+          note: `Nhánh "đỉnh ${v} = màu ${c}" thất bại → gỡ màu (quay lui lần ${bts}).` });
+      }
+      R && R({ line: 15, type: 'fail', v, k, depth: i, deg: deg[v], backtracks: bts, title: 'Hết màu',
+        note: lim < k
+          ? `Đã thử các màu 0..${lim - 1} (màu mới khác là đối xứng, bỏ qua) → trả về False.`
+          : `Không màu nào trong 0..${k - 1} hợp lệ cho đỉnh ${v} → trả về False.` });
+      return false;
+    }
+
+    try {
+      R && R({ line: 1, type: 'init', order, title: 'Khởi tạo',
+        note: `Sắp đỉnh theo bậc giảm dần: ${fmtOrder(order)}.` });
+      for (let k = 1; k <= n; k++) {
+        color.fill(-1);
+        R && R({ line: 2, type: 'kloop', k, backtracks: bts, title: `Thử k = ${k}`,
+          note: `Thử tô toàn bộ đồ thị chỉ với ${k} màu.` });
+        if (tryColor(0, k, 0)) {
+          found = k;
+          R && R({ line: 4, type: 'done', k, backtracks: bts, title: 'Hoàn tất',
+            note: `Sắc số χ(G) = ${k}. Tổng số lần quay lui: ${bts}.` });
+          break;
+        }
+        R && R({ line: 2, type: 'kfail', k, backtracks: bts, title: `k = ${k} không đủ`,
+          note: `Không thể tô với ${k} màu → tăng k.` });
+      }
+    } catch (e) {
+      if (e === ABORT) aborted = true;
+      else if (e !== TRUNC) throw e;
+    }
+    return { colors: color, k: found, aborted, calls, backtracks: bts };
+  }
+
+  const ALGOS = {
+    greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
+                desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
+                exact: false, cx: 'O(n² + k·m)' },
+    backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
+                code: () => BT_CODE(), desc: 'Vét cạn có cắt tỉa: thử k = 1, 2, … đến khi tô được.', exact: true, cx: 'O(kⁿ) xấu nhất' },
+  };
+
+  /** Chạy thuật toán có ghi trace. */
+  function trace(algoId, g, limit = 6000) {
+    const rec = new Recorder(limit);
+    const res = ALGOS[algoId].run(g, rec, { budget: 2e6 });
+    return { steps: rec.steps, truncated: rec.truncated, result: res };
+  }
+
+  /* ---------------- Bộ đồ thị mẫu ---------------- */
+  function cycleEdges(n, offset = 0) {
+    const e = [];
+    for (let i = 0; i < n; i++) e.push([offset + i, offset + ((i + 1) % n)]);
+    return e;
+  }
+
+  function mycielski(g) {
+    // V' = v_0..v_{n-1}, u_0..u_{n-1}, w
+    const n = g.n, edges = [];
+    for (const [a, b] of g.edges) {
+      edges.push([a, b]);
+      edges.push([n + a, b]);
+      edges.push([n + b, a]);
+    }
+    for (let i = 0; i < n; i++) edges.push([n + i, 2 * n]);
+    return makeGraph(2 * n + 1, edges);
+  }
+
+  /* Đề bài chính: khoang chứa mẫu vật chất của phi hành gia */
+  const CARGO = {
+    items: [
+      ['³He', 'Heli-3', 'Mặt Trăng'], ['O₂', 'Oxy lỏng', 'Mặt Trăng'], ['H₂', 'Hydro lỏng', 'Sao Mộc'],
+      ['H₂O', 'Băng sao chổi', 'Sao chổi 67P'], ['Na', 'Natri kim loại', 'Sao Thủy'], ['Fe', 'Bụi sắt', 'Thiên thạch'],
+      ['CH₄', 'Metan lỏng', 'Titan'], ['ClO₄', 'Perclorat', 'Sao Hỏa'], ['Bio', 'Bào tử lạ', 'Europa'],
+      ['S', 'Lưu huỳnh', 'Io'], ['CO₂', 'Băng khô', 'Sao Hỏa'], ['e⁺', 'Phản vật chất', 'Vành đai bức xạ'],
+    ],
+    edges: [
+      [1, 2, 'hỗn hợp nổ'], [1, 6, 'cháy nổ'], [1, 5, 'bụi sắt bốc cháy'], [1, 4, 'natri bốc cháy'],
+      [1, 9, 'lưu huỳnh bốc cháy'], [1, 8, 'oxy diệt bào tử kỵ khí'],
+      [7, 2, 'oxy hóa mạnh'], [7, 6, 'oxy hóa mạnh'], [7, 5, 'hỗn hợp dễ nổ'], [7, 4, 'oxy hóa mạnh'],
+      [7, 8, 'phá hủy chất hữu cơ'], [7, 9, 'hỗn hợp dễ nổ'], [7, 3, 'tạo nước muối ăn mòn'],
+      [4, 3, 'sinh khí hydro, nổ'], [4, 8, 'phá hủy mẫu sinh học'], [4, 9, 'phản ứng mãnh liệt'],
+      [4, 10, 'natri cháy trong CO₂'], [5, 9, 'tạo sắt sunfua, tỏa nhiệt'], [5, 3, 'gỉ sét làm hỏng mẫu'],
+      ...Array.from({ length: 11 }, (_, i) => [11, i, 'hủy cặp vật chất – phản vật chất']),
+    ],
+  };
+
+  /* Ví dụ tô màu bản đồ cô chạy tay ở Buổi 10 (slide 18), dựng lại từ ảnh bảng */
+  const BUOI10_EDGES = [
+    [0, 1], [0, 2], [0, 3], [1, 2], [1, 5], [1, 6], [2, 3], [2, 5], [3, 4],
+    [3, 5], [4, 8], [5, 6], [5, 7], [6, 7], [6, 9], [7, 8], [8, 9],
+  ];
+
+  /* Bài gốc trong đề thi: Sở thú */
+  const ZOO = {
+    animals: [
+      ['🦁', 'Sư tử'], ['🐯', 'Hổ'], ['🐑', 'Cừu'], ['🐐', 'Dê'], ['🦓', 'Ngựa vằn'],
+      ['🐊', 'Cá sấu'], ['🦒', 'Hươu cao cổ'], ['🐒', 'Khỉ'], ['🐧', 'Chim cánh cụt'], ['🐘', 'Voi'],
+    ],
+    edges: [
+      [0, 1, 'tranh lãnh thổ'], [0, 5, 'tranh lãnh thổ'], [1, 5, 'tranh lãnh thổ'],
+      [0, 2, 'ăn thịt'], [0, 3, 'ăn thịt'], [0, 4, 'ăn thịt'], [0, 6, 'ăn thịt'],
+      [1, 2, 'ăn thịt'], [1, 3, 'ăn thịt'], [1, 4, 'ăn thịt'], [1, 7, 'ăn thịt'],
+      [5, 2, 'ăn thịt'], [5, 3, 'ăn thịt'], [5, 4, 'ăn thịt'], [5, 8, 'ăn thịt'],
+      [7, 8, 'trêu chọc'], [8, 9, 'khác khí hậu'],
+    ],
+  };
+
+  const PRESETS = [
+    { id: 'cargo', name: 'Khoang chứa vật chất', chi: 4,
+      desc: '12 mẫu, 30 cặp phản ứng. Phản vật chất phản ứng với mọi mẫu nên luôn cần một ngăn riêng.',
+      build: () => makeGraph(12, CARGO.edges.map(e => [e[0], e[1]]), {
+        labels: CARGO.items.map(a => ({ sym: a[0], name: a[1], from: a[2] })),
+        reasons: CARGO.edges.map(e => e[2]) }) },
+    { id: 'buoi10', name: 'Ví dụ Buổi 10 (slide 18)', chi: 3,
+      desc: 'Đồ thị 10 đỉnh cô chạy tay trên lớp: tô 5 → 0 → 6 → …, bảng bậc khớp slide, cần 3 màu.',
+      build: () => makeGraph(10, BUOI10_EDGES) },
+    { id: 'zoo', name: 'Sở thú (bài gốc)', chi: 4,
+      desc: 'Bài trong đề thi: 10 loài, 17 cặp xung khắc, số chuồng ít nhất là χ = 4.',
+      build: () => makeGraph(10, ZOO.edges.map(e => [e[0], e[1]]), {
+        labels: ZOO.animals.map(a => ({ sym: a[0], name: a[1], emoji: true })),
+        reasons: ZOO.edges.map(e => e[2]) }) },
+    { id: 'petersen', name: 'Petersen', chi: 3,
+      desc: '10 đỉnh, 15 cạnh, mỗi đỉnh bậc 3, có chu trình lẻ → χ = 3.',
+      build: () => {
+        const e = cycleEdges(5);
+        for (let i = 0; i < 5; i++) { e.push([i, i + 5]); e.push([5 + i, 5 + ((i + 2) % 5)]); }
+        return makeGraph(10, e);
+      } },
+    { id: 'crown', name: 'Crown (bẫy tham lam)', chi: 2,
+      desc: 'Lưỡng phân nên χ = 2, nhưng mọi đỉnh cùng bậc, tham lam chọn theo chỉ số và phải dùng tới 6 màu.',
+      build: () => {
+        const k = 6, e = [];
+        for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) if (i !== j) e.push([2 * i, 2 * j + 1]);
+        return makeGraph(2 * k, e);
+      } },
+    { id: 'grotzsch', name: 'Grötzsch (Mycielski)', chi: 4,
+      desc: '11 đỉnh, không có tam giác nhưng vẫn cần 4 màu — quay lui phải làm việc vất vả.',
+      build: () => mycielski(makeGraph(5, cycleEdges(5))) },
+    { id: 'c7', name: 'Chu trình lẻ C₇', chi: 3,
+      desc: 'Chu trình độ dài lẻ không tô được bằng 2 màu.',
+      build: () => makeGraph(7, cycleEdges(7)) },
+    { id: 'wheel', name: 'Bánh xe W₈', chi: 4,
+      desc: 'Trục nối với chu trình lẻ C₇ → χ = 3 + 1 = 4.',
+      build: () => {
+        const e = cycleEdges(7, 1);
+        for (let i = 1; i <= 7; i++) e.push([0, i]);
+        return makeGraph(8, e);
+      } },
+  ];
+
+  /* ---------------- Sinh ngẫu nhiên G(n, p) có seed ---------------- */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function randomGraph(n, p, seed = 1) {
+    const rnd = mulberry32(seed), e = [];
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (rnd() < p) e.push([i, j]);
+    return makeGraph(n, e, { seed, p });
+  }
+
+  /* ---------------- Đọc input văn bản ----------------
+   * Định dạng 1:  dòng đầu "n", mỗi dòng sau "u v" (đỉnh 0..n-1)
+   * Định dạng 2:  DIMACS — "p edge n m", "e u v" (đỉnh 1..n), "c ..." chú thích
+   */
+  const MAX_N = 120;
+
+  function parseInput(text) {
+    const errors = [], warnings = [];
+    const lines = text.split(/\r?\n/);
+    let n = null, dimacs = false;
+    const edges = [], seen = new Set();
+    for (let li = 0; li < lines.length; li++) {
+      const raw = lines[li];
+      const line = raw.replace(/#.*$/, '').trim();
+      const ln = li + 1;
+      if (!line) continue;
+      const tok = line.split(/\s+/);
+      if (tok[0] === 'c') continue;
+      if (tok[0] === 'p') {
+        if (tok.length < 3 || !/^\d+$/.test(tok[2])) { errors.push(`Dòng ${ln}: dòng "p" phải có dạng "p edge n m".`); continue; }
+        n = +tok[2]; dimacs = true; continue;
+      }
+      let a, b;
+      if (tok[0] === 'e') {
+        if (n === null) { errors.push(`Dòng ${ln}: cạnh xuất hiện trước dòng "p edge n m".`); continue; }
+        if (tok.length !== 3 || !/^-?\d+$/.test(tok[1]) || !/^-?\d+$/.test(tok[2])) { errors.push(`Dòng ${ln}: "${raw.trim()}" phải có dạng "e u v".`); continue; }
+        a = +tok[1] - 1; b = +tok[2] - 1;
+      } else if (n === null) {
+        if (tok.length > 2 || !tok.every(t => /^\d+$/.test(t))) { errors.push(`Dòng ${ln}: dòng đầu phải là số mẫu "n".`); break; }
+        n = +tok[0];
+        if (tok.length === 2) warnings.push(`Dòng ${ln}: không cần nhập số ngăn, chương trình tự xếp nên đã bỏ qua "${tok[1]}".`);
+        continue;
+      } else {
+        if (tok.length !== 2 || !/^-?\d+$/.test(tok[0]) || !/^-?\d+$/.test(tok[1])) { errors.push(`Dòng ${ln}: "${raw.trim()}" phải gồm đúng 2 số nguyên "u v".`); continue; }
+        a = +tok[0]; b = +tok[1];
+      }
+      const base = dimacs ? 1 : 0;
+      if (a < 0 || b < 0 || a >= n || b >= n) {
+        errors.push(`Dòng ${ln}: đỉnh ${(a < 0 || a >= n ? a : b) + base} nằm ngoài phạm vi ${base}..${n - 1 + base}.`); continue;
+      }
+      if (a === b) { errors.push(`Dòng ${ln}: khuyên ${a + base}–${a + base} không hợp lệ (một mẫu không thể phản ứng với chính nó).`); continue; }
+      const key = a < b ? a * 100000 + b : b * 100000 + a;
+      if (seen.has(key)) { warnings.push(`Dòng ${ln}: cạnh ${a + base}–${b + base} bị lặp, đã bỏ qua.`); continue; }
+      seen.add(key);
+      edges.push([a, b]);
+    }
+    if (n === null && errors.length === 0) errors.push('Chưa có dữ liệu: dòng đầu là số đỉnh n.');
+    if (n !== null && n < 1) errors.push('Số đỉnh n phải ≥ 1.');
+    if (n !== null && n > MAX_N) errors.push(`n = ${n} quá lớn cho demo 3D (tối đa ${MAX_N}).`);
+    if (errors.length) return { errors, warnings, graph: null };
+    if (n > 40) warnings.push('Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.');
+    return { errors, warnings, graph: makeGraph(n, edges) };
+  }
+
+  function toEdgeListText(g) {
+    const L = g.labels;
+    return [`${g.n}`.padEnd(6) + '# n', ...g.edges.map(([a, b]) =>
+      L ? `${a} ${b}`.padEnd(6) + `# ${L[a].name} – ${L[b].name}` : `${a} ${b}`)].join('\n');
+  }
+
+  return {
+    Recorder, makeGraph, usedCount, setStr, isProper, isPartialProper,
+    greedy, backtrack, ALGOS, trace,
+    PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toEdgeListText, MAX_N, mulberry32,
+  };
+})();
+
+if (typeof window !== 'undefined') window.Solver = Solver;
+if (typeof module !== 'undefined' && module.exports) module.exports = Solver;
