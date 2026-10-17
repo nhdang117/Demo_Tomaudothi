@@ -1226,6 +1226,13 @@ const Solver = (() => {
     '  }',
     '  return color, used',
     '}',
+    '',
+    'main()',
+    '{',
+    '  đọc G: n đỉnh, danh sách kề',
+    '  color, used = thamlam(G, n)',
+    '  xuất color, used',
+    '}',
   ];
 
   function fmtList(arr, max = 8) {
@@ -1287,7 +1294,7 @@ const Solver = (() => {
             ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
             : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
       }
-      R && R({ line: 23, type: 'done', title: 'Hoàn tất',
+      R && R({ line: 30, type: 'done', title: 'Hoàn tất',
         note: `Đã tô ${n} đỉnh, dùng ${used} màu.` });
     } catch (e) { if (e !== TRUNC) throw e; }
     return { colors: color, k: usedCount(color) };
