@@ -719,7 +719,7 @@ function logText(s) {
     case 'init': return `deg = [${fmtArr(Array.from(s.degs))}] · used = 0`;
     case 'select': return `v = ${s.v} · deg[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '');
     case 'try': return s.c == null ? 'used = 0 → chưa có màu cũ' : `c = ${s.c}`;
-    case 'conflict': return `color[${s.u}] == ${s.c} → ` + (G ? `c += 1` : `bỏ màu ${s.c}`);
+    case 'conflict': return `color[${s.u}] == ${s.c} → c = c + 1`;
     case 'ok': return `c = ${s.c} không trùng → dùng lại`;
     case 'newcolor': return `used = ${s.c + 1} · màu mới ${sw(s.c)}`;
     case 'assign': return `color[${s.v}] = ${sw(s.c)} → ngăn ${s.c + 1}`;
