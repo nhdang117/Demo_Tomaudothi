@@ -1927,7 +1927,8 @@ const pad2 = v => v == null ? '--' : String(v).padStart(2, '0');
 function lockText(s) {
   const L = st.g.labels;
   const head = s.v != null ? `MẪU_${pad2(s.v)}${L ? ' · ' + L[s.v].sym : ''}` : '';
-  const tel = st.algo === 'backtrack' ? `MIN ${pad2(s.kmin)} / BƯỚC ${pad2(s.depth != null ? s.depth + 1 : null)}` : `BẬC ${pad2(s.deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
+  const deg = s.degs && s.v != null ? s.degs[s.v] : s.deg;   // bậc hiện tại trong bảng trạng thái (−1 = đã tô), đổi theo từng dòng code
+  const tel = st.algo === 'backtrack' ? `MIN ${pad2(s.kmin)} / BƯỚC ${pad2(s.depth != null ? s.depth + 1 : null)}` : `BẬC ${pad2(deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
   return head ? `${head}\n${tel}` : '';
 }
 function demoVisOf(sec) {
