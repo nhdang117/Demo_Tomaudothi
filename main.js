@@ -634,7 +634,7 @@ function buildLabels(n) {
 
 const codeEl = $('#code');
 let curLine = -1;
-const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|thamlam|main|cin|cout|trungMau|thamLam|toMau)\b|\b(\d+)\b/g;
+const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|main|cin|cout|trungMau|thamLam|quayLui)\b|\b(\d+)\b/g;
 function hl(line) {
   const hi = line.search(/\/\//);                        // chú thích //
   const code = hi >= 0 ? line.slice(0, hi) : line, cm = hi >= 0 ? line.slice(hi) : '';
@@ -1051,7 +1051,7 @@ function updateHandGreedy(i) {
 /* ---------------- Cây quay lui (thay bảng tính tay khi chạy quay lui) ----------------
    Cách làm theo file Tuần 6 (sinh_hoanvi_neon_responsive.html): dựng cả cây tìm kiếm từ trace một lần,
    nút chưa tới vẽ mờ; mỗi bước chỉ đổi class: đang xét (sáng) · chọn (xanh) · loại (đỏ, gạch) ·
-   đã quay lui (mờ) · cắt tỉa (✂) · lời giải tốt nhất hiện hành (vàng). Gốc χ → tầng i là các màu đã thử cho đỉnh v_i.
+   đã quay lui (mờ) · cắt tỉa (✂) · lời giải tốt nhất hiện hành (vàng). Gốc χ → tầng i là các màu đã thử cho đỉnh ord[i].
    Mỗi lần gặp lời giải tốt hơn, đường vàng cũ hết vàng (thành mờ) và đường mới sáng vàng.
    Kéo để di chuyển, lăn chuột để phóng to, nhấp đúp hoặc nút "Vừa khung" để xem cả cây; cây tự cuộn theo nút đang xét. */
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -1101,13 +1101,13 @@ function buildTree() {
   TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + n * YU + 12;
 
   const body = $('#tbHtBody');
-  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh v_i. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
+  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh ord[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
     '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button></div>';
   const stage = $('.bt-stage', body), svg = $('svg', stage), g = svgEl('g', { class: 'bt-view' }, svg);
   const rowsG = svgEl('g', {}, g), edgeG = svgEl('g', {}, g), nodeG = svgEl('g', {}, g);
-  for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh v_i = order[i-1]
+  for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh ord[i] = order[i-1]
     const y = top + NH / 2 + L * YU;
     svgEl('line', { x1: LX - 6, x2: TR.W, y1: y, y2: y, class: 't-row' }, rowsG);
     svgEl('text', { x: 4, y: y + 1, class: 't-rowl' }, rowsG).textContent = `v${order[L - 1]}`;

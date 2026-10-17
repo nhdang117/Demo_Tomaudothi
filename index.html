@@ -1213,11 +1213,14 @@ const Solver = (() => {
    *    Độ phức tạp: O(n² + k·m), k = số màu dùng (≤ Δ + 1).
    * ================================================================= */
   const GREEDY_CODE = () => [
+    '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
+    '// trungMau(v, c): có đỉnh kề v mang màu c?',
     '// S_i = đỉnh thứ i được chọn để tô',
-    '// deg[v]: số đỉnh kề chưa tô; -1 = v đã tô',
-    '// color[v]: màu của v; used: số màu đã dùng',
+    '// deg[v]: số đỉnh kề chưa tô; -1 = đã tô',
+    '// color[v]: màu của v; -1 = chưa tô',
+    '// used: số màu đã dùng (màu 0..used-1)',
     '',
-    'thamlam(G, n)',
+    'thamLam()',
     '{',
     '  deg[v] = số đỉnh kề của v, với mọi v',
     '  color[v] = -1 với mọi v;  used = 0',
@@ -1226,8 +1229,7 @@ const Solver = (() => {
     '    v = đỉnh có deg lớn nhất  // SELECT',
     '    // (hòa bậc → lấy chỉ số nhỏ nhất)',
     '    c = 0  // thử lần lượt các màu đã dùng',
-    '    while (c < used',
-    '           and có đỉnh kề v mang màu c)',
+    '    while (c < used and trungMau(v, c))',
     '      c = c + 1  // trùng màu → thử màu sau',
     '    if (c == used)  // hết màu cũ',
     '      used = used + 1  // → sinh màu mới',
@@ -1236,14 +1238,13 @@ const Solver = (() => {
     '    for (u kề v)  // hạ bậc đỉnh kề chưa tô',
     '      if (deg[u] >= 0) deg[u] = deg[u] - 1',
     '  }',
-    '  return color, used',
     '}',
     '',
     'main()',
     '{',
-    '  đọc G: n đỉnh, danh sách kề',
-    '  color, used = thamlam(G, n)',
-    '  xuất color, used',
+    '  đọc G: n đỉnh, ma trận kề a',
+    '  thamLam()',
+    '  xuất used, color',
     '}',
   ];
 
@@ -1259,7 +1260,7 @@ const Solver = (() => {
     // mỗi bước lưu kèm ảnh chụp bảng bậc để giao diện hiện giống bảng cô chạy tay
     const R = rec ? ev => { ev.degs = Int16Array.from(deg); rec.push(color, ev); } : null;
     try {
-      R && R({ line: 6, type: 'init', title: 'Lập bảng bậc',
+      R && R({ line: 9, type: 'init', title: 'Lập bảng bậc',
         note: `Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.` });
       for (let step = 0; step < n; step++) {
         let v = -1;
@@ -1268,45 +1269,45 @@ const Solver = (() => {
         if (R) {
           const ties = [];
           for (let x = 0; x < n; x++) if (deg[x] === d) ties.push(x);
-          R({ line: 10, type: 'select', v, deg: d, ties, title: 'Chọn đỉnh',
+          R({ line: 13, type: 'select', v, deg: d, ties, title: 'Chọn đỉnh',
             note: ties.length > 1
               ? `Bậc cao nhất là ${d}, có ${ties.length} đỉnh cùng bậc: ${fmtList(ties)} → lấy chỉ số nhỏ nhất: đỉnh ${v}.`
               : `Đỉnh ${v} có bậc cao nhất trong bảng (${d}).` });
         }
         let c = 0;
-        R && R({ line: 12, type: 'try', v, c: used ? 0 : null, deg: d, title: used ? 'Thử màu đã dùng' : 'Chưa có màu',
+        R && R({ line: 15, type: 'try', v, c: used ? 0 : null, deg: d, title: used ? 'Thử màu đã dùng' : 'Chưa có màu',
           note: used ? `Đã dùng ${used} màu (0..${used - 1}). Thử lần lượt từ màu 0.` : 'Chưa dùng màu nào nên không có màu cũ để thử.' });
         while (c < used) {
           let clash = -1;
           for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
           if (clash < 0) break;
-          R && R({ line: 14, type: 'conflict', v, u: clash, c, deg: d, title: 'Trùng màu',
+          R && R({ line: 16, type: 'conflict', v, u: clash, c, deg: d, title: 'Trùng màu',
             note: `Đỉnh kề ${clash} đã tô màu ${c} → không dùng được màu ${c}.` });
           c++;
-          if (c < used) R && R({ line: 15, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
+          if (c < used) R && R({ line: 17, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
         }
         if (c < used) {
-          R && R({ line: 14, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
+          R && R({ line: 16, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
             note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
         } else {
           used++;
-          R && R({ line: 17, type: 'newcolor', v, c, deg: d, title: 'Sinh màu mới',
+          R && R({ line: 19, type: 'newcolor', v, c, deg: d, title: 'Sinh màu mới',
             note: c === 0 ? 'Chưa có màu nào → sinh màu 0.' : `Cả ${c} màu cũ đều trùng với đỉnh kề → sinh màu mới ${c}.` });
         }
         color[v] = c;
-        R && R({ line: 18, type: 'assign', v, c, deg: d, title: 'Tô màu',
+        R && R({ line: 20, type: 'assign', v, c, deg: d, title: 'Tô màu',
           note: `Tô đỉnh ${v} màu ${c} → xếp vào ngăn ${c + 1}.` });
         deg[v] = -1;
-        R && R({ line: 19, type: 'mark', v, c, deg: d, title: 'Đánh dấu đã tô',
+        R && R({ line: 21, type: 'mark', v, c, deg: d, title: 'Đánh dấu đã tô',
           note: `Gán bậc của đỉnh ${v} = −1 để không bị chọn lại.` });
         const dec = [];
         for (const u of adj[v]) if (deg[u] >= 0) { deg[u]--; dec.push(u); }
-        R && R({ line: 20, type: 'dec', v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
+        R && R({ line: 22, type: 'dec', v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
           note: dec.length
             ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
             : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
       }
-      R && R({ line: 30, type: 'done', title: 'Hoàn tất',
+      R && R({ line: 31, type: 'done', title: 'Hoàn tất',
         note: `Đã tô ${n} đỉnh, dùng ${used} màu.` });
     } catch (e) { if (e !== TRUNC) throw e; }
     return { colors: color, k: usedCount(color) };
@@ -1316,11 +1317,11 @@ const Solver = (() => {
    * 2) QUAY LUI tìm sắc số χ(G) — theo mô hình try(i) của GV (Buổi 6–7),
    *    kiểu bài tối ưu "cây khung tối tiểu": vét cạn, giữ LG tốt nhất
    *    hiện hành (kmin, Smin), gặp LG hoàn chỉnh thì cập nhật.
-   *    Bước i tô đỉnh v_i (đỉnh xếp theo bậc giảm dần), for chạy tối đa
+   *    Bước i tô đỉnh ord[i] (đỉnh xếp theo bậc giảm dần), for chạy tối đa
    *    n màu, loại bằng if:
    *      - c <= used               : phá đối xứng (chỉ mở màu mới kế tiếp)
    *      - max(used, c + 1) < kmin : cắt tỉa (không thể ít màu hơn kmin)
-   *      - không đỉnh kề v_i mang màu c : ràng buộc của bài toán
+   *      - not trungMau(v, c)      : ràng buộc của bài toán
    *    Hai điều kiện đầu đơn điệu theo c: sai ở c thì sai với mọi c lớn
    *    hơn, nên bản cài đặt dừng vòng for ngay (kết quả như for chạy hết).
    *    Không có cận dưới cho χ nên không thoát sớm được: phải vét hết
@@ -1328,36 +1329,43 @@ const Solver = (() => {
    *    Độ phức tạp xấu nhất: O(nⁿ) nút — hàm mũ (NP-khó).
    * ================================================================= */
   const BT_CODE = () => [
-    '// S_i = màu của v_i, v_1..v_n: bậc giảm dần',
-    '// color[v] = -1: đỉnh v chưa được tô',
-    '// used: số màu đã dùng (các màu 0..used-1)',
+    '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
+    '// trungMau(v, c): có đỉnh kề v mang màu c?',
+    '// S_i = màu của đỉnh ord[i]',
+    '// ord[1..n]: các đỉnh theo bậc giảm dần',
+    '// color[v]: màu của v; -1 = chưa tô',
+    '// used: số màu đã dùng (màu 0..used-1)',
     '// kmin, Smin: LG tốt nhất hiện hành',
     '',
-    'tomau(i, used)  // bước i: màu S_i cho v_i',
+    'quayLui(i, used)  // bước i: màu S_i cho ord[i]',
     '{',
+    '  v = ord[i]',
     '  for (c = 0 -> n-1)  // tối đa n lựa chọn',
+    '  {',
+    '    moi = max(used, c + 1)  // số màu nếu tô c',
     '    if (c <= used  // phá đối xứng',
-    '        and max(used, c + 1) < kmin  // cắt tỉa',
-    '        and không đỉnh kề v_i mang màu c)',
+    '        and moi < kmin  // cắt tỉa',
+    '        and not trungMau(v, c))  // khác màu kề',
     '    {',
-    '      color[v_i] = c  // ghi nhận S_i = c',
+    '      color[v] = c  // ghi nhận S_i = c',
     '      if (i == n)  // đủ n đỉnh: LG hoàn chỉnh',
     '      {',
-    '        kmin = max(used, c + 1)',
+    '        kmin = moi',
     '        Smin = color  // lưu bản sao',
     '      }',
     '      else',
-    '        tomau(i + 1, max(used, c + 1))',
-    '      color[v_i] = -1  // trả lại trạng thái cũ',
+    '        quayLui(i + 1, moi)',
+    '      color[v] = -1  // trả lại trạng thái cũ',
     '    }',
+    '  }',
     '}',
     '',
     'main()',
     '{',
-    '  đọc G: n đỉnh, danh sách kề',
-    '  v_1..v_n = các đỉnh theo bậc giảm dần',
+    '  đọc G: n đỉnh, ma trận kề a',
+    '  ord[1..n] = các đỉnh theo bậc giảm dần',
     '  color[v] = -1 với mọi v;  kmin = n + 1',
-    '  tomau(1, 0)',
+    '  quayLui(1, 0)',
     '  xuất kmin, Smin',
     '}',
   ];
@@ -1372,54 +1380,54 @@ const Solver = (() => {
     const R = rec ? (ev, col = color) => { ev.kmin = kmin; ev.backtracks = bts; rec.push(col, ev); } : null;
 
     // i: bước giải (0-based trong code, hiển thị i + 1 cho khớp mã giả)
-    function tomau(i, used) {
+    function quayLui(i, used) {
       if (++calls > budget) throw ABORT;
       const v = order[i];
-      R && R({ line: 5, type: 'select', v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
-        note: `Tìm màu cho đỉnh v_${i + 1} = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, kmin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
+      R && R({ line: 8, type: 'select', v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
+        note: `Tìm màu cho đỉnh ord[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, kmin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
-          R && R({ line: 8, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
+          R && R({ line: 14, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
             note: `Màu ${c} > used = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
           break;
         }
         if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
-          R && R({ line: 9, type: 'prune', v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
+          R && R({ line: 15, type: 'prune', v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
             note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ kmin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
           break;
         }
         let clash = -1;
         for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
         if (clash >= 0) {
-          R && R({ line: 10, type: 'conflict', v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
+          R && R({ line: 16, type: 'conflict', v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
             note: `Đỉnh kề ${clash} đang mang màu ${c} → loại màu ${c}.` });
           continue;
         }
         color[v] = c;
-        R && R({ line: 12, type: 'assign', v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
+        R && R({ line: 18, type: 'assign', v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
           note: `Màu ${c} hợp lệ → S_${i + 1} = ${c}, tô đỉnh ${v}.` });
         if (i === n - 1) {
           kmin = Math.max(used, c + 1);
           smin.set(color);
-          R && R({ line: 15, type: 'found', k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
+          R && R({ line: 21, type: 'found', k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
             note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật kmin = ${kmin}, lưu Smin.` });
         } else {
-          tomau(i + 1, Math.max(used, c + 1));
+          quayLui(i + 1, Math.max(used, c + 1));
         }
         color[v] = -1;
         bts++;
-        R && R({ line: 20, type: 'backtrack', v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
+        R && R({ line: 26, type: 'backtrack', v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
           note: `Gỡ màu ${c} của đỉnh ${v} (quay lui lần ${bts}) rồi thử màu kế tiếp.` });
       }
-      R && R({ line: 7, type: 'fail', v, depth: i, deg: deg[v], title: 'Hết lựa chọn',
+      R && R({ line: 11, type: 'fail', v, depth: i, deg: deg[v], title: 'Hết lựa chọn',
         note: i ? `Đã xét hết màu cho đỉnh ${v} → quay về bước ${i}.` : `Đã xét hết màu cho đỉnh đầu tiên → vét xong cây tìm kiếm.` });
     }
 
     try {
-      R && R({ line: 27, type: 'init', order, title: 'Khởi tạo',
+      R && R({ line: 34, type: 'init', order, title: 'Khởi tạo',
         note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, kmin = n + 1 = ${n + 1} (chưa có lời giải).` });
-      tomau(0, 0);
-      R && R({ line: 30, type: 'done', k: kmin, title: 'Hoàn tất',
+      quayLui(0, 0);
+      R && R({ line: 37, type: 'done', k: kmin, title: 'Hoàn tất',
         note: `Vét hết cây tìm kiếm: sắc số χ(G) = kmin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
     } catch (e) {
       if (e === ABORT) aborted = true;
@@ -1442,12 +1450,12 @@ const Solver = (() => {
     '',
     'const int MAXN = 125;',
     'int n;               // số đỉnh',
-    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
+    'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
     'int deg[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
-    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
-    'int used;            // số màu đã dùng',
+    'int color[MAXN];     // màu của v; -1 = chưa tô',
+    'int used;            // số màu đã dùng (màu 0..used-1)',
     '',
-    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    '// có đỉnh kề v mang màu c?',
     'bool trungMau(int v, int c) {',
     '    for (int u = 0; u < n; u++)',
     '        if (a[v][u] == 1 && color[u] == c) return true;',
@@ -1455,14 +1463,14 @@ const Solver = (() => {
     '}',
     '',
     'void thamLam() {',
-    '    for (int v = 0; v < n; v++) {',
+    '    for (int v = 0; v < n; v++) {    // deg[v] = số đỉnh kề của v',
     '        deg[v] = 0;',
     '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
     '        color[v] = -1;',
     '    }',
     '    used = 0;',
-    '    for (int i = 1; i <= n; i++) {   // mỗi vòng tô 1 đỉnh',
-    '        int v = 0;                   // SELECT: bậc lớn nhất,',
+    '    for (int i = 1; i <= n; i++) {   // mỗi vòng tô đúng 1 đỉnh',
+    '        int v = 0;                   // SELECT: deg lớn nhất,',
     '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
     '            if (deg[x] > deg[v]) v = x;',
     '        int c = 0;                   // thử các màu đã dùng',
@@ -1477,7 +1485,7 @@ const Solver = (() => {
     '}',
     '',
     'int main() {',
-    '    cin >> n;                        // đọc G',
+    '    cin >> n;                        // đọc G: n, ma trận kề a',
     '    int x, y;',
     '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
     '    thamLam();',
@@ -1488,9 +1496,9 @@ const Solver = (() => {
     '}',
   ];
   const GREEDY_CPP_AT = {
-    6: 'deg[v] += a[v][u]', 10: '// SELECT', 12: 'int c = 0;', 14: 'while (c < used',
-    15: 'c++;', 17: 'if (c == used)', 18: 'color[v] = c;', 19: 'deg[v] = -1;',
-    20: 'for (int u = 0; u < n; u++)  // hạ bậc', 30: 'cout << "So mau',
+    9: 'deg[v] += a[v][u]', 13: '// SELECT', 15: 'int c = 0;', 16: 'while (c < used',
+    17: 'c++;', 19: 'if (c == used)', 20: 'color[v] = c;', 21: 'deg[v] = -1;',
+    22: '// hạ bậc', 31: 'cout << "So mau',
   };
 
   const BT_CPP = () => [
@@ -1499,63 +1507,63 @@ const Solver = (() => {
     '',
     'const int MAXN = 125;',
     'int n;               // số đỉnh',
-    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
-    'int ord[MAXN];       // ord[i] = v_i (bậc giảm dần)',
-    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
+    'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
+    'int deg[MAXN];       // số đỉnh kề của v (để sắp ord)',
+    'int ord[MAXN];       // ord[1..n]: đỉnh theo bậc giảm dần',
+    'int color[MAXN];     // màu của v; -1 = chưa tô',
     'int kmin;            // số màu của LG tốt nhất',
     'int Smin[MAXN];      // LG tốt nhất (bản sao color)',
     '',
-    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    '// có đỉnh kề v mang màu c?',
     'bool trungMau(int v, int c) {',
     '    for (int u = 0; u < n; u++)',
     '        if (a[v][u] == 1 && color[u] == c) return true;',
     '    return false;',
     '}',
     '',
-    'void toMau(int i, int used) {    // bước i: màu cho v_i',
+    'void quayLui(int i, int used) {  // bước i: màu S_i cho ord[i]',
     '    int v = ord[i];',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
-    '        int moi = (c + 1 > used) ? c + 1 : used;  // max',
+    '        int moi = (c + 1 > used) ? c + 1 : used;  // max(used, c + 1)',
     '        if (c <= used                // phá đối xứng',
     '            && moi < kmin            // cắt tỉa',
-    '            && !trungMau(v, c)) {    // khác màu đỉnh kề',
+    '            && !trungMau(v, c)) {    // khác màu kề',
     '            color[v] = c;            // ghi nhận S_i = c',
-    '            if (i == n) {            // đủ n đỉnh: LG mới',
+    '            if (i == n) {            // đủ n đỉnh: LG hoàn chỉnh',
     '                kmin = moi;',
     '                for (int x = 0; x < n; x++) Smin[x] = color[x];',
     '            } else',
-    '                toMau(i + 1, moi);',
+    '                quayLui(i + 1, moi);',
     '            color[v] = -1;           // trả lại trạng thái cũ',
     '        }',
     '    }',
     '}',
     '',
     'int main() {',
-    '    cin >> n;                        // đọc G',
+    '    cin >> n;                        // đọc G: n, ma trận kề a',
     '    int x, y;',
     '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
-    '    int deg[MAXN];',
-    '    for (int v = 0; v < n; v++) {',
+    '    for (int v = 0; v < n; v++) {    // deg[v] = số đỉnh kề của v',
     '        deg[v] = 0;',
     '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
     '    }',
-    '    int k = 0;                       // v_1..v_n: bậc giảm dần,',
+    '    int k = 0;                       // ord: bậc giảm dần,',
     '    for (int d = n - 1; d >= 0; d--) // cùng bậc: chỉ số nhỏ trước',
     '        for (int v = 0; v < n; v++)',
     '            if (deg[v] == d) ord[++k] = v;',
     '    for (int v = 0; v < n; v++) color[v] = -1;',
     '    kmin = n + 1;',
-    '    toMau(1, 0);',
-    '    cout << "So mau it nhat: " << kmin << "\\n";',
+    '    quayLui(1, 0);',
+    '    cout << "So mau: " << kmin << "\\n";',
     '    for (int v = 0; v < n; v++)',
     '        cout << "Dinh " << v << ": mau " << Smin[v] << "\\n";',
     '    return 0;',
     '}',
   ];
   const BT_CPP_AT = {
-    5: 'void toMau', 7: 'for (int c = 0; c < n; c++)', 8: 'if (c <= used', 9: '&& moi < kmin',
-    10: '&& !trungMau', 12: 'color[v] = c;', 15: 'kmin = moi;', 20: '// trả lại trạng thái cũ',
-    27: 'int k = 0;', 30: 'cout << "So mau',
+    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int moi', 14: 'if (c <= used',
+    15: '&& moi < kmin', 16: '&& !trungMau', 18: 'color[v] = c;', 21: 'kmin = moi;',
+    26: '// trả lại trạng thái cũ', 34: 'int k = 0;', 37: 'cout << "So mau',
   };
 
   /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
@@ -2417,7 +2425,7 @@ function buildLabels(n) {
 
 const codeEl = $('#code');
 let curLine = -1;
-const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|thamlam|main|cin|cout|trungMau|thamLam|toMau)\b|\b(\d+)\b/g;
+const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|main|cin|cout|trungMau|thamLam|quayLui)\b|\b(\d+)\b/g;
 function hl(line) {
   const hi = line.search(/\/\//);                        // chú thích //
   const code = hi >= 0 ? line.slice(0, hi) : line, cm = hi >= 0 ? line.slice(hi) : '';
@@ -2834,7 +2842,7 @@ function updateHandGreedy(i) {
 /* ---------------- Cây quay lui (thay bảng tính tay khi chạy quay lui) ----------------
    Cách làm theo file Tuần 6 (sinh_hoanvi_neon_responsive.html): dựng cả cây tìm kiếm từ trace một lần,
    nút chưa tới vẽ mờ; mỗi bước chỉ đổi class: đang xét (sáng) · chọn (xanh) · loại (đỏ, gạch) ·
-   đã quay lui (mờ) · cắt tỉa (✂) · lời giải tốt nhất hiện hành (vàng). Gốc χ → tầng i là các màu đã thử cho đỉnh v_i.
+   đã quay lui (mờ) · cắt tỉa (✂) · lời giải tốt nhất hiện hành (vàng). Gốc χ → tầng i là các màu đã thử cho đỉnh ord[i].
    Mỗi lần gặp lời giải tốt hơn, đường vàng cũ hết vàng (thành mờ) và đường mới sáng vàng.
    Kéo để di chuyển, lăn chuột để phóng to, nhấp đúp hoặc nút "Vừa khung" để xem cả cây; cây tự cuộn theo nút đang xét. */
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -2884,13 +2892,13 @@ function buildTree() {
   TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + n * YU + 12;
 
   const body = $('#tbHtBody');
-  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh v_i. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
+  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh ord[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
     '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button></div>';
   const stage = $('.bt-stage', body), svg = $('svg', stage), g = svgEl('g', { class: 'bt-view' }, svg);
   const rowsG = svgEl('g', {}, g), edgeG = svgEl('g', {}, g), nodeG = svgEl('g', {}, g);
-  for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh v_i = order[i-1]
+  for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh ord[i] = order[i-1]
     const y = top + NH / 2 + L * YU;
     svgEl('line', { x1: LX - 6, x2: TR.W, y1: y, y2: y, class: 't-row' }, rowsG);
     svgEl('text', { x: 4, y: y + 1, class: 't-rowl' }, rowsG).textContent = `v${order[L - 1]}`;
