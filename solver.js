@@ -194,7 +194,7 @@ const Solver = (() => {
    *    hiện hành (soMauMin, Smin), gặp LG hoàn chỉnh thì cập nhật.
    *    Bước i tô đỉnh thuTu[i] (đỉnh xếp theo bậc giảm dần), for chạy tối đa
    *    n màu, loại bằng if:
-   *      - c <= soMau              : phá đối xứng (chỉ mở màu mới kế tiếp)
+   *      - c <= soMau              : không vượt số màu (màu mới chỉ thử 1 màu: màu soMau)
    *      - soMauMoi < soMauMin     : cắt tỉa, soMauMoi = max(soMau, c + 1)
    *      - not trungMau(v, c)      : ràng buộc của bài toán
    *    Hai điều kiện đầu đơn điệu theo c: sai ở c thì sai với mọi c lớn
@@ -218,7 +218,7 @@ const Solver = (() => {
     '  for (c = 0 -> n-1)  // tối đa n lựa chọn',
     '  {',
     '    soMauMoi = max(soMau, c + 1)  // số màu nếu tô c',
-    '    if (c <= soMau  // phá đối xứng',
+    '    if (c <= soMau  // không vượt số màu',
     '        and soMauMoi < soMauMin  // cắt tỉa',
     '        and not trungMau(v, c))  // khác màu kề',
     '    {',
@@ -262,8 +262,8 @@ const Solver = (() => {
         note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
-          R && R({ line: 14, type: 'sym', out: `${ind}  c=${c} doi xung`, v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
-            note: `Màu ${c} > soMau = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
+          R && R({ line: 14, type: 'sym', out: `${ind}  c=${c} vuot soMau`, v, c, depth: i, deg: deg[v], title: 'Vượt số màu',
+            note: `Màu ${c} > soMau = ${used}: vượt số màu. Màu mới chỉ cần thử 1 màu (màu ${used}, đã thử); màu ${c} trở đi chỉ là đổi tên màu đó → bỏ màu ${c}..${n - 1}.` });
           break;
         }
         if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
@@ -423,8 +423,8 @@ const Solver = (() => {
     '    int v = thuTu[i];',
     '    thutLe(i); cout << "B" << i << ": v=" << v << " soMau=" << soMau << "\\n";',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
-    '        if (c > soMau) {             // phá đối xứng: màu mới soMau đã thử rồi,',
-    '            thutLe(i); cout << "  c=" << c << " doi xung\\n";  // màu mới khác chỉ là đổi tên',
+    '        if (c > soMau) {             // vượt số màu: màu mới soMau đã thử rồi,',
+    '            thutLe(i); cout << "  c=" << c << " vuot soMau\\n";  // màu mới khác chỉ là đổi tên',
     '            break;                   // → dừng (màu sau cũng vậy)',
     '        }',
     '        int soMauMoi = (c == soMau) ? soMau + 1 : soMau;  // c == soMau: mở màu mới',
@@ -479,7 +479,7 @@ const Solver = (() => {
     26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
   };
   const BT_CPP_OUT = {
-    select: 'cout << "B"', sym: '" doi xung', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
+    select: 'cout << "B"', sym: '" vuot soMau', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
     found: '"  LG moi', backtrack: '"  go mau["', init: 'cout << "thuTu:"', done: 'cout << "So mau',
   };
 
