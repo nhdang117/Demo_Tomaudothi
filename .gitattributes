@@ -1,0 +1,3 @@
+# testcase phai giu nguyen tung byte (co file CRLF co y), khong cho git doi xuong dong
+testcases/0*/*.txt -text
+testcases/expected.csv -text
