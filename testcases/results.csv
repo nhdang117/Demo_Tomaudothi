@@ -1,0 +1,101 @@
+﻿id,group,n,m,chi,src,lb,ub,greedyK,greedyMs,btStatus,btK,btMs,btCalls,trace,errors,warnings,msg,status,fails,notes
+nho_01,01_nho,3,1,2,vet_can,2,2,2,0.01442,xong,2,0.01663,3,khớp,0,0,,Đạt,,
+nho_02,01_nho,4,0,1,vet_can,1,1,1,0.005102,xong,1,0.006178,4,khớp,0,0,,Đạt,,
+nho_03,01_nho,5,7,3,vet_can,3,5,3,0.003058,xong,3,0.006592,5,khớp,0,0,,Đạt,,
+nho_04,01_nho,6,11,4,vet_can,4,6,4,0.00899,xong,4,0.00519,6,khớp,0,0,,Đạt,,
+nho_05,01_nho,7,1,2,vet_can,2,2,2,0.007385,xong,2,0.003274,7,khớp,0,0,,Đạt,,
+nho_06,01_nho,8,13,3,vet_can,3,6,4,0.007459,xong,3,0.00602,12,khớp,0,0,,Đạt,,
+nho_07,01_nho,9,24,5,vet_can,5,8,5,0.008766,xong,5,0.00898,13,khớp,0,0,,Đạt,,
+nho_08,01_nho,3,3,3,vet_can,3,3,3,0.001701,xong,3,0.00259,3,khớp,0,0,,Đạt,,
+nho_09,01_nho,4,1,2,vet_can,2,2,2,0.003776,xong,2,0.005918,4,khớp,0,0,,Đạt,,
+nho_10,01_nho,5,4,3,vet_can,3,4,3,0.00341,xong,3,0.006854,5,khớp,0,0,,Đạt,,
+nho_11,01_nho,6,9,3,vet_can,3,5,3,0.002845,xong,3,0.03056,6,khớp,0,0,,Đạt,,
+nho_12,01_nho,7,18,5,vet_can,5,7,5,0.003081,xong,5,0.00459,7,khớp,0,0,,Đạt,,
+nho_13,01_nho,8,1,2,vet_can,2,2,2,0.003304,xong,2,0.003,8,khớp,0,0,,Đạt,,
+nho_14,01_nho,9,12,3,vet_can,3,5,3,0.003555,xong,3,0.004864,10,khớp,0,0,,Đạt,,
+nho_15,01_nho,3,1,2,vet_can,2,2,2,0.001151,xong,2,0.00146,3,khớp,0,0,,Đạt,,
+nho_16,01_nho,4,3,2,vet_can,2,3,2,0.001337,xong,2,0.0017,4,khớp,0,0,,Đạt,,
+nho_17,01_nho,5,1,2,vet_can,2,2,2,0.001741,xong,2,0.00185,5,khớp,0,0,,Đạt,,
+nho_18,01_nho,6,12,4,vet_can,4,6,4,0.002647,xong,4,0.002408,6,khớp,0,0,,Đạt,,
+nho_19,01_nho,7,12,3,vet_can,3,6,3,0.002035,xong,3,0.002452,7,khớp,0,0,,Đạt,,
+nho_20,01_nho,8,23,5,vet_can,5,8,5,0.002456,xong,5,0.003152,8,khớp,0,0,,Đạt,,
+khoang_chua,02_thong_thuong,12,30,4,de_bai,4,12,4,0.01084,xong,4,0.00486,13,khớp,0,0,,Đạt,,
+buoi10_slide18,02_thong_thuong,10,17,3,de_bai,3,6,3,0.002854,xong,3,0.003272,10,khớp,0,0,,Đạt,,
+so_thu,02_thong_thuong,10,17,4,de_bai,4,7,4,0.002741,xong,4,0.003038,10,khớp,0,0,,Đạt,,
+lich_thi_20mon,02_thong_thuong,20,93,6,kiem_chung,6,16,6,0.01082,xong,6,0.02197,29,khớp,0,0,,Đạt,,
+lich_thi_30mon,02_thong_thuong,30,148,6,kiem_chung,6,20,6,0.01153,xong,6,0.2255,591,khớp,0,0,,Đạt,,
+lich_thi_40mon,02_thong_thuong,40,233,6,kiem_chung,6,21,7,0.01897,xong,6,18.02,33364,cắt,0,0,,Đạt,,"trace backtrack dài hơn 300,000 bước, không chấm"
+gnp_12_5,02_thong_thuong,12,31,4,kiem_chung,4,9,4,0.004745,xong,4,0.006146,12,khớp,0,0,,Đạt,,
+gnp_16_4,02_thong_thuong,16,60,5,kiem_chung,5,12,6,0.005497,xong,5,0.01783,61,khớp,0,0,,Đạt,,
+gnp_20_3,02_thong_thuong,20,66,4,kiem_chung,4,12,4,0.005725,xong,4,0.00644,22,khớp,0,0,,Đạt,,
+gnp_25_25,02_thong_thuong,25,67,4,kiem_chung,4,10,4,0.006786,xong,4,0.03628,240,khớp,0,0,,Đạt,,
+gnp_30_2,02_thong_thuong,30,81,4,kiem_chung,4,12,5,0.008684,xong,4,0.04271,284,khớp,0,0,,Đạt,,
+gnp_30_5,02_thong_thuong,30,209,7,kiem_chung,7,21,8,0.01153,xong,7,0.06123,181,khớp,0,0,,Đạt,,
+gnp_40_15,02_thong_thuong,40,115,4,kiem_chung,4,12,5,0.02922,xong,4,1.384,1471,khớp,0,0,,Đạt,,"giao diện hiện 30000 / 44,796 bước quay lui"
+gnp_50_1,02_thong_thuong,50,117,4,kiem_chung,4,11,4,0.02454,xong,4,11.4,36761,cắt,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,"trace backtrack dài hơn 300,000 bước, không chấm"
+gnp_60_08,02_thong_thuong,60,129,3,kiem_chung,3,8,4,0.0288,xong,3,4.122,22084,cắt,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,"trace backtrack dài hơn 300,000 bước, không chấm"
+n1,03_bien,1,0,1,ly_thuyet,1,1,1,0.001004,xong,1,0.001116,1,khớp,0,0,,Đạt,,
+n2_mot_canh,03_bien,2,1,2,ly_thuyet,2,2,2,0.001186,xong,2,0.001628,2,khớp,0,0,,Đạt,,
+n2_khong_canh,03_bien,2,0,1,ly_thuyet,1,1,1,0.002275,xong,1,0.002004,2,khớp,0,0,,Đạt,,
+canh_dinh_cuoi,03_bien,5,2,2,ly_thuyet,2,3,2,0.001693,xong,2,0.002054,5,khớp,0,0,,Đạt,,
+n120_khong_canh,03_bien,120,0,1,ly_thuyet,1,1,1,0.05024,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+n120_duong_di,03_bien,120,119,2,ly_thuyet,2,3,2,0.05115,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+n120_hinh_sao,03_bien,120,119,2,ly_thuyet,2,120,2,0.08739,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+n119_chu_trinh_le,03_bien,119,119,3,ly_thuyet,3,3,3,0.06794,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+k90,03_bien,90,4005,90,ly_thuyet,90,90,90,0.8001,xong,90,0.925,90,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,
+k91,03_bien,91,4095,91,ly_thuyet,91,91,91,0.492,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+k120,03_bien,120,7140,120,ly_thuyet,120,120,120,1.665,bỏ qua,,,,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,"quay lui chỉ chạy khi n ≤ 90; giao diện hiện 30000 / 43,685 bước tham lam"
+crown_6,04_dac_biet,12,30,2,ly_thuyet,2,6,6,0.007953,xong,2,0.07835,40,khớp,0,0,,Đạt,,
+crown_10,04_dac_biet,20,90,2,ly_thuyet,2,10,10,0.01355,xong,2,0.03834,108,khớp,0,0,,Đạt,,
+myciel3,04_dac_biet,11,20,4,ly_thuyet,4,6,4,0.005561,xong,4,0.01842,82,khớp,0,0,,Đạt,,
+myciel4,04_dac_biet,23,71,5,ly_thuyet,5,12,5,0.0124,xong,5,10.07,32373,cắt,0,0,,Đạt,,"trace backtrack dài hơn 300,000 bước, không chấm"
+myciel5,04_dac_biet,47,236,6,ly_thuyet,6,24,6,0.02172,vượt ngân sách,,233.9,1000001,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,"quay lui dừng sau 1,000,000 lời gọi"
+petersen,04_dac_biet,10,15,3,ly_thuyet,3,4,3,0.003071,xong,3,0.007808,10,khớp,0,0,,Đạt,,
+c7_le,04_dac_biet,7,7,3,ly_thuyet,3,3,3,0.003997,xong,3,0.002336,7,khớp,0,0,,Đạt,,
+c8_chan,04_dac_biet,8,8,2,ly_thuyet,2,3,2,0.002341,xong,2,0.005194,8,khớp,0,0,,Đạt,,
+banh_xe_w8,04_dac_biet,8,14,4,ly_thuyet,4,8,4,0.00264,xong,4,0.003874,8,khớp,0,0,,Đạt,,
+banh_xe_w9,04_dac_biet,9,16,3,ly_thuyet,3,9,3,0.002829,xong,3,0.00264,9,khớp,0,0,,Đạt,,
+k_5_7,04_dac_biet,12,35,2,ly_thuyet,2,8,2,0.007613,xong,2,0.007166,12,khớp,0,0,,Đạt,,
+cay_40,04_dac_biet,40,39,2,ly_thuyet,2,6,3,0.03557,xong,2,0.02813,82,khớp,0,0,,Đạt,,
+khong_lien_thong,04_dac_biet,12,11,4,ly_thuyet,4,4,4,0.003175,xong,4,0.00309,12,khớp,0,0,,Đạt,,
+dinh_ke_tat_ca,04_dac_biet,9,24,3,ly_thuyet,3,9,3,0.002739,xong,3,0.002912,9,khớp,0,0,,Đạt,,
+queen5_5,04_dac_biet,25,160,5,ly_thuyet,5,17,7,0.009084,xong,5,0.0168,63,khớp,0,0,,Đạt,,
+queen6_6,04_dac_biet,36,290,7,ly_thuyet,7,20,9,0.01733,xong,7,5.124,12523,cắt,0,0,,Đạt,,"trace backtrack dài hơn 300,000 bước, không chấm"
+sudoku,04_dac_biet,81,810,9,ly_thuyet,9,21,12,0.09472,xong,9,1.27,816,khớp,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,"giao diện hiện 30000 / 43,011 bước quay lui"
+thua_200,05_lon,200,957,,can,3,18,6,0.1657,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+thua_500,05_lon,500,2528,,can,3,23,7,0.803,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+thua_1000,05_lon,1000,5027,,can,3,22,7,3.093,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+thua_2000,05_lon,2000,9945,,can,3,23,7,9.572,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+thua_5000,05_lon,5000,24910,,can,3,23,7,116.4,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+day_300,05_lon,300,22636,,can,12,176,47,1.662,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+day_1000,05_lon,1000,50051,,can,6,133,28,5.137,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+cai_san_1000_k5,05_lon,1000,12117,5,cai_san,5,43,11,3.183,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+cai_san_3000_k8,05_lon,3000,15904,8,cai_san,8,25,8,22.95,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+luong_phan_2000,05_lon,2000,2980,2,cai_san,2,14,4,9.295,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+crown_100,05_lon,200,9900,2,ly_thuyet,2,100,100,1.354,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+k150,05_lon,150,11175,150,ly_thuyet,150,150,150,2.414,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+chu_trinh_4999,05_lon,4999,4999,3,ly_thuyet,3,3,3,46.25,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+duong_di_5000,05_lon,5000,4999,2,ly_thuyet,2,3,2,43.7,bỏ qua,,,,—,0,1,"Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.",Đạt,,quay lui chỉ chạy khi n ≤ 90
+rong,06_khong_hop_le,,,,,,,,,,,,,,1,0,Chưa có dữ liệu: dòng đầu là số đỉnh n.,Đạt,,
+chi_chu_thich,06_khong_hop_le,,,,,,,,,,,,,,1,0,Chưa có dữ liệu: dòng đầu là số đỉnh n.,Đạt,,
+dong_dau_chu,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
+n_am,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
+n_bang_0,06_khong_hop_le,,,,,,,,,,,,,,1,0,Số đỉnh n phải ≥ 1.,Đạt,,
+n_qua_lon,06_khong_hop_le,,,,,,,,,,,,,,1,0,n = 121 quá lớn cho demo 3D (tối đa 120).,Đạt,,
+dong_dau_3_so,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
+khuyen,06_khong_hop_le,,,,,,,,,,,,,,1,0,Dòng 3: khuyên 2–2 không hợp lệ (một mẫu không thể phản ứng với chính nó).,Đạt,,
+dinh_ngoai_pham_vi,06_khong_hop_le,,,,,,,,,,,,,,1,0,Dòng 3: đỉnh 4 nằm ngoài phạm vi 0..3.,Đạt,,
+dinh_am,06_khong_hop_le,,,,,,,,,,,,,,1,0,Dòng 2: đỉnh -1 nằm ngoài phạm vi 0..3.,Đạt,,
+token_chu,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 2: ""0 x"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
+so_thuc,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 2: ""0 1.5"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
+ba_so_tren_dong,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 2: ""0 1 2"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
+dimacs_e_truoc_p,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 1: cạnh xuất hiện trước dòng ""p edge n m"".",Đạt,,
+dimacs_p_sai,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 1: dòng ""p"" phải có dạng ""p edge n m"".",Đạt,,
+dimacs_e_thieu,06_khong_hop_le,,,,,,,,,,,,,,1,0,"Dòng 2: ""e 1"" phải có dạng ""e u v"".",Đạt,,
+dimacs_dinh_0,06_khong_hop_le,,,,,,,,,,,,,,1,0,Dòng 2: đỉnh 0 nằm ngoài phạm vi 1..3.,Đạt,,
+nhieu_loi,06_khong_hop_le,,,,,,,,,,,,,,3,0,Dòng 3: khuyên 1–1 không hợp lệ (một mẫu không thể phản ứng với chính nó).,Đạt,,
+canh_lap,06_khong_hop_le,3,2,2,ly_thuyet,2,3,2,0.002511,xong,2,0.004726,3,khớp,0,1,"Dòng 4: cạnh 0–1 bị lặp, đã bỏ qua.",Đạt,,
+canh_lap_dao,06_khong_hop_le,3,3,3,ly_thuyet,3,3,3,0.002447,xong,3,0.004108,3,khớp,0,1,"Dòng 3: cạnh 1–0 bị lặp, đã bỏ qua.",Đạt,,
+dong_dau_n_K,06_khong_hop_le,4,4,2,ly_thuyet,2,3,2,0.003072,xong,2,0.003368,4,khớp,0,1,"Dòng 1: không cần nhập số ngăn, chương trình tự xếp nên đã bỏ qua ""2"".",Đạt,,
+dimacs_m_sai,06_khong_hop_le,3,2,2,ly_thuyet,2,3,2,0.002625,xong,2,0.003694,3,khớp,0,1,"Dòng ""p"" khai báo m = 5 nhưng đọc được 2 cạnh khác nhau.",Đạt,,
+crlf_tab_chu_thich,06_khong_hop_le,5,5,3,ly_thuyet,3,3,3,0.003468,xong,3,0.003636,5,khớp,0,0,,Đạt,,

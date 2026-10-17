@@ -1,0 +1,101 @@
+﻿id,nhom,file,dinh_dang,gioi_han,n,m,chi,nguon,loi,so_loi,canh_bao,mo_ta
+nho_01,01_nho,01_nho/nho_01.txt,edge,web,3,1,2,vet_can,,,,"G(n = 3, p = 0.25), seed 101"
+nho_02,01_nho,01_nho/nho_02.txt,edge,web,4,0,1,vet_can,,,,"G(n = 4, p = 0.45), seed 102"
+nho_03,01_nho,01_nho/nho_03.txt,edge,web,5,7,3,vet_can,,,,"G(n = 5, p = 0.65), seed 103"
+nho_04,01_nho,01_nho/nho_04.txt,edge,web,6,11,4,vet_can,,,,"G(n = 6, p = 0.85), seed 104"
+nho_05,01_nho,01_nho/nho_05.txt,edge,web,7,1,2,vet_can,,,,"G(n = 7, p = 0.25), seed 105"
+nho_06,01_nho,01_nho/nho_06.txt,edge,web,8,13,3,vet_can,,,,"G(n = 8, p = 0.45), seed 106"
+nho_07,01_nho,01_nho/nho_07.txt,edge,web,9,24,5,vet_can,,,,"G(n = 9, p = 0.65), seed 107"
+nho_08,01_nho,01_nho/nho_08.txt,edge,web,3,3,3,vet_can,,,,"G(n = 3, p = 0.85), seed 108"
+nho_09,01_nho,01_nho/nho_09.txt,edge,web,4,1,2,vet_can,,,,"G(n = 4, p = 0.25), seed 109"
+nho_10,01_nho,01_nho/nho_10.txt,edge,web,5,4,3,vet_can,,,,"G(n = 5, p = 0.45), seed 110"
+nho_11,01_nho,01_nho/nho_11.txt,edge,web,6,9,3,vet_can,,,,"G(n = 6, p = 0.65), seed 111"
+nho_12,01_nho,01_nho/nho_12.txt,edge,web,7,18,5,vet_can,,,,"G(n = 7, p = 0.85), seed 112"
+nho_13,01_nho,01_nho/nho_13.txt,edge,web,8,1,2,vet_can,,,,"G(n = 8, p = 0.25), seed 113"
+nho_14,01_nho,01_nho/nho_14.txt,edge,web,9,12,3,vet_can,,,,"G(n = 9, p = 0.45), seed 114"
+nho_15,01_nho,01_nho/nho_15.txt,edge,web,3,1,2,vet_can,,,,"G(n = 3, p = 0.65), seed 115"
+nho_16,01_nho,01_nho/nho_16.txt,edge,web,4,3,2,vet_can,,,,"G(n = 4, p = 0.85), seed 116"
+nho_17,01_nho,01_nho/nho_17.txt,edge,web,5,1,2,vet_can,,,,"G(n = 5, p = 0.25), seed 117"
+nho_18,01_nho,01_nho/nho_18.txt,edge,web,6,12,4,vet_can,,,,"G(n = 6, p = 0.45), seed 118"
+nho_19,01_nho,01_nho/nho_19.txt,edge,web,7,12,3,vet_can,,,,"G(n = 7, p = 0.65), seed 119"
+nho_20,01_nho,01_nho/nho_20.txt,edge,web,8,23,5,vet_can,,,,"G(n = 8, p = 0.85), seed 120"
+khoang_chua,02_thong_thuong,02_thong_thuong/khoang_chua.txt,edge,web,12,30,4,de_bai,,,,"12 mẫu, 30 cặp phản ứng. Phản vật chất phản ứng với mọi mẫu nên luôn cần một ngăn riêng."
+buoi10_slide18,02_thong_thuong,02_thong_thuong/buoi10_slide18.txt,edge,web,10,17,3,de_bai,,,,"Đồ thị 10 đỉnh cô chạy tay trên lớp: tô 5 → 0 → 6 → …, bảng bậc khớp slide, cần 3 màu."
+so_thu,02_thong_thuong,02_thong_thuong/so_thu.txt,edge,web,10,17,4,de_bai,,,,"Bài trong đề thi: 10 loài, 17 cặp xung khắc, số chuồng ít nhất là χ = 4."
+lich_thi_20mon,02_thong_thuong,02_thong_thuong/lich_thi_20mon.txt,edge,web,20,93,6,kiem_chung,,,,"Xếp lịch thi: 20 môn, 40 sinh viên, mỗi SV 3 môn (seed 7) — số ca thi ít nhất"
+lich_thi_30mon,02_thong_thuong,02_thong_thuong/lich_thi_30mon.txt,dimacs,web,30,148,6,kiem_chung,,,,"Xếp lịch thi: 30 môn, 60 sinh viên, mỗi SV 3 môn (seed 8) — số ca thi ít nhất"
+lich_thi_40mon,02_thong_thuong,02_thong_thuong/lich_thi_40mon.txt,edge,web,40,233,6,kiem_chung,,,,"Xếp lịch thi: 40 môn, 90 sinh viên, mỗi SV 3 môn (seed 9) — số ca thi ít nhất"
+gnp_12_5,02_thong_thuong,02_thong_thuong/gnp_12_5.txt,edge,web,12,31,4,kiem_chung,,,,"Ngẫu nhiên G(n = 12, p = 0.5), seed 11"
+gnp_16_4,02_thong_thuong,02_thong_thuong/gnp_16_4.txt,edge,web,16,60,5,kiem_chung,,,,"Ngẫu nhiên G(n = 16, p = 0.4), seed 12"
+gnp_20_3,02_thong_thuong,02_thong_thuong/gnp_20_3.txt,edge,web,20,66,4,kiem_chung,,,,"Ngẫu nhiên G(n = 20, p = 0.3), seed 13"
+gnp_25_25,02_thong_thuong,02_thong_thuong/gnp_25_25.txt,edge,web,25,67,4,kiem_chung,,,,"Ngẫu nhiên G(n = 25, p = 0.25), seed 14"
+gnp_30_2,02_thong_thuong,02_thong_thuong/gnp_30_2.txt,edge,web,30,81,4,kiem_chung,,,,"Ngẫu nhiên G(n = 30, p = 0.2), seed 15"
+gnp_30_5,02_thong_thuong,02_thong_thuong/gnp_30_5.txt,edge,web,30,209,7,kiem_chung,,,,"Ngẫu nhiên G(n = 30, p = 0.5), seed 16"
+gnp_40_15,02_thong_thuong,02_thong_thuong/gnp_40_15.txt,edge,web,40,115,4,kiem_chung,,,,"Ngẫu nhiên G(n = 40, p = 0.15), seed 17"
+gnp_50_1,02_thong_thuong,02_thong_thuong/gnp_50_1.txt,edge,web,50,117,4,kiem_chung,,,,"Ngẫu nhiên G(n = 50, p = 0.1), seed 18"
+gnp_60_08,02_thong_thuong,02_thong_thuong/gnp_60_08.txt,edge,web,60,129,3,kiem_chung,,,,"Ngẫu nhiên G(n = 60, p = 0.08), seed 19"
+n1,03_bien,03_bien/n1.txt,edge,web,1,0,1,ly_thuyet,,,,"n = 1, không cạnh (giá trị nhỏ nhất của n)"
+n2_mot_canh,03_bien,03_bien/n2_mot_canh.txt,edge,web,2,1,2,ly_thuyet,,,,"n = 2, một cạnh"
+n2_khong_canh,03_bien,03_bien/n2_khong_canh.txt,edge,web,2,0,1,ly_thuyet,,,,"n = 2, không cạnh"
+canh_dinh_cuoi,03_bien,03_bien/canh_dinh_cuoi.txt,dimacs,web,5,2,2,ly_thuyet,,,,Cạnh chạm đỉnh có chỉ số lớn nhất n − 1 (định dạng DIMACS: đỉnh n)
+n120_khong_canh,03_bien,03_bien/n120_khong_canh.txt,edge,web,120,0,1,ly_thuyet,,,,"n = 120 (tối đa của giao diện), không cạnh"
+n120_duong_di,03_bien,03_bien/n120_duong_di.txt,edge,web,120,119,2,ly_thuyet,,,,"n = 120, đường đi P₁₂₀"
+n120_hinh_sao,03_bien,03_bien/n120_hinh_sao.txt,edge,web,120,119,2,ly_thuyet,,,,"n = 120, hình sao: 1 đỉnh kề 119 đỉnh"
+n119_chu_trinh_le,03_bien,03_bien/n119_chu_trinh_le.txt,edge,web,119,119,3,ly_thuyet,,,,"n = 119, chu trình lẻ C₁₁₉ (quay lui bị bỏ qua vì n > 90)"
+k90,03_bien,03_bien/k90.txt,edge,web,90,4005,90,ly_thuyet,,,,Đồ thị đầy đủ K₉₀ — n lớn nhất quay lui còn chạy
+k91,03_bien,03_bien/k91.txt,edge,web,91,4095,91,ly_thuyet,,,,Đồ thị đầy đủ K₉₁ — vừa vượt ngưỡng quay lui
+k120,03_bien,03_bien/k120.txt,edge,web,120,7140,120,ly_thuyet,,,,Đồ thị đầy đủ K₁₂₀ — số cạnh lớn nhất (7140) ở n tối đa
+crown_6,04_dac_biet,04_dac_biet/crown_6.txt,edge,web,12,30,2,ly_thuyet,,,,Crown S₆: lưỡng phân nhưng mọi đỉnh cùng bậc → tham lam theo bậc dùng 6 màu
+crown_10,04_dac_biet,04_dac_biet/crown_10.txt,edge,web,20,90,2,ly_thuyet,,,,Crown S₁₀ (20 đỉnh): tham lam dùng 10 màu thay vì 2
+myciel3,04_dac_biet,04_dac_biet/myciel3.txt,dimacs,web,11,20,4,ly_thuyet,,,,Grötzsch = Mycielski(C₅): không có tam giác nhưng χ = 4 (DIMACS myciel3)
+myciel4,04_dac_biet,04_dac_biet/myciel4.txt,dimacs,web,23,71,5,ly_thuyet,,,,"Mycielski bậc 4 (DIMACS myciel4): không tam giác, χ = 5"
+myciel5,04_dac_biet,04_dac_biet/myciel5.txt,dimacs,web,47,236,6,ly_thuyet,,,,Mycielski bậc 5 (DIMACS myciel5): ca khó cho quay lui
+petersen,04_dac_biet,04_dac_biet/petersen.txt,edge,web,10,15,3,ly_thuyet,,,,"Petersen: 3-chính quy, có chu trình lẻ"
+c7_le,04_dac_biet,04_dac_biet/c7_le.txt,edge,web,7,7,3,ly_thuyet,,,,Chu trình lẻ C₇
+c8_chan,04_dac_biet,04_dac_biet/c8_chan.txt,edge,web,8,8,2,ly_thuyet,,,,Chu trình chẵn C₈
+banh_xe_w8,04_dac_biet,04_dac_biet/banh_xe_w8.txt,edge,web,8,14,4,ly_thuyet,,,,Bánh xe W₈: trục + C₇ lẻ → 4
+banh_xe_w9,04_dac_biet,04_dac_biet/banh_xe_w9.txt,edge,web,9,16,3,ly_thuyet,,,,Bánh xe W₉: trục + C₈ chẵn → 3
+k_5_7,04_dac_biet,04_dac_biet/k_5_7.txt,edge,web,12,35,2,ly_thuyet,,,,"Lưỡng phân đầy đủ K₅,₇"
+cay_40,04_dac_biet,04_dac_biet/cay_40.txt,edge,web,40,39,2,ly_thuyet,,,,Cây ngẫu nhiên 40 đỉnh (seed 41)
+khong_lien_thong,04_dac_biet,04_dac_biet/khong_lien_thong.txt,edge,web,12,11,4,ly_thuyet,,,,Không liên thông: K₄ ∪ C₅ ∪ 3 đỉnh cô lập
+dinh_ke_tat_ca,04_dac_biet,04_dac_biet/dinh_ke_tat_ca.txt,edge,web,9,24,3,ly_thuyet,,,,"Một đỉnh kề mọi đỉnh (như phản vật chất) + K₄,₄ → 2 + 1"
+queen5_5,04_dac_biet,04_dac_biet/queen5_5.txt,dimacs,web,25,160,5,ly_thuyet,,,,Bàn cờ hậu 5×5 (DIMACS queen5_5)
+queen6_6,04_dac_biet,04_dac_biet/queen6_6.txt,dimacs,web,36,290,7,ly_thuyet,,,,Bàn cờ hậu 6×6 (DIMACS queen6_6)
+sudoku,04_dac_biet,04_dac_biet/sudoku.txt,edge,web,81,810,9,ly_thuyet,,,,"Đồ thị Sudoku 9×9: 81 ô, nối ô cùng hàng/cột/khối"
+thua_200,05_lon,05_lon/thua_200.txt,edge,node,200,957,,can,,,,"Đồ thị thưa G(n = 200, p = 0.05), bậc trung bình ≈ 10, seed 51"
+thua_500,05_lon,05_lon/thua_500.txt,edge,node,500,2528,,can,,,,"Đồ thị thưa G(n = 500, p = 0.02), bậc trung bình ≈ 10, seed 52"
+thua_1000,05_lon,05_lon/thua_1000.txt,edge,node,1000,5027,,can,,,,"Đồ thị thưa G(n = 1000, p = 0.01), bậc trung bình ≈ 10, seed 53"
+thua_2000,05_lon,05_lon/thua_2000.txt,edge,node,2000,9945,,can,,,,"Đồ thị thưa G(n = 2000, p = 0.005), bậc trung bình ≈ 10, seed 54"
+thua_5000,05_lon,05_lon/thua_5000.txt,edge,node,5000,24910,,can,,,,"Đồ thị thưa G(n = 5000, p = 0.002), bậc trung bình ≈ 10, seed 55"
+day_300,05_lon,05_lon/day_300.txt,edge,node,300,22636,,can,,,,"Đồ thị dày G(n = 300, p = 0.5), seed 56"
+day_1000,05_lon,05_lon/day_1000.txt,edge,node,1000,50051,,can,,,,"Đồ thị dày G(n = 1000, p = 0.1), seed 57"
+cai_san_1000_k5,05_lon,05_lon/cai_san_1000_k5.txt,edge,node,1000,12117,5,cai_san,,,,"1000 đỉnh, 5 phần + clique K₅ cài sẵn → χ = 5"
+cai_san_3000_k8,05_lon,05_lon/cai_san_3000_k8.txt,edge,node,3000,15904,8,cai_san,,,,"3000 đỉnh, 8 phần + clique K₈ cài sẵn → χ = 8"
+luong_phan_2000,05_lon,05_lon/luong_phan_2000.txt,edge,node,2000,2980,2,cai_san,,,,"2000 đỉnh, lưỡng phân ngẫu nhiên → χ = 2"
+crown_100,05_lon,05_lon/crown_100.txt,edge,node,200,9900,2,ly_thuyet,,,,"Crown S₁₀₀ (200 đỉnh, 9900 cạnh): bẫy tham lam ở quy mô lớn"
+k150,05_lon,05_lon/k150.txt,edge,node,150,11175,150,ly_thuyet,,,,Đồ thị đầy đủ K₁₅₀
+chu_trinh_4999,05_lon,05_lon/chu_trinh_4999.txt,edge,node,4999,4999,3,ly_thuyet,,,,Chu trình lẻ C₄₉₉₉
+duong_di_5000,05_lon,05_lon/duong_di_5000.txt,edge,node,5000,4999,2,ly_thuyet,,,,Đường đi P₅₀₀₀
+rong,06_khong_hop_le,06_khong_hop_le/rong.txt,edge,web,,,,,Chưa có dữ liệu,,,File rỗng
+chi_chu_thich,06_khong_hop_le,06_khong_hop_le/chi_chu_thich.txt,edge,web,,,,,Chưa có dữ liệu,,,"Chỉ có chú thích, không có dữ liệu"
+dong_dau_chu,06_khong_hop_le,06_khong_hop_le/dong_dau_chu.txt,edge,web,,,,,dòng đầu phải là số mẫu,1,,Dòng đầu là chữ
+n_am,06_khong_hop_le,06_khong_hop_le/n_am.txt,edge,web,,,,,dòng đầu phải là số mẫu,1,,n âm
+n_bang_0,06_khong_hop_le,06_khong_hop_le/n_bang_0.txt,edge,web,,,,,phải ≥ 1,1,,n = 0
+n_qua_lon,06_khong_hop_le,06_khong_hop_le/n_qua_lon.txt,edge,web,,,,,quá lớn,1,,n = 121 vượt giới hạn giao diện
+dong_dau_3_so,06_khong_hop_le,06_khong_hop_le/dong_dau_3_so.txt,edge,web,,,,,dòng đầu phải là số mẫu,1,,Dòng đầu có 3 số
+khuyen,06_khong_hop_le,06_khong_hop_le/khuyen.txt,edge,web,,,,,khuyên,1,,Khuyên 2–2
+dinh_ngoai_pham_vi,06_khong_hop_le,06_khong_hop_le/dinh_ngoai_pham_vi.txt,edge,web,,,,,ngoài phạm vi,1,,Đỉnh 4 khi n = 4 (đỉnh đánh số 0..3)
+dinh_am,06_khong_hop_le,06_khong_hop_le/dinh_am.txt,edge,web,,,,,ngoài phạm vi,1,,Đỉnh âm
+token_chu,06_khong_hop_le,06_khong_hop_le/token_chu.txt,edge,web,,,,,phải gồm đúng 2 số nguyên,1,,Cạnh có chữ
+so_thuc,06_khong_hop_le,06_khong_hop_le/so_thuc.txt,edge,web,,,,,phải gồm đúng 2 số nguyên,1,,Cạnh có số thực
+ba_so_tren_dong,06_khong_hop_le,06_khong_hop_le/ba_so_tren_dong.txt,edge,web,,,,,phải gồm đúng 2 số nguyên,1,,Dòng cạnh có 3 số
+dimacs_e_truoc_p,06_khong_hop_le,06_khong_hop_le/dimacs_e_truoc_p.txt,dimacs,web,,,,,trước dòng,1,,"DIMACS: cạnh ""e"" đứng trước dòng ""p"""
+dimacs_p_sai,06_khong_hop_le,06_khong_hop_le/dimacs_p_sai.txt,dimacs,web,,,,,p edge n m,1,,"DIMACS: dòng ""p"" thiếu số đỉnh"
+dimacs_e_thieu,06_khong_hop_le,06_khong_hop_le/dimacs_e_thieu.txt,dimacs,web,,,,,e u v,1,,"DIMACS: dòng ""e"" thiếu đỉnh"
+dimacs_dinh_0,06_khong_hop_le,06_khong_hop_le/dimacs_dinh_0.txt,dimacs,web,,,,,ngoài phạm vi,1,,"DIMACS đánh số từ 1, đỉnh 0 không hợp lệ"
+nhieu_loi,06_khong_hop_le,06_khong_hop_le/nhieu_loi.txt,edge,web,,,,,khuyên,3,,"Nhiều lỗi cùng lúc: khuyên, ngoài phạm vi, chữ"
+canh_lap,06_khong_hop_le,06_khong_hop_le/canh_lap.txt,edge,web,,,2,ly_thuyet,,,bị lặp,"Cạnh lặp → bỏ qua, cảnh báo"
+canh_lap_dao,06_khong_hop_le,06_khong_hop_le/canh_lap_dao.txt,edge,web,,,3,ly_thuyet,,,bị lặp,Cạnh lặp đảo chiều (1 0 sau 0 1)
+dong_dau_n_K,06_khong_hop_le,06_khong_hop_le/dong_dau_n_K.txt,edge,web,,,2,ly_thuyet,,,không cần nhập số ngăn,"Dòng đầu kiểu cũ ""n K"" → bỏ qua K, cảnh báo"
+dimacs_m_sai,06_khong_hop_le,06_khong_hop_le/dimacs_m_sai.txt,dimacs,web,,,2,ly_thuyet,,,khai báo m = 5,DIMACS khai m = 5 nhưng chỉ có 2 cạnh
+crlf_tab_chu_thich,06_khong_hop_le,06_khong_hop_le/crlf_tab_chu_thich.txt,edge,web,,,3,ly_thuyet,,,,"Xuống dòng Windows (CRLF), tab, dòng trống, chú thích cuối dòng — C₅ hợp lệ"

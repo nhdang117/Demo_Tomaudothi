@@ -1,0 +1,4 @@
+# nho_17 — G(n = 5, p = 0.25), seed 117
+# χ mong đợi = 2 (nguồn: vet_can)
+5
+0 4

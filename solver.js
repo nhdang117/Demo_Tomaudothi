@@ -828,13 +828,15 @@ const Solver = (() => {
   /* ---------------- Đọc input văn bản ----------------
    * Định dạng 1:  dòng đầu "n", mỗi dòng sau "u v" (đỉnh 0..n-1)
    * Định dạng 2:  DIMACS — "p edge n m", "e u v" (đỉnh 1..n), "c ..." chú thích
+   * opts.maxN: giới hạn n (mặc định MAX_N của demo 3D; bộ testcase chạy bằng Node truyền Infinity)
    */
   const MAX_N = 120;
 
-  function parseInput(text) {
+  function parseInput(text, opts = {}) {
+    const maxN = opts.maxN ?? MAX_N;
     const errors = [], warnings = [];
     const lines = text.split(/\r?\n/);
-    let n = null, dimacs = false;
+    let n = null, dimacs = false, mDecl = null;
     const edges = [], seen = new Set();
     for (let li = 0; li < lines.length; li++) {
       const raw = lines[li];
@@ -845,7 +847,9 @@ const Solver = (() => {
       if (tok[0] === 'c') continue;
       if (tok[0] === 'p') {
         if (tok.length < 3 || !/^\d+$/.test(tok[2])) { errors.push(`Dòng ${ln}: dòng "p" phải có dạng "p edge n m".`); continue; }
-        n = +tok[2]; dimacs = true; continue;
+        n = +tok[2]; dimacs = true;
+        if (/^\d+$/.test(tok[3] || '')) mDecl = +tok[3];
+        continue;
       }
       let a, b;
       if (tok[0] === 'e') {
@@ -866,15 +870,16 @@ const Solver = (() => {
         errors.push(`Dòng ${ln}: đỉnh ${(a < 0 || a >= n ? a : b) + base} nằm ngoài phạm vi ${base}..${n - 1 + base}.`); continue;
       }
       if (a === b) { errors.push(`Dòng ${ln}: khuyên ${a + base}–${a + base} không hợp lệ (một mẫu không thể phản ứng với chính nó).`); continue; }
-      const key = a < b ? a * 100000 + b : b * 100000 + a;
+      const key = a < b ? a * n + b : b * n + a;
       if (seen.has(key)) { warnings.push(`Dòng ${ln}: cạnh ${a + base}–${b + base} bị lặp, đã bỏ qua.`); continue; }
       seen.add(key);
       edges.push([a, b]);
     }
     if (n === null && errors.length === 0) errors.push('Chưa có dữ liệu: dòng đầu là số đỉnh n.');
     if (n !== null && n < 1) errors.push('Số đỉnh n phải ≥ 1.');
-    if (n !== null && n > MAX_N) errors.push(`n = ${n} quá lớn cho demo 3D (tối đa ${MAX_N}).`);
+    if (n !== null && n > maxN) errors.push(`n = ${n} quá lớn cho demo 3D (tối đa ${maxN}).`);
     if (errors.length) return { errors, warnings, graph: null };
+    if (mDecl !== null && mDecl !== edges.length) warnings.push(`Dòng "p" khai báo m = ${mDecl} nhưng đọc được ${edges.length} cạnh khác nhau.`);
     if (n > 40) warnings.push('Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.');
     return { errors, warnings, graph: makeGraph(n, edges) };
   }

@@ -1,0 +1,20 @@
+# buoi10_slide18 — Đồ thị 10 đỉnh cô chạy tay trên lớp: tô 5 → 0 → 6 → …, bảng bậc khớp slide, cần 3 màu.
+# χ mong đợi = 3 (nguồn: de_bai)
+10
+0 1
+0 2
+0 3
+1 2
+1 5
+1 6
+2 3
+2 5
+3 4
+3 5
+4 8
+5 6
+5 7
+6 7
+6 9
+7 8
+8 9

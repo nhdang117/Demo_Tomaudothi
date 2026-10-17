@@ -1,0 +1,3 @@
+# n1 — n = 1, không cạnh (giá trị nhỏ nhất của n)
+# χ mong đợi = 1 (nguồn: ly_thuyet)
+1

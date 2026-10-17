@@ -1,0 +1,3 @@
+# n2_khong_canh — n = 2, không cạnh
+# χ mong đợi = 1 (nguồn: ly_thuyet)
+2

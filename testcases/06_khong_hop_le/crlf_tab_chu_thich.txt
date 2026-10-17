@@ -1,0 +1,9 @@
+# C5 gõ tay trên Windows
+5	# n
+
+0  1
+1	2   # cạnh
+2 3
+
+3 4
+4 0

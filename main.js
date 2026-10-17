@@ -1475,10 +1475,148 @@ function computeCompare() {
 })();
 
 /* =====================================================================
+ * Kiểm thử — kết quả bộ testcase (testcases/run_tests.js, build.py nhúng results.json)
+ * và chạy lại các testcase n ≤ 120 ngay trên trình duyệt bằng cùng testcases/suite.js.
+ * ===================================================================== */
+const TSD = window.TESTSUITE_DATA || null;
+const TSU = window.TestSuite || null;
+const ts = { group: 'all', sel: null, live: {}, running: false };
+const TS_SRC = { ly_thuyet: 'lý thuyết', de_bai: 'đề bài', vet_can: 'vét cạn', kiem_chung: 'DSatur kiểm chứng', cai_san: 'cài sẵn', can: 'chỉ có cận' };
+const tsRow = id => TSD.rows.find(r => r.id === id);
+const tsMs = ms => ms == null ? '—' : fmtTime(ms);
+const tsPill = st => st === 'Đạt' ? '<span class="pill ok">Đạt</span>' : '<span class="pill bad">Không đạt</span>';
+function tsExpect(r) {
+  if (r.expErr) return `lỗi “${esc(r.expErr)}”`;
+  const w = r.expWarn ? ` + cảnh báo` : '';
+  return r.chi != null ? `χ = ${r.chi}${w}` : `${r.lb} ≤ k ≤ ${r.ub}`;
+}
+function tsGreedy(r) {
+  if (r.greedyK == null) return '—';
+  return r.chi != null && r.greedyK > r.chi ? `<span class="over">${r.greedyK} (+${r.greedyK - r.chi})</span>` : `${r.greedyK}`;
+}
+function tsBt(r) {
+  if (r.btStatus === 'xong') return `${r.btK}`;
+  return r.btStatus ? `<span class="pill na">${esc(r.btStatus)}</span>` : '—';
+}
+function tsRowHtml(r) {
+  const live = ts.live[r.id];
+  const res = tsPill(r.status) + (live ? `<span class="live${live.status === 'Đạt' ? '' : ' bad'}" title="Kết quả chạy lại trên trình duyệt này">${live.status === 'Đạt' ? '✓' : '✗'} web</span>` : '');
+  const head = `<td><span class="tid">${esc(r.id)}<small title="${esc(r.desc)}">${esc(r.desc)}</small></span></td>`;
+  if (r.errors) return `<tr data-ts="${r.id}" tabindex="0" class="${ts.sel === r.id ? 'sel' : ''}">${head}<td class="num">—</td><td>${tsExpect(r)}</td>` +
+    `<td colspan="3" class="msg">✕ ${esc(r.msg)}</td><td class="res">${res}</td></tr>`;
+  return `<tr data-ts="${r.id}" tabindex="0" class="${ts.sel === r.id ? 'sel' : ''}">${head}<td class="num">${r.n} · ${r.m}</td><td>${tsExpect(r)}</td>` +
+    `<td class="num">${tsGreedy(r)}</td><td class="num">${tsBt(r)}</td><td class="num">${tsMs(r.greedyMs)} / ${tsMs(r.btMs)}</td><td class="res">${res}</td></tr>`;
+}
+function tsRender() {
+  const groups = Object.entries(TSD.groups).filter(([g]) => ts.group === 'all' || ts.group === g);
+  $('#tsBody').innerHTML = groups.map(([g, name]) => {
+    const rs = TSD.rows.filter(r => r.group === g);
+    return (ts.group === 'all' ? `<tr class="gh"><td colspan="7">${esc(name)} · ${rs.length}</td></tr>` : '') + rs.map(tsRowHtml).join('');
+  }).join('');
+  $$('#tsTiles .ts-tile').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.g === ts.group)));
+}
+function tsTiles() {
+  const M = TSD.meta;
+  const tile = (g, name, pass, total, extra) =>
+    `<button class="ts-tile" type="button" data-g="${g}"><span>${esc(name)}</span><b class="${pass < total ? 'bad' : ''}">${pass}/${total}</b><small>${extra}</small></button>`;
+  $('#tsTiles').innerHTML = tile('all', 'Tất cả', M.pass, M.total, `${M.seconds} s bằng Node`) +
+    TSD.summary.map(s => tile(s.group, s.name.split(' / ')[0], s.pass, s.total,
+      isFinite(s.nMin) ? `n = ${s.nMin === s.nMax ? s.nMin : `${s.nMin}–${s.nMax}`}` : 'bắt lỗi input')).join('');
+}
+async function tsInput(r) {
+  const t = TSD.inputs[r.id];
+  if (typeof t === 'string') return t;
+  const res = await fetch(`testcases/${r.file}`);     // file lớn không nhúng: tải từ thư mục testcases/ cạnh trang
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.text();
+}
+function tsDetail(r, text) {
+  const live = ts.live[r.id];
+  const dd = (k, v) => v == null || v === '' ? '' : `<dt>${k}</dt><dd>${v}</dd>`;
+  const sys = r.errors ? `${r.errors} lỗi: ${esc(r.msg)}`
+    : `tham lam ${r.greedyK} màu (${tsMs(r.greedyMs)})` + (r.btStatus === 'xong' ? ` · quay lui ${r.btK} màu, ${r.btCalls.toLocaleString('vi-VN')} lời gọi (${tsMs(r.btMs)})` : r.btStatus ? ` · quay lui: ${esc(r.btStatus)}` : '');
+  const liveTxt = live ? (live.errors ? `${live.errors} lỗi` : `tham lam ${live.greedyK} (${tsMs(live.greedyMs)})` +
+    (live.btStatus === 'xong' ? ` · quay lui ${live.btK} (${tsMs(live.btMs)})` : '')) + ` → ${live.status}` : null;
+  const canLoad = r.limit === 'web' && !r.errors;
+  $('#tsDetail').innerHTML = `<h3>${esc(r.id)} ${tsPill(r.status)}</h3><p>${esc(r.desc)}</p><dl>` +
+    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.fmt === 'dimacs' ? 'DIMACS' : 'danh sách cạnh'}`) +
+    dd('Mong đợi', tsExpect(r) + (r.src && !r.expErr ? ` <small>(${TS_SRC[r.src] || esc(r.src)})</small>` : '')) +
+    dd('Node', sys) + dd('Trình duyệt', liveTxt) + dd('Trace', r.trace && r.trace !== '—' ? esc(r.trace) : null) +
+    dd('Ghi chú', r.notes.length ? esc(r.notes.join(' · ')) : null) +
+    (r.fails.length ? dd('Lỗi', `<span class="fails">${esc(r.fails.join(' · '))}</span>`) : '') + '</dl>' +
+    (text != null && !canLoad && r.limit === 'web' ? `<pre>${esc(text.length > 600 ? text.slice(0, 600) + '\n…' : text) || '(file rỗng)'}</pre>` : '') +
+    (r.limit === 'node' ? '<p>n > 120 vượt giới hạn hiển thị 3D, testcase này chỉ chạy bằng Node.</p>' : '') +
+    `<div class="btns">${canLoad ? '<button class="btn small" type="button" data-ts-go="demo">Xem từng bước ở Demo</button>' : ''}</div>`;
+}
+async function tsSelect(id) {
+  const r = tsRow(id);
+  if (!r) return;
+  ts.sel = id;
+  $$('#tsBody tr[data-ts]').forEach(tr => tr.classList.toggle('sel', tr.dataset.ts === id));
+  tsDetail(r, null);
+  if (r.limit !== 'web') return;
+  let text;
+  try { text = await tsInput(r); } catch (e) { tsDetail(r, null); $('#tsDetail .btns').insertAdjacentHTML('beforebegin', `<p class="fails">Không tải được file (${esc(e.message)}). Mở trang qua web server để xem.</p>`); return; }
+  if (ts.sel !== id) return;
+  tsDetail(r, text);
+  if (r.errors) return;
+  const pr = S.parseInput(text);
+  if (pr.graph) loadGraph(pr.graph, { id: `tc:${r.id}`, name: `Testcase ${r.id}`, chi: r.chi, desc: r.desc });
+}
+async function tsRunAll() {
+  if (ts.running || !TSU) return;
+  ts.running = true;
+  const btn = $('#tsRun'), msg = $('#tsRunMsg');
+  btn.disabled = true;
+  const rows = TSD.rows.filter(r => r.limit === 'web');
+  let pass = 0, skipped = 0;
+  const t0 = performance.now();
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    msg.textContent = `Đang chạy ${i + 1}/${rows.length}: ${r.id}…`;
+    await new Promise(res => setTimeout(res, 0));           // nhường trình duyệt vẽ lại giữa các testcase
+    let text;
+    try { text = await tsInput(r); } catch (e) { skipped++; continue; }
+    const tc = { id: r.id, group: r.group, limit: r.limit, chi: r.chi, err: r.expErr, errCount: r.expErrCount, warn: r.expWarn };
+    const live = TSU.runCase(S, tc, text, { minMs: 5 });
+    ts.live[r.id] = live;
+    if (live.status === 'Đạt') pass++;
+    const tr = $(`#tsBody tr[data-ts="${r.id}"]`);
+    if (tr) tr.outerHTML = tsRowHtml(r);
+  }
+  const sec = ((performance.now() - t0) / 1000).toFixed(1);
+  const done = rows.length - skipped;
+  msg.innerHTML = `<span class="${pass === done ? 'ok' : 'e'}">Trình duyệt: ${pass}/${done} testcase đạt (${sec} s)</span>` +
+    (skipped ? ` · ${skipped} file không tải được (cần mở qua web server)` : '') + ' · nhóm Dữ liệu lớn chỉ chạy bằng Node';
+  btn.disabled = false; ts.running = false;
+  if (ts.sel) tsSelect(ts.sel);
+}
+(function initTests() {
+  if (!TSD) {
+    $('#tsSub').textContent = 'Chưa có kết quả: chạy "node testcases/run_tests.js" rồi "python build.py".';
+    $('#tsRun').hidden = true;
+    return;
+  }
+  const M = TSD.meta, day = new Date(M.date).toLocaleDateString('vi-VN');
+  $('#tsTitle').textContent = `${M.pass}/${M.total} testcase đạt`;
+  $('#tsSub').textContent = `${M.total} testcase chia ${TSD.summary.length} nhóm, đáp án lấy từ lý thuyết, vét cạn hoặc thuật toán kiểm chứng độc lập. ` +
+    `Chạy bằng Node ${M.node} ngày ${day} trên ${M.cpu}. Bấm một dòng để nạp đồ thị đó vào khung đồ thị.`;
+  tsTiles(); tsRender();
+  $('#tsTiles').addEventListener('click', e => { const b = e.target.closest('.ts-tile'); if (b) { ts.group = b.dataset.g; tsRender(); } });
+  const pick = e => { const tr = e.target.closest('tr[data-ts]'); if (tr) tsSelect(tr.dataset.ts); };
+  $('#tsBody').addEventListener('click', pick);
+  $('#tsBody').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); } });
+  $('#tsDetail').addEventListener('click', e => { if (e.target.closest('[data-ts-go="demo"]')) scrollToEl($('#demo')); });
+  $('#tsRun').addEventListener('click', tsRunAll);
+  $('#tsRunMsg').textContent = `${TSD.rows.filter(r => r.limit === 'web').length} testcase có n ≤ 120 chạy lại được ngay trên trình duyệt này.`;
+  tsDetail(tsRow('khoang_chua') || TSD.rows[0], null);
+})();
+
+/* =====================================================================
  * Section & cuộn
  * ===================================================================== */
-const SECS = ['hero', 'problem', 'model', 'demo', 'compare'].map(id => ({ id, el: document.getElementById(id), box: $(`[data-gbox="${id}"]`) }));
-const SEC_SPIN = { hero: 0.16, problem: FROST ? 0.13 : 0.07, model: 0.09, demo: 0, compare: 0.14 };
+const SECS = ['hero', 'problem', 'model', 'demo', 'compare', 'tests'].map(id => ({ id, el: document.getElementById(id), box: $(`[data-gbox="${id}"]`) }));
+const SEC_SPIN = { hero: 0.16, problem: FROST ? 0.13 : 0.07, model: 0.09, demo: 0, compare: 0.14, tests: 0.1 };
 function sectionState(H) {
   const vc = H * 0.5;
   const rects = SECS.map(s => s.el.getBoundingClientRect());

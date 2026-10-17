@@ -1,0 +1,4 @@
+# nho_05 — G(n = 7, p = 0.25), seed 105
+# χ mong đợi = 2 (nguồn: vet_can)
+7
+0 1
