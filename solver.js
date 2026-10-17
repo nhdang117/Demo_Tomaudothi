@@ -93,10 +93,10 @@ const Solver = (() => {
     '  {',
     '    v = đỉnh có bac lớn nhất  // SELECT',
     '    // (hòa bậc → lấy chỉ số nhỏ nhất)',
-    '    c = 0  // thử lần lượt các màu đã dùng',
-    '    while (c < soMau and trungMau(v, c))',
-    '      c = c + 1  // trùng màu → thử màu sau',
-    '    if (c == soMau)  // hết màu cũ',
+    '    for (c = 0 -> soMau - 1)  // thử lần lượt các màu đã dùng',
+    '      if (not trungMau(v, c))  // màu c không trùng đỉnh kề',
+    '        break  // → dùng màu c',
+    '    if (c == soMau)  // for chạy hết: mọi màu cũ đều trùng',
     '      soMau = soMau + 1  // → sinh màu mới',
     '    mau[v] = c  // S_i = v, tô màu c',
     '    bac[v] = -1  // P = P − {v}: không chọn lại',
@@ -159,10 +159,10 @@ const Solver = (() => {
           R && R({ line: 16, type: 'conflict', out: `  c=${c} trung`, v, u: clash, c, deg: d, title: 'Trùng màu',
             note: `Đỉnh kề ${clash} đã tô màu ${c} → không dùng được màu ${c}.` });
           c++;
-          if (c < used) R && R({ line: 17, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
+          if (c < used) R && R({ line: 15, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
         }
         if (c < used) {
-          R && R({ line: 16, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
+          R && R({ line: 17, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
             note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
         } else {
           used++;
@@ -353,12 +353,12 @@ const Solver = (() => {
     '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
     '            if (bac[x] > bac[v]) v = x;',
     '        cout << "Lan " << i << ": v=" << v << " bac=" << bac[v] << "\\n";',
-    '        int c = 0;                   // thử các màu đã dùng',
-    '        while (c < soMau && trungMau(v, c)) {',
+    '        int c;                       // thử lần lượt các màu đã dùng',
+    '        for (c = 0; c < soMau; c++) {',
+    '            if (!trungMau(v, c)) break;  // không trùng → dùng màu c',
     '            cout << "  c=" << c << " trung\\n";',
-    '            c++;                     // trùng màu → màu sau',
     '        }',
-    '        if (c == soMau) {            // hết màu cũ → màu mới',
+    '        if (c == soMau) {            // for chạy hết → màu mới',
     '            soMau++;',
     '            cout << "  mau moi " << c << "\\n";',
     '        }',
@@ -385,8 +385,8 @@ const Solver = (() => {
     '}',
   ];
   const GREEDY_CPP_AT = {
-    9: 'bac[v] += a[v][u]', 13: '// SELECT', 15: 'int c = 0;', 16: 'while (c < soMau',
-    17: 'c++;', 19: 'soMau++;', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
+    9: 'bac[v] += a[v][u]', 13: '// SELECT', 15: 'for (c = 0; c < soMau', 16: 'if (!trungMau(v, c))',
+    17: 'break;', 19: 'soMau++;', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
     22: '// hạ bậc', 31: 'cout << "So mau',
   };
   const GREEDY_CPP_OUT = {
