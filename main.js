@@ -1573,18 +1573,10 @@ async function tsInput(r) {
   return res.text();
 }
 function tsDetail(r, text, loaded) {
-  const C = TSD.meta.cpp;
   const dd = (k, v) => v == null || v === '' ? '' : `<dt>${k}</dt><dd>${v}</dd>`;
-  const js = r.errors ? `${r.errors} lỗi: ${esc(r.msg)}`
-    : `tham lam ${r.greedyK} màu` + (r.btStatus === 'xong' ? ` · quay lui ${r.btK} màu, ${r.btCalls.toLocaleString('vi-VN')} lời gọi`
-      : r.btStatus ? ` · quay lui: ${esc(r.btStatus)}${r.btStatus === 'bỏ qua' ? ` (n > ${TSD.meta.btMaxN})` : ''}` : '');
-  const cpp = r.cppGreedyK == null ? null : `tham lam ${r.cppGreedyK} màu · quay lui ` +
-    (r.cppBtStatus === 'xong' ? `${r.cppBtK} màu` : r.cppBtStatus === 'quá thời gian' ? `chưa xong sau ${C.timeoutS} s` : esc(r.cppBtStatus));
   $('#tsDetail').innerHTML = `<h3>${esc(r.id)} ${tsPill(r.status)}</h3><p>${esc(r.desc)}</p><dl>` +
     dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.fmt === 'dimacs' ? 'DIMACS' : r.norm ? 'chuẩn hoá cho C++' : 'danh sách cạnh (thô)'}`) +
     dd('Mong đợi', tsExpect(r) + (r.src && !r.expErr ? ` <small>(${TS_SRC[r.src] || esc(r.src)})</small>` : '')) +
-    dd('JS (web)', js) + dd('C++', cpp) + dd('Trace', r.trace && r.trace !== '—' ? esc(r.trace) : null) +
-    dd('Demo', r.demo ? (loaded ? 'đã nạp vào khung đồ thị' : 'có') + (r.demoWhy ? ` · ${esc(r.demoWhy)}` : '') : `không — ${esc(r.demoWhy)}`) +
     dd('Ghi chú', r.notes.length ? esc(r.notes.join(' · ')) : null) +
     (r.fails.length ? dd('Lỗi', `<span class="fails">${esc(r.fails.join(' · '))}</span>`) : '') + '</dl>' +
     (text != null && r.errors ? `<pre>${esc(text.length > 600 ? text.slice(0, 600) + '\n…' : text) || '(file rỗng)'}</pre>` : '') +
