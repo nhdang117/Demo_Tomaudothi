@@ -1,5 +1,3 @@
-# thua_2000 — Đồ thị thưa G(n = 2000, p = 0.005), bậc trung bình ≈ 10, seed 54
-# χ chưa biết: kiểm tra ω(G) ≤ số màu ≤ Δ + 1
 2000
 0 52
 0 192

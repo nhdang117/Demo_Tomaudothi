@@ -1,5 +1,3 @@
-# thua_500 — Đồ thị thưa G(n = 500, p = 0.02), bậc trung bình ≈ 10, seed 52
-# χ chưa biết: kiểm tra ω(G) ≤ số màu ≤ Δ + 1
 500
 0 2
 0 15

@@ -1,5 +1,3 @@
-# banh_xe_w8 — Bánh xe W₈: trục + C₇ lẻ → 4
-# χ mong đợi = 4 (nguồn: ly_thuyet)
 8
 0 1
 1 2

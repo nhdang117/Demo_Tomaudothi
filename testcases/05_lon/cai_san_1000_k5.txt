@@ -1,5 +1,3 @@
-# cai_san_1000_k5 — 1000 đỉnh, 5 phần + clique K₅ cài sẵn → χ = 5
-# χ mong đợi = 5 (nguồn: cai_san)
 1000
 0 1
 0 2

@@ -1,5 +1,3 @@
-# chu_trinh_4999 — Chu trình lẻ C₄₉₉₉
-# χ mong đợi = 3 (nguồn: ly_thuyet)
 4999
 0 1
 1 2

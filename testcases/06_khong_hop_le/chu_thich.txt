@@ -1,0 +1,17 @@
+# Petersen: 10 đỉnh, 15 cạnh
+10   # n
+0 1   # cạnh
+0 5   # cạnh
+5 7   # cạnh
+1 2   # cạnh
+1 6   # cạnh
+6 8   # cạnh
+2 3   # cạnh
+2 7   # cạnh
+7 9   # cạnh
+3 4   # cạnh
+3 8   # cạnh
+8 5   # cạnh
+4 0   # cạnh
+4 9   # cạnh
+9 6   # cạnh

@@ -1,5 +1,3 @@
-# n119_chu_trinh_le — n = 119, chu trình lẻ C₁₁₉ (quay lui bị bỏ qua vì n > 90)
-# χ mong đợi = 3 (nguồn: ly_thuyet)
 119
 0 1
 1 2

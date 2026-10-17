@@ -1,5 +1,3 @@
-# nho_08 — G(n = 3, p = 0.85), seed 108
-# χ mong đợi = 3 (nguồn: vet_can)
 3
 0 1
 0 2

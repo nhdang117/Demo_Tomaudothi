@@ -1,5 +1,3 @@
-# gnp_60_08 — Ngẫu nhiên G(n = 60, p = 0.08), seed 19
-# χ mong đợi = 3 (nguồn: kiem_chung)
 60
 0 1
 0 23

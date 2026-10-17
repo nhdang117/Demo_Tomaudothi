@@ -1,5 +1,3 @@
-c canh_dinh_cuoi — Cạnh chạm đỉnh có chỉ số lớn nhất n − 1 (định dạng DIMACS: đỉnh n)
-c χ mong đợi = 2 (nguồn: ly_thuyet)
-p edge 5 2
-e 1 5
-e 4 5
+5
+0 4
+3 4

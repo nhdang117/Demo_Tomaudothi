@@ -1,5 +1,3 @@
-# k90 — Đồ thị đầy đủ K₉₀ — n lớn nhất quay lui còn chạy
-# χ mong đợi = 90 (nguồn: ly_thuyet)
 90
 0 1
 0 2

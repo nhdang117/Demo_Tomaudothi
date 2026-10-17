@@ -1,5 +1,3 @@
-# c8_chan — Chu trình chẵn C₈
-# χ mong đợi = 2 (nguồn: ly_thuyet)
 8
 0 1
 1 2

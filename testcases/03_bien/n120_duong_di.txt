@@ -1,5 +1,3 @@
-# n120_duong_di — n = 120, đường đi P₁₂₀
-# χ mong đợi = 2 (nguồn: ly_thuyet)
 120
 0 1
 1 2

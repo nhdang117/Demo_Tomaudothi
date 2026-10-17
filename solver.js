@@ -549,9 +549,9 @@ const Solver = (() => {
     '#include <iostream>',
     'using namespace std;',
     '',
-    'const int MAXN = 125;',
+    'const int MAXN = 5005;      // n tối đa 5000 (giống demo)',
     'int n;               // số đỉnh',
-    'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
+    'bool a[MAXN][MAXN];  // ma trận kề: a[u][v] = 1 <=> u kề v',
     'int bac[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
     'int mau[MAXN];       // màu của v; -1 = chưa tô',
     'int soMau;           // số màu đã dùng (màu 0..soMau-1)',
@@ -614,9 +614,9 @@ const Solver = (() => {
     '#include <iostream>',
     'using namespace std;',
     '',
-    'const int MAXN = 125;',
+    'const int MAXN = 5005;      // n tối đa 5000 (giống demo)',
     'int n;               // số đỉnh',
-    'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
+    'bool a[MAXN][MAXN];  // ma trận kề: a[u][v] = 1 <=> u kề v',
     'int bac[MAXN];       // số đỉnh kề của v (để sắp thuTu)',
     'int thuTu[MAXN];     // thuTu[1..n]: đỉnh theo bậc giảm dần',
     'int mau[MAXN];       // màu của v; -1 = chưa tô',
@@ -828,9 +828,19 @@ const Solver = (() => {
   /* ---------------- Đọc input văn bản ----------------
    * Định dạng 1:  dòng đầu "n", mỗi dòng sau "u v" (đỉnh 0..n-1)
    * Định dạng 2:  DIMACS — "p edge n m", "e u v" (đỉnh 1..n), "c ..." chú thích
-   * opts.maxN: giới hạn n (mặc định MAX_N của demo 3D; bộ testcase chạy bằng Node truyền Infinity)
+   * opts.maxN: giới hạn n (mặc định MAX_N)
    */
-  const MAX_N = 120;
+  const MAX_N = 5000;          // = MAXN − 5 của code C++ (mảng tĩnh)
+
+  /* Ngưỡng giao diện — main.js dùng để chạy, testcases/suite.js dùng để đo xem testcase có nạp nổi vào web không */
+  const UI = {
+    BT_MAX_N: 90,                // quay lui chỉ chạy khi n ≤ 90 (vét cạn hàm mũ)
+    BT_LOAD_BUDGET: 4e5,         // loadGraph: tìm χ để tô màu lúc xem / tách ngăn
+    BT_CMP_BUDGET: 1e6,          // bảng so sánh
+    TABLE_MAX_N: 120,            // ma trận kề, bảng trạng thái: n² ô DOM (n ≤ 120: giữ nguyên như bản cũ)
+    STRESS_MAX_N: 120,           // bố cục stress O(n²) mỗi vòng; lớn hơn dùng xoắn ốc trên mặt cầu O(n + m)
+    traceLimit: n => Math.max(1500, Math.min(30000, Math.floor(8e6 / Math.max(1, n)))),   // mỗi bước chép mảng màu n phần tử
+  };
 
   function parseInput(text, opts = {}) {
     const maxN = opts.maxN ?? MAX_N;
@@ -877,10 +887,11 @@ const Solver = (() => {
     }
     if (n === null && errors.length === 0) errors.push('Chưa có dữ liệu: dòng đầu là số đỉnh n.');
     if (n !== null && n < 1) errors.push('Số đỉnh n phải ≥ 1.');
-    if (n !== null && n > maxN) errors.push(`n = ${n} quá lớn cho demo 3D (tối đa ${maxN}).`);
+    if (n !== null && n > maxN) errors.push(`n = ${n} quá lớn (tối đa ${maxN}, giới hạn mảng MAXN của code C++).`);
     if (errors.length) return { errors, warnings, graph: null };
     if (mDecl !== null && mDecl !== edges.length) warnings.push(`Dòng "p" khai báo m = ${mDecl} nhưng đọc được ${edges.length} cạnh khác nhau.`);
     if (n > 40) warnings.push('Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.');
+    if (n > UI.TABLE_MAX_N) warnings.push(`n > ${UI.TABLE_MAX_N}: không vẽ ma trận kề và bảng trạng thái; n > ${UI.BT_MAX_N}: không chạy quay lui.`);
     return { errors, warnings, graph: makeGraph(n, edges) };
   }
 
@@ -893,7 +904,7 @@ const Solver = (() => {
   return {
     Recorder, makeGraph, usedCount, setStr, isProper, isPartialProper,
     greedy, backtrack, ALGOS, trace, stdoutOf,
-    PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toEdgeListText, MAX_N, mulberry32,
+    PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toEdgeListText, MAX_N, UI, mulberry32,
   };
 })();
 

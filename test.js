@@ -164,10 +164,13 @@ console.log('7) Đọc input & dữ liệu không hợp lệ');
   check('token sai', r.errors.length === 1);
   r = S.parseInput('3\n0 1\n1 0');
   check('cạnh lặp → cảnh báo', r.errors.length === 0 && r.warnings.length === 1 && r.graph.edges.length === 1);
-  r = S.parseInput('999\n0 1');
-  check('n quá lớn', r.errors.length === 1);
-  r = S.parseInput('999\n0 1\n998 1', { maxN: Infinity });
-  check('maxN = Infinity (bộ testcase chạy bằng Node) nhận n lớn', r.errors.length === 0 && r.graph.n === 999 && r.graph.edges.length === 2);
+  r = S.parseInput(`${S.MAX_N + 1}\n0 1`);
+  check('n quá lớn (> MAX_N = MAXN − 5 của code C++)', r.errors.length === 1);
+  r = S.parseInput(`${S.MAX_N}\n0 1\n${S.MAX_N - 1} 1`);
+  check('n = MAX_N vẫn nhận', r.errors.length === 0 && r.graph.n === S.MAX_N && r.graph.edges.length === 2);
+  r = S.parseInput('9999\n0 1\n9998 1', { maxN: Infinity });
+  check('opts.maxN nới giới hạn', r.errors.length === 0 && r.graph.n === 9999 && r.graph.edges.length === 2);
+  check('MAXN trong code C++ = MAX_N + 5', Object.values(S.ALGOS).every(A => A.cpp().some(l => l.includes(`const int MAXN = ${S.MAX_N + 5};`))));
   r = S.parseInput('p edge 3 5\ne 1 2\ne 2 3');
   check('DIMACS khai sai m → cảnh báo', r.errors.length === 0 && r.warnings.length === 1 && /m = 5/.test(r.warnings[0]));
   r = S.parseInput('');
@@ -191,12 +194,32 @@ console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so 
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-cpp-'));
     const graphs = S.PRESETS.map(p => p.build());
     for (let seed = 1; seed <= 40; seed++) graphs.push(S.randomGraph(1 + seed % 14, [0.2, 0.4, 0.7][seed % 3], seed));
+    const { exportCpp, FILES } = require('./cpp/export_cpp.js');
+    const want = exportCpp(S);
+    for (const [name, text] of Object.entries(want)) {
+      const p = path.join(__dirname, 'cpp', name);
+      check(`cpp/${name} khớp solver.js (chạy node cpp/export_cpp.js nếu lệch)`,   // bỏ qua CRLF do git autocrlf
+        fs.existsSync(p) && fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n') === text);
+    }
     for (const id of Object.keys(S.ALGOS)) {
       const src = path.join(dir, id + '.cpp'), exe = path.join(dir, id + '.exe');
-      fs.writeFileSync(src, S.ALGOS[id].cpp().join('\n') + '\n');
+      fs.writeFileSync(src, want[FILES[id].log]);
       const c = spawnSync('g++', ['-O2', '-Wall', '-Wextra', '-o', exe, src], { encoding: 'utf8' });
       check(`C++ ${id}: biên dịch được, không cảnh báo`, c.status === 0 && !c.stderr.trim(), c.stderr);
       if (c.status !== 0) continue;
+      // bản chỉ in kết quả (dùng cho bộ testcase): in đúng phần "So mau…" cuối của bản log
+      const srcR = path.join(dir, id + '_kq.cpp'), exeR = path.join(dir, id + '_kq.exe');
+      fs.writeFileSync(srcR, want[FILES[id].res]);
+      const cr = spawnSync('g++', ['-O2', '-Wall', '-Wextra', '-o', exeR, srcR], { encoding: 'utf8' });
+      check(`C++ ${id} bản kết quả: biên dịch được, không cảnh báo`, cr.status === 0 && !cr.stderr.trim(), cr.stderr);
+      let badR = 0;
+      for (const g of graphs) {
+        const input = `${g.n}\n` + g.edges.map(e => e.join(' ')).join('\n') + '\n';
+        const full = spawnSync(exe, [], { input, encoding: 'utf8' }).stdout.replace(/\r\n/g, '\n');
+        const res = spawnSync(exeR, [], { input, encoding: 'utf8' }).stdout.replace(/\r\n/g, '\n');
+        if (!res.startsWith('So mau:') || full.slice(full.indexOf('So mau:')) !== res) badR++;
+      }
+      check(`C++ ${id} bản kết quả: in đúng kết quả cuối của bản log trên ${graphs.length} đồ thị`, badR === 0, `${badR} đồ thị lệch`);
       let bad = 0, badOut = 0;
       for (const g of graphs) {
         const input = `${g.n}\n` + g.edges.map(e => e.join(' ')).join('\n') + '\n';

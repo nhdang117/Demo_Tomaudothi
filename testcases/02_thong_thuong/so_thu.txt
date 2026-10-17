@@ -1,5 +1,3 @@
-# so_thu — Bài trong đề thi: 10 loài, 17 cặp xung khắc, số chuồng ít nhất là χ = 4.
-# χ mong đợi = 4 (nguồn: de_bai)
 10
 0 1
 0 5

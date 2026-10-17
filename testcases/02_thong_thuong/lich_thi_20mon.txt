@@ -1,5 +1,3 @@
-# lich_thi_20mon — Xếp lịch thi: 20 môn, 40 sinh viên, mỗi SV 3 môn (seed 7) — số ca thi ít nhất
-# χ mong đợi = 6 (nguồn: kiem_chung)
 20
 0 1
 0 19

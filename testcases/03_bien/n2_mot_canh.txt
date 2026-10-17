@@ -1,4 +1,2 @@
-# n2_mot_canh — n = 2, một cạnh
-# χ mong đợi = 2 (nguồn: ly_thuyet)
 2
 0 1

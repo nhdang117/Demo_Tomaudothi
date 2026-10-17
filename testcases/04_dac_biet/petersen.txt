@@ -1,5 +1,3 @@
-# petersen — Petersen: 3-chính quy, có chu trình lẻ
-# χ mong đợi = 3 (nguồn: ly_thuyet)
 10
 0 1
 0 5

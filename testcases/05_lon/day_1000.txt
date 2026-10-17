@@ -1,5 +1,3 @@
-# day_1000 — Đồ thị dày G(n = 1000, p = 0.1), seed 57
-# χ chưa biết: kiểm tra ω(G) ≤ số màu ≤ Δ + 1
 1000
 0 24
 0 33

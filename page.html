@@ -450,10 +450,10 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ts-tile b{font:600 18px var(--mono);font-variant-numeric:tabular-nums}
 .ts-tile b.bad{color:var(--warn)}
 .ts-tile small{font:500 10.5px var(--mono);color:var(--ink-faint)}
-.ts-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
-.ts-run{font:500 12px var(--mono);color:var(--ink-dim);flex:1;min-width:200px}
-.ts-run .ok{color:var(--good,#12a866)}.ts-run .e{color:var(--warn)}
-.ts-wrap{max-height:max(240px,calc(100vh - 470px));overflow:auto;border-top:1px solid var(--line)}
+.ts-note{font-size:11.5px;line-height:1.45;color:var(--ink-dim);padding:8px 12px;border-radius:var(--r);background:rgba(91,91,240,.06)}
+.ts-note b{color:var(--ink);font-weight:600}
+.pairs-big{font:500 12px var(--mono);color:var(--ink-dim);padding:12px}
+.ts-wrap{max-height:max(240px,calc(100vh - 540px));overflow:auto;border-top:1px solid var(--line)}
 .ts{min-width:640px;font-size:12.5px}
 .ts td.msg{white-space:normal;font:400 11.5px/1.4 var(--mono);color:var(--warn)}
 .ts thead th{position:sticky;top:0;z-index:1;background:var(--plate-solid,#fff);padding-top:8px}
@@ -469,7 +469,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ts .res{white-space:nowrap}
 .ts .res .pill{margin-left:0}
 .ts .live{font:500 10px var(--mono);color:var(--good,#12a866);display:block;margin-top:2px}
-.ts .live.bad{color:var(--warn)}
+.ts .live.off{color:var(--ink-faint)}
 .ts-side{display:flex;flex-direction:column;gap:56px;min-width:0}   /* chừa chỗ cho nút mũi tên dưới đồ thị */
 .tests .gbox{height:min(40vh,380px)}
 .ts-detail{padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--ink-dim);min-height:150px}
@@ -663,7 +663,7 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
       <p class="eyebrow">Mô hình bài toán</p>
       <h2>Từ khoang chứa đến tô màu đồ thị</h2>
       <div class="io-grid">
-        <div><h3>Input</h3><p>Số mẫu vật chất n (1 ≤ n ≤ 120) ở dòng đầu, không cần nhập số ngăn. Mỗi dòng sau là một cặp phản ứng "u v", tức một cạnh của đồ thị G = (V, E).</p></div>
+        <div><h3>Input</h3><p>Số mẫu vật chất n (1 ≤ n ≤ 5000) ở dòng đầu, không cần nhập số ngăn. Mỗi dòng sau là một cặp phản ứng "u v", tức một cạnh của đồ thị G = (V, E).</p></div>
         <div><h3>Output</h3><p>Số ngăn ít nhất χ(G) và phép xếp c: V → {0, …, χ − 1}, mẫu v vào ngăn c(v) + 1. Số ngăn do chương trình tự tính.</p></div>
         <div><h3>Ràng buộc</h3><p>Với mọi cặp phản ứng (u, v) ∈ E thì c(u) ≠ c(v). Không có khuyên u–u, cặp lặp bị bỏ qua.</p></div>
       </div>
@@ -772,13 +772,10 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
       <h2 id="tsTitle">Kiểm thử trên bộ testcase</h2>
       <p id="tsSub" class="ts-sub">—</p>
       <div class="ts-tiles" id="tsTiles" role="group" aria-label="Lọc theo nhóm testcase"></div>
-      <div class="ts-bar">
-        <p class="ts-run" id="tsRunMsg" aria-live="polite"></p>
-        <button class="btn small" id="tsRun" type="button" title="Chạy lại các testcase n ≤ 120 bằng chính bộ giải trên trang này">Chạy lại trên trình duyệt</button>
-      </div>
+      <p class="ts-note" id="tsNote"></p>
       <div class="tbl-wrap ts-wrap" data-lenis-prevent>
         <table class="cmp ts">
-          <thead><tr><th>Test</th><th>n · m</th><th>Mong đợi</th><th>Tham lam</th><th>Quay lui</th><th>Thời gian</th><th>Kết quả</th></tr></thead>
+          <thead><tr><th>Test</th><th>n · m</th><th>Mong đợi</th><th>Tham lam</th><th>Quay lui</th><th title="Thời gian chạy code C++ (bản chỉ in kết quả)">C++ tl / ql</th><th>Kết quả</th></tr></thead>
           <tbody id="tsBody"></tbody>
         </table>
       </div>

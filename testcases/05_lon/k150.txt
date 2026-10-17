@@ -1,5 +1,3 @@
-# k150 — Đồ thị đầy đủ K₁₅₀
-# χ mong đợi = 150 (nguồn: ly_thuyet)
 150
 0 1
 0 2

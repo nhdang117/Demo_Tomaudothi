@@ -1,5 +1,3 @@
-# k91 — Đồ thị đầy đủ K₉₁ — vừa vượt ngưỡng quay lui
-# χ mong đợi = 91 (nguồn: ly_thuyet)
 91
 0 1
 0 2

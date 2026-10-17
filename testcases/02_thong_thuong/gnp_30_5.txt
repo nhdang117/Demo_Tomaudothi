@@ -1,5 +1,3 @@
-# gnp_30_5 — Ngẫu nhiên G(n = 30, p = 0.5), seed 16
-# χ mong đợi = 7 (nguồn: kiem_chung)
 30
 0 2
 0 4

@@ -1,5 +1,3 @@
-# luong_phan_2000 — 2000 đỉnh, lưỡng phân ngẫu nhiên → χ = 2
-# χ mong đợi = 2 (nguồn: cai_san)
 2000
 0 1
 0 299

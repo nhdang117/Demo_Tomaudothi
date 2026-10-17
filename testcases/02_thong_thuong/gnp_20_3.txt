@@ -1,5 +1,3 @@
-# gnp_20_3 — Ngẫu nhiên G(n = 20, p = 0.3), seed 13
-# χ mong đợi = 4 (nguồn: kiem_chung)
 20
 0 3
 0 4

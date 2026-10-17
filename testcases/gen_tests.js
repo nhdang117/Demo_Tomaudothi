@@ -122,9 +122,14 @@ function bruteChi(g) {
   return g.n;
 }
 
-/* ---------------- Định dạng file ---------------- */
-function edgeText(g, head) {
-  return [...head.map(h => `# ${h}`), `${g.n}`, ...g.e.map(([a, b]) => `${a} ${b}`)].join('\n') + '\n';
+/* ---------------- Định dạng file ----------------
+ * Nhóm 01–05: input CHUẨN HÓA để code C++ (cpp/*.cpp, đọc bằng cin) đọc được — dòng đầu "n", mỗi dòng
+ * sau "u v" (0 ≤ u, v < n), xuống dòng LF, không chú thích, không dòng trống. Mô tả và χ mong đợi nằm
+ * trong expected.csv. Nhóm 06 kiểm tra bộ đọc input của web (chú thích, DIMACS, CRLF, input lỗi…)
+ * nên giữ dạng thô và chỉ chạy bằng bộ giải JS. */
+const CPP_READABLE = /^\d+\n(\d+ \d+\n)*$/;
+function edgeText(g) {
+  return [`${g.n}`, ...g.e.map(([a, b]) => `${a} ${b}`)].join('\n') + '\n';
 }
 function dimacsText(g, head) {
   return [...head.map(h => `c ${h}`), `p edge ${g.n} ${g.e.length}`, ...g.e.map(([a, b]) => `e ${a + 1} ${b + 1}`)].join('\n') + '\n';
@@ -132,8 +137,8 @@ function dimacsText(g, head) {
 
 /* ---------------- Danh sách testcase ---------------- */
 const cases = [];
-function add(group, id, desc, g, { chi = null, src, fmt = 'edge', check = true, oracle = true } = {}) {
-  const limit = g.n > S.MAX_N ? 'node' : 'web';
+function add(group, id, desc, g, { chi = null, src, check = true, oracle = true } = {}) {
+  if (g.n > S.MAX_N) throw new Error(`${id}: n = ${g.n} > MAX_N = ${S.MAX_N}`);
   if (check && chi != null && g.n <= 9) {
     const b = bruteChi(g);
     if (b !== chi) throw new Error(`${id}: χ mong đợi ${chi} nhưng vét cạn ra ${b}`);
@@ -143,12 +148,12 @@ function add(group, id, desc, g, { chi = null, src, fmt = 'edge', check = true, 
     if (d.exact && d.chi !== chi) throw new Error(`${id}: χ mong đợi ${chi} nhưng DSatur ra ${d.chi}`);
     if (!d.exact) console.log(`   (${id}: DSatur không chạy hết, giữ χ = ${chi} theo ${src})`);
   }
-  const head = [`${id} — ${desc}`, chi != null ? `χ mong đợi = ${chi} (nguồn: ${src})` : `χ chưa biết: kiểm tra ω(G) ≤ số màu ≤ Δ + 1`];
-  const text = fmt === 'dimacs' ? dimacsText(g, head) : edgeText(g, head);
-  cases.push({ group, id, desc, fmt, limit, n: g.n, m: g.e.length, chi, src, text });
+  const text = edgeText(g);
+  if (!CPP_READABLE.test(text)) throw new Error(`${id}: file không đúng dạng chuẩn hóa`);
+  cases.push({ group, id, desc, fmt: 'edge', n: g.n, m: g.e.length, chi, src, text });
 }
 function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi = null, src = '' } = {}) {
-  cases.push({ group, id, desc, fmt: /^\s*(c |p )/m.test(text) ? 'dimacs' : 'edge', limit: 'web', n: '', m: '', chi, src, err, errCount, warn, text });
+  cases.push({ group, id, desc, fmt: /^\s*(c |p )/m.test(text) ? 'dimacs' : 'edge', n: '', m: '', chi, src, err, errCount, warn, text });
 }
 
 /* 01 — Dữ liệu nhỏ: đáp án bằng vét cạn */
@@ -172,7 +177,7 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   for (const [c, s, per, seed] of lt) {
     const g = G.exams(c, s, per, seed), d = T.dsaturChi(toSolverGraph(g));
     add('02_thong_thuong', `lich_thi_${c}mon`, `Xếp lịch thi: ${c} môn, ${s} sinh viên, mỗi SV ${per} môn (seed ${seed}) — số ca thi ít nhất`,
-        g, { chi: d.chi, src: 'kiem_chung', fmt: c === 30 ? 'dimacs' : 'edge', oracle: false });
+        g, { chi: d.chi, src: 'kiem_chung', oracle: false });
   }
   const rnd = [[12, 0.5, 11], [16, 0.4, 12], [20, 0.3, 13], [25, 0.25, 14], [30, 0.2, 15], [30, 0.5, 16], [40, 0.15, 17], [50, 0.1, 18], [60, 0.08, 19]];
   for (const [n, p, seed] of rnd) {
@@ -187,14 +192,16 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   add('03_bien', 'n1', 'n = 1, không cạnh (giá trị nhỏ nhất của n)', G.empty(1), { chi: 1, src: 'ly_thuyet' });
   add('03_bien', 'n2_mot_canh', 'n = 2, một cạnh', G.complete(2), { chi: 2, src: 'ly_thuyet' });
   add('03_bien', 'n2_khong_canh', 'n = 2, không cạnh', G.empty(2), { chi: 1, src: 'ly_thuyet' });
-  add('03_bien', 'canh_dinh_cuoi', 'Cạnh chạm đỉnh có chỉ số lớn nhất n − 1 (định dạng DIMACS: đỉnh n)', { n: 5, e: [[0, 4], [3, 4]] }, { chi: 2, src: 'ly_thuyet', fmt: 'dimacs' });
-  add('03_bien', 'n120_khong_canh', 'n = 120 (tối đa của giao diện), không cạnh', G.empty(120), { chi: 1, src: 'ly_thuyet' });
+  add('03_bien', 'canh_dinh_cuoi', 'Cạnh chạm đỉnh có chỉ số lớn nhất n − 1', { n: 5, e: [[0, 4], [3, 4]] }, { chi: 2, src: 'ly_thuyet' });
+  add('03_bien', 'n120_khong_canh', 'n = 120, không cạnh', G.empty(120), { chi: 1, src: 'ly_thuyet' });
   add('03_bien', 'n120_duong_di', 'n = 120, đường đi P₁₂₀', G.path(120), { chi: 2, src: 'ly_thuyet' });
   add('03_bien', 'n120_hinh_sao', 'n = 120, hình sao: 1 đỉnh kề 119 đỉnh', G.star(120), { chi: 2, src: 'ly_thuyet' });
   add('03_bien', 'n119_chu_trinh_le', 'n = 119, chu trình lẻ C₁₁₉ (quay lui bị bỏ qua vì n > 90)', G.cycle(119), { chi: 3, src: 'ly_thuyet' });
   add('03_bien', 'k90', 'Đồ thị đầy đủ K₉₀ — n lớn nhất quay lui còn chạy', G.complete(90), { chi: 90, src: 'ly_thuyet', oracle: false });
   add('03_bien', 'k91', 'Đồ thị đầy đủ K₉₁ — vừa vượt ngưỡng quay lui', G.complete(91), { chi: 91, src: 'ly_thuyet', oracle: false });
-  add('03_bien', 'k120', 'Đồ thị đầy đủ K₁₂₀ — số cạnh lớn nhất (7140) ở n tối đa', G.complete(120), { chi: 120, src: 'ly_thuyet', oracle: false });
+  add('03_bien', 'k120', 'Đồ thị đầy đủ K₁₂₀ (7140 cạnh)', G.complete(120), { chi: 120, src: 'ly_thuyet', oracle: false });
+  add('03_bien', 'n5000_khong_canh', `n = ${S.MAX_N} (tối đa, = MAXN − 5 của code C++), không cạnh`, G.empty(S.MAX_N), { chi: 1, src: 'ly_thuyet' });
+  add('03_bien', 'n5000_canh_cuoi', `n = ${S.MAX_N}, một cạnh nối 2 đỉnh có chỉ số lớn nhất`, { n: S.MAX_N, e: [[S.MAX_N - 2, S.MAX_N - 1]] }, { chi: 2, src: 'ly_thuyet' });
 }
 
 /* 04 — Đặc biệt: tính chất đồ thị, bẫy cho tham lam, benchmark DIMACS */
@@ -202,9 +209,9 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   const c5 = G.cycle(5), m3 = G.mycielski(c5), m4 = G.mycielski(m3), m5 = G.mycielski(m4);
   add('04_dac_biet', 'crown_6', 'Crown S₆: lưỡng phân nhưng mọi đỉnh cùng bậc → tham lam theo bậc dùng 6 màu', G.crown(6), { chi: 2, src: 'ly_thuyet' });
   add('04_dac_biet', 'crown_10', 'Crown S₁₀ (20 đỉnh): tham lam dùng 10 màu thay vì 2', G.crown(10), { chi: 2, src: 'ly_thuyet' });
-  add('04_dac_biet', 'myciel3', 'Grötzsch = Mycielski(C₅): không có tam giác nhưng χ = 4 (DIMACS myciel3)', m3, { chi: 4, src: 'ly_thuyet', fmt: 'dimacs' });
-  add('04_dac_biet', 'myciel4', 'Mycielski bậc 4 (DIMACS myciel4): không tam giác, χ = 5', m4, { chi: 5, src: 'ly_thuyet', fmt: 'dimacs' });
-  add('04_dac_biet', 'myciel5', 'Mycielski bậc 5 (DIMACS myciel5): ca khó cho quay lui', m5, { chi: 6, src: 'ly_thuyet', fmt: 'dimacs', oracle: false });
+  add('04_dac_biet', 'myciel3', 'Grötzsch = Mycielski(C₅): không có tam giác nhưng χ = 4 (DIMACS myciel3)', m3, { chi: 4, src: 'ly_thuyet' });
+  add('04_dac_biet', 'myciel4', 'Mycielski bậc 4 (DIMACS myciel4): không tam giác, χ = 5', m4, { chi: 5, src: 'ly_thuyet' });
+  add('04_dac_biet', 'myciel5', 'Mycielski bậc 5 (DIMACS myciel5): ca khó cho quay lui', m5, { chi: 6, src: 'ly_thuyet', oracle: false });
   add('04_dac_biet', 'petersen', 'Petersen: 3-chính quy, có chu trình lẻ', G.petersen(), { chi: 3, src: 'ly_thuyet' });
   add('04_dac_biet', 'c7_le', 'Chu trình lẻ C₇', G.cycle(7), { chi: 3, src: 'ly_thuyet' });
   add('04_dac_biet', 'c8_chan', 'Chu trình chẵn C₈', G.cycle(8), { chi: 2, src: 'ly_thuyet' });
@@ -217,12 +224,12 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
     const g = G.bipartite(4, 4); g.e.push(...[...Array(8).keys()].map(i => [i, 8])); g.n = 9;
     add('04_dac_biet', 'dinh_ke_tat_ca', 'Một đỉnh kề mọi đỉnh (như phản vật chất) + K₄,₄ → 2 + 1', g, { chi: 3, src: 'ly_thuyet' });
   }
-  add('04_dac_biet', 'queen5_5', 'Bàn cờ hậu 5×5 (DIMACS queen5_5)', G.queen(5), { chi: 5, src: 'ly_thuyet', fmt: 'dimacs' });
-  add('04_dac_biet', 'queen6_6', 'Bàn cờ hậu 6×6 (DIMACS queen6_6)', G.queen(6), { chi: 7, src: 'ly_thuyet', fmt: 'dimacs' });
+  add('04_dac_biet', 'queen5_5', 'Bàn cờ hậu 5×5 (DIMACS queen5_5)', G.queen(5), { chi: 5, src: 'ly_thuyet' });
+  add('04_dac_biet', 'queen6_6', 'Bàn cờ hậu 6×6 (DIMACS queen6_6)', G.queen(6), { chi: 7, src: 'ly_thuyet' });
   add('04_dac_biet', 'sudoku', 'Đồ thị Sudoku 9×9: 81 ô, nối ô cùng hàng/cột/khối', G.sudoku(), { chi: 9, src: 'ly_thuyet', oracle: false });
 }
 
-/* 05 — Dữ liệu lớn (vượt giới hạn giao diện, chạy bằng Node) */
+/* 05 — Dữ liệu lớn (web không chạy quay lui khi n > 90, quay lui chạy bằng C++) */
 {
   for (const [n, seed] of [[200, 51], [500, 52], [1000, 53], [2000, 54], [5000, 55]]) {
     const p = +(10 / n).toFixed(4);
@@ -247,7 +254,7 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   addRaw(H, 'dong_dau_chu', 'Dòng đầu là chữ', 'abc\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_am', 'n âm', '-3\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_bang_0', 'n = 0', '0\n', { err: 'phải ≥ 1', errCount: 1 });
-  addRaw(H, 'n_qua_lon', 'n = 121 vượt giới hạn giao diện', '121\n0 1\n', { err: 'quá lớn', errCount: 1 });
+  addRaw(H, 'n_qua_lon', `n = ${S.MAX_N + 1} vượt giới hạn MAX_N = ${S.MAX_N}`, `${S.MAX_N + 1}\n0 1\n`, { err: 'quá lớn', errCount: 1 });
   addRaw(H, 'dong_dau_3_so', 'Dòng đầu có 3 số', '3 2 1\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'khuyen', 'Khuyên 2–2', '3\n0 1\n2 2\n', { err: 'khuyên', errCount: 1 });
   addRaw(H, 'dinh_ngoai_pham_vi', 'Đỉnh 4 khi n = 4 (đỉnh đánh số 0..3)', '4\n0 1\n1 4\n', { err: 'ngoài phạm vi', errCount: 1 });
@@ -264,6 +271,11 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   addRaw(H, 'canh_lap_dao', 'Cạnh lặp đảo chiều (1 0 sau 0 1)', '3\n0 1\n1 0\n1 2\n2 0\n', { warn: 'bị lặp', chi: 3, src: 'ly_thuyet' });
   addRaw(H, 'dong_dau_n_K', 'Dòng đầu kiểu cũ "n K" → bỏ qua K, cảnh báo', '4 2\n0 1\n1 2\n2 3\n3 0\n', { warn: 'không cần nhập số ngăn', chi: 2, src: 'ly_thuyet' });
   addRaw(H, 'dimacs_m_sai', 'DIMACS khai m = 5 nhưng chỉ có 2 cạnh', 'p edge 3 5\ne 1 2\ne 2 3\n', { warn: 'khai báo m = 5', chi: 2, src: 'ly_thuyet' });
+  addRaw(H, 'dimacs_myciel3', 'DIMACS hợp lệ (định dạng benchmark, đỉnh 1..n, chú thích c): Grötzsch',
+    dimacsText(G.mycielski(G.cycle(5)), ['myciel3 = Mycielski(C5), chi = 4']), { chi: 4, src: 'ly_thuyet' });
+  addRaw(H, 'dimacs_queen5_5', 'DIMACS hợp lệ: bàn cờ hậu 5×5', dimacsText(G.queen(5), ['queen5_5, chi = 5']), { chi: 5, src: 'ly_thuyet' });
+  addRaw(H, 'chu_thich', 'Danh sách cạnh có chú thích # đầu file và cuối dòng — Petersen',
+    '# Petersen: 10 đỉnh, 15 cạnh\n10   # n\n' + G.petersen().e.map(([a, b]) => `${a} ${b}   # cạnh`).join('\n') + '\n', { chi: 3, src: 'ly_thuyet' });
   addRaw(H, 'crlf_tab_chu_thich', 'Xuống dòng Windows (CRLF), tab, dòng trống, chú thích cuối dòng — C₅ hợp lệ',
     '# C5 gõ tay trên Windows\r\n5\t# n\r\n\r\n0  1\r\n1\t2   # cạnh\r\n2 3\r\n\r\n3 4\r\n4 0\r\n', { chi: 3, src: 'ly_thuyet' });
 }
@@ -275,14 +287,14 @@ for (const g of Object.keys(GROUPS)) {
   fs.mkdirSync(dir, { recursive: true });
 }
 const csvCell = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-const COLS = ['id', 'nhom', 'file', 'dinh_dang', 'gioi_han', 'n', 'm', 'chi', 'nguon', 'loi', 'so_loi', 'canh_bao', 'mo_ta'];
+const COLS = ['id', 'nhom', 'file', 'dinh_dang', 'chuan_hoa', 'n', 'm', 'chi', 'nguon', 'loi', 'so_loi', 'canh_bao', 'mo_ta'];
 const rows = [COLS.join(',')];
 let bytes = 0;
 for (const c of cases) {
   c.file = `${c.group}/${c.id}.txt`;
   fs.writeFileSync(path.join(OUT, c.file), c.text);
   bytes += Buffer.byteLength(c.text);
-  rows.push([c.id, c.group, c.file, c.fmt, c.limit, c.n, c.m, c.chi ?? '', c.src || (c.chi == null && !c.err ? 'can' : ''),
+  rows.push([c.id, c.group, c.file, c.fmt, CPP_READABLE.test(c.text) ? 1 : 0, c.n, c.m, c.chi ?? '', c.src || (c.chi == null && !c.err ? 'can' : ''),
     c.err || '', c.errCount || '', c.warn || '', c.desc].map(csvCell).join(','));
 }
 fs.writeFileSync(path.join(OUT, 'expected.csv'), '﻿' + rows.join('\n') + '\n');

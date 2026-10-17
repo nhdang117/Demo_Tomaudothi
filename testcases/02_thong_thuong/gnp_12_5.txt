@@ -1,5 +1,3 @@
-# gnp_12_5 — Ngẫu nhiên G(n = 12, p = 0.5), seed 11
-# χ mong đợi = 4 (nguồn: kiem_chung)
 12
 0 7
 0 10

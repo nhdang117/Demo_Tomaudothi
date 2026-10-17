@@ -1,5 +1,3 @@
-# sudoku — Đồ thị Sudoku 9×9: 81 ô, nối ô cùng hàng/cột/khối
-# χ mong đợi = 9 (nguồn: ly_thuyet)
 81
 0 1
 0 2

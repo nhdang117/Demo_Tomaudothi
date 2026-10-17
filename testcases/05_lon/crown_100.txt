@@ -1,5 +1,3 @@
-# crown_100 — Crown S₁₀₀ (200 đỉnh, 9900 cạnh): bẫy tham lam ở quy mô lớn
-# χ mong đợi = 2 (nguồn: ly_thuyet)
 200
 0 3
 0 5

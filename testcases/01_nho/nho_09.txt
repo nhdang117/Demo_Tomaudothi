@@ -1,4 +1,2 @@
-# nho_09 — G(n = 4, p = 0.25), seed 109
-# χ mong đợi = 2 (nguồn: vet_can)
 4
 1 2

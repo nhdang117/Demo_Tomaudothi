@@ -1,5 +1,3 @@
-# crown_6 — Crown S₆: lưỡng phân nhưng mọi đỉnh cùng bậc → tham lam theo bậc dùng 6 màu
-# χ mong đợi = 2 (nguồn: ly_thuyet)
 12
 0 3
 0 5

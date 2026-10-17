@@ -1,5 +1,3 @@
-# banh_xe_w9 — Bánh xe W₉: trục + C₈ chẵn → 3
-# χ mong đợi = 3 (nguồn: ly_thuyet)
 9
 0 1
 1 2

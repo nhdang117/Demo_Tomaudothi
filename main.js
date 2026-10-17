@@ -430,6 +430,7 @@ const GV = {
 /* Bố cục theo "stress majorization" (SMACOF): khoảng cách hình học ≈ khoảng cách đường đi ngắn nhất.
    Cho bố cục đều hơn lực đẩy-kéo khi đồ thị có lõi dày và lá dài. */
 function stressLayout(g, dim, init) {
+  if (g.n > S.UI.STRESS_MAX_N) return spiralLayout(g, dim);   // stress tốn O(n²) bộ nhớ và mỗi vòng lặp
   const n = g.n, P = new Float32Array(n * 3), rnd = S.mulberry32(1000 + n * 31 + g.edges.length * 7);
   if (n <= 1) return P;
   const Dm = new Int16Array(n * n).fill(-1), q = new Int32Array(n);
@@ -480,6 +481,30 @@ function stressLayout(g, dim, init) {
   const target = clamp(1.3 + Math.sqrt(n) * 0.62, 2.2, 7.5);
   const sc = maxR > 1e-6 ? target / maxR : 1;
   for (let i = 0; i < n * 3; i++) P[i] *= sc;
+  return P;
+}
+
+/* Đồ thị lớn (n > STRESS_MAX_N): đỉnh xếp theo thứ tự BFS lên xoắn ốc Fibonacci trên mặt cầu (3D) hoặc
+   hình hoa hướng dương (2D) — O(n + m), đỉnh kề nhau theo BFS nằm gần nhau */
+function spiralLayout(g, dim) {
+  const n = g.n, P = new Float32Array(n * 3), order = [], seen = new Uint8Array(n);
+  const byDeg = [...Array(n).keys()].sort((a, b) => g.adj[b].length - g.adj[a].length);
+  for (const s of byDeg) {
+    if (seen[s]) continue;
+    seen[s] = 1; order.push(s);
+    for (let h = order.length - 1; h < order.length; h++) for (const u of g.adj[order[h]]) if (!seen[u]) { seen[u] = 1; order.push(u); }
+  }
+  const R = clamp(1.3 + Math.sqrt(n) * 0.62, 2.2, 7.5), GA = Math.PI * (3 - Math.sqrt(5));
+  order.forEach((v, k) => {
+    const t = (k + 0.5) / n, a = k * GA;
+    if (dim === 3) {
+      const y = 1 - 2 * t, r = Math.sqrt(1 - y * y);
+      P[v * 3] = Math.cos(a) * r * R; P[v * 3 + 1] = y * R; P[v * 3 + 2] = Math.sin(a) * r * R;
+    } else {
+      const r = Math.sqrt(t) * R;
+      P[v * 3] = Math.cos(a) * r; P[v * 3 + 1] = Math.sin(a) * r;
+    }
+  });
   return P;
 }
 
@@ -935,7 +960,15 @@ function tbLayout() {
 addEventListener('resize', tbLayout);
 for (const k of ['mx', 'ht']) $('.tb-head', tbSec[k]).addEventListener('click', () => { TB.open[k] = !TB.open[k]; tbApply(); });
 
+const tbBigNote = n => `<p class="tb-key">n = ${n} > ${S.UI.TABLE_MAX_N}: bảng ${n} × ${n} ô quá lớn để vẽ, trang bỏ qua bảng này. ` +
+  'Các bước vẫn xem được trên đồ thị, khung code và Output C++.</p>';
 function buildMatrix(g) {
+  if (g.n > S.UI.TABLE_MAX_N) {
+    $('#tbMxBody').innerHTML = tbBigNote(g.n);
+    TB.mx = null; TB.hot = []; TB.cross = null;
+    $('#tbMxMeta').textContent = `${g.n} × ${g.n} · không vẽ`;
+    return;
+  }
   const n = g.n, L = g.labels, cs = tbCell(n), A = new Uint8Array(n * n);
   for (const [a, b] of g.edges) A[a * n + b] = A[b * n + a] = 1;
   const nm = i => esc(L ? `${i} · ${L[i].sym} ${L[i].name}` : `Đỉnh ${i}`);
@@ -963,6 +996,7 @@ function mxCross(td) {                                    // trỏ vào ô → s
 $('#tbMxBody').addEventListener('mouseover', e => mxCross(e.target.closest('td')));
 $('#tbMxBody').addEventListener('mouseleave', () => mxCross(null));
 function updateMatrix(s) {
+  if (!TB.mx) return;
   const t = TB.mx, n = st.g.n, cols = s.colors;
   for (const [el, c] of TB.hot) el.classList.remove(c);
   TB.hot = [];
@@ -992,6 +1026,8 @@ function buildHand() {
   tbSec.ht.classList.toggle('tree-mode', !G);
   if (!G) { buildTree(); return; }
   if (TR.ro) { TR.ro.disconnect(); TR.ro = null; }
+  TB.big = n > S.UI.TABLE_MAX_N;
+  if (TB.big) { body.innerHTML = tbBigNote(n); $('#tbHtMeta').textContent = 'không vẽ'; return; }
   /* mỗi dòng = một lần chọn đỉnh, chụp bảng bậc lúc chọn (giống bảng cô chạy tay ở slide 18).
      Vòng đời một dòng: hiện ra (vis) — trượt xuống từ dòng trên khi vòng hạ bậc của lần trước bắt đầu, số chạy
      theo bậc hiện tại của từng dòng code (dòng đầu: theo lúc lập bảng bậc); sáng lên (enter) ở dòng for (i …)
@@ -1274,7 +1310,7 @@ function tbScroll() {                                     // giữ dòng đang x
 }
 function updateTables(i, animate) {
   updateMatrix(st.steps[i]);
-  if (st.algo === 'greedy') updateHandGreedy(i, animate); else updateHandBT(i);
+  if (st.algo === 'greedy') { if (!TB.big) updateHandGreedy(i, animate); } else updateHandBT(i);
   tbScroll();
 }
 
@@ -1285,7 +1321,7 @@ const scrub = $('#pScrub'), speed = $('#pSpeed');
 const setFill = el => { const mx = +el.max || 1; el.style.setProperty('--fill', ((+el.value - +el.min) / (mx - +el.min || 1) * 100) + '%'); };
 
 function computeTrace(seq = 0) {
-  const t = S.trace(st.algo, st.g, 30000, st.lang);
+  const t = S.trace(st.algo, st.g, S.UI.traceLimit(st.g.n), st.lang);
   st.steps = t.steps; st.truncated = t.truncated;
   st.playing = false; st.acc = 0;
   if (st.layers) toggleLayers(false);
@@ -1395,7 +1431,7 @@ resetView();
  * ===================================================================== */
 function loadGraph(g, meta) {
   st.g = g; st.meta = meta;
-  const bt = g.n <= 90 ? S.backtrack(g, null, { budget: 4e5 }) : { aborted: true };
+  const bt = g.n <= S.UI.BT_MAX_N ? S.backtrack(g, null, { budget: S.UI.BT_LOAD_BUDGET }) : { aborted: true };
   if (!bt.aborted && bt.k > 0) { st.best = bt.colors; st.chi = bt.k; st.chiExact = true; }
   else { st.best = S.greedy(g, null).colors; st.chi = meta.chi ?? null; st.chiExact = meta.chi != null; }
   if (meta.chi != null) st.chi = meta.chi;
@@ -1429,12 +1465,12 @@ function computeCompare() {
   const g = st.g;
   const rows = Object.keys(S.ALGOS).map(id => {
     const A = S.ALGOS[id];
-    if (id === 'backtrack' && g.n > 90) return { id, A, skip: true };
+    if (id === 'backtrack' && g.n > S.UI.BT_MAX_N) return { id, A, skip: true };
     let r, reps = 0;
     const t0 = performance.now();
-    do { r = A.run(g, null, { budget: 1e6 }); reps++; } while (performance.now() - t0 < 10 && reps < 300 && !r.aborted);
+    do { r = A.run(g, null, { budget: S.UI.BT_CMP_BUDGET }); reps++; } while (performance.now() - t0 < 10 && reps < 300 && !r.aborted);
     const ms = (performance.now() - t0) / reps;
-    const tr = S.trace(id, g, 6000);
+    const tr = S.trace(id, g, Math.min(6000, S.UI.traceLimit(g.n)));
     return { id, A, k: r.k, aborted: r.aborted, ms, steps: tr.steps.length, trunc: tr.truncated };
   });
   const chi = st.chi;
@@ -1475,15 +1511,14 @@ function computeCompare() {
 })();
 
 /* =====================================================================
- * Kiểm thử — kết quả bộ testcase (testcases/run_tests.js, build.py nhúng results.json)
- * và chạy lại các testcase n ≤ 120 ngay trên trình duyệt bằng cùng testcases/suite.js.
+ * Kiểm thử — kết quả bộ testcase chạy trên máy (testcases/run_tests.js: bộ giải JS + code C++),
+ * build.py nhúng results.json. Trang chỉ hiển thị; testcase nào nạp nhẹ (run_tests.js đo) thì cho xem demo.
  * ===================================================================== */
 const TSD = window.TESTSUITE_DATA || null;
-const TSU = window.TestSuite || null;
-const ts = { group: 'all', sel: null, live: {}, running: false };
+const ts = { group: 'all', sel: null };
 const TS_SRC = { ly_thuyet: 'lý thuyết', de_bai: 'đề bài', vet_can: 'vét cạn', kiem_chung: 'DSatur kiểm chứng', cai_san: 'cài sẵn', can: 'chỉ có cận' };
 const tsRow = id => TSD.rows.find(r => r.id === id);
-const tsMs = ms => ms == null ? '—' : fmtTime(ms);
+const tsMs = ms => ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : fmtTime(ms);
 const tsPill = st => st === 'Đạt' ? '<span class="pill ok">Đạt</span>' : '<span class="pill bad">Không đạt</span>';
 function tsExpect(r) {
   if (r.expErr) return `lỗi “${esc(r.expErr)}”`;
@@ -1494,18 +1529,25 @@ function tsGreedy(r) {
   if (r.greedyK == null) return '—';
   return r.chi != null && r.greedyK > r.chi ? `<span class="over">${r.greedyK} (+${r.greedyK - r.chi})</span>` : `${r.greedyK}`;
 }
-function tsBt(r) {
+function tsBt(r) {                                        // quay lui: C++ chạy mọi n; JS chỉ khi n ≤ 90
+  if (r.cppBtStatus === 'xong') return `${r.cppBtK}`;
+  if (r.cppBtStatus === 'quá thời gian') return `<span class="pill na" title="C++ chưa xong sau ${TSD.meta.cpp ? TSD.meta.cpp.timeoutS : '?'} s">quá giờ</span>`;
   if (r.btStatus === 'xong') return `${r.btK}`;
   return r.btStatus ? `<span class="pill na">${esc(r.btStatus)}</span>` : '—';
 }
+function tsDemoTag(r) {
+  return r.demo ? '<span class="live">▶ xem demo</span>' : `<span class="live off" title="${esc(r.demoWhy)}">chỉ kết quả</span>`;
+}
 function tsRowHtml(r) {
-  const live = ts.live[r.id];
-  const res = tsPill(r.status) + (live ? `<span class="live${live.status === 'Đạt' ? '' : ' bad'}" title="Kết quả chạy lại trên trình duyệt này">${live.status === 'Đạt' ? '✓' : '✗'} web</span>` : '');
+  const res = tsPill(r.status) + tsDemoTag(r);
   const head = `<td><span class="tid">${esc(r.id)}<small title="${esc(r.desc)}">${esc(r.desc)}</small></span></td>`;
-  if (r.errors) return `<tr data-ts="${r.id}" tabindex="0" class="${ts.sel === r.id ? 'sel' : ''}">${head}<td class="num">—</td><td>${tsExpect(r)}</td>` +
+  const cls = `${ts.sel === r.id ? 'sel' : ''}`;
+  if (r.errors) return `<tr data-ts="${r.id}" tabindex="0" class="${cls}">${head}<td class="num">—</td><td>${tsExpect(r)}</td>` +
     `<td colspan="3" class="msg">✕ ${esc(r.msg)}</td><td class="res">${res}</td></tr>`;
-  return `<tr data-ts="${r.id}" tabindex="0" class="${ts.sel === r.id ? 'sel' : ''}">${head}<td class="num">${r.n} · ${r.m}</td><td>${tsExpect(r)}</td>` +
-    `<td class="num">${tsGreedy(r)}</td><td class="num">${tsBt(r)}</td><td class="num">${tsMs(r.greedyMs)} / ${tsMs(r.btMs)}</td><td class="res">${res}</td></tr>`;
+  return `<tr data-ts="${r.id}" tabindex="0" class="${cls}">${head}<td class="num">${r.n} · ${r.m}</td><td>${tsExpect(r)}</td>` +
+    `<td class="num">${tsGreedy(r)}</td><td class="num">${tsBt(r)}</td>` +
+    `<td class="num">${r.cppGreedyMs != null ? `${tsMs(r.cppGreedyMs)} / ${tsMs(r.cppBtMs)}` : '<span title="input dạng thô, không chạy C++">JS</span>'}</td>` +
+    `<td class="res">${res}</td></tr>`;
 }
 function tsRender() {
   const groups = Object.entries(TSD.groups).filter(([g]) => ts.group === 'all' || ts.group === g);
@@ -1519,9 +1561,9 @@ function tsTiles() {
   const M = TSD.meta;
   const tile = (g, name, pass, total, extra) =>
     `<button class="ts-tile" type="button" data-g="${g}"><span>${esc(name)}</span><b class="${pass < total ? 'bad' : ''}">${pass}/${total}</b><small>${extra}</small></button>`;
-  $('#tsTiles').innerHTML = tile('all', 'Tất cả', M.pass, M.total, `${M.seconds} s bằng Node`) +
+  $('#tsTiles').innerHTML = tile('all', 'Tất cả', M.pass, M.total, `${TSD.rows.filter(r => r.demo).length} xem demo`) +
     TSD.summary.map(s => tile(s.group, s.name.split(' / ')[0], s.pass, s.total,
-      isFinite(s.nMin) ? `n = ${s.nMin === s.nMax ? s.nMin : `${s.nMin}–${s.nMax}`}` : 'bắt lỗi input')).join('');
+      s.nMin != null ? `n = ${s.nMin === s.nMax ? s.nMin : `${s.nMin}–${s.nMax}`}` : 'bắt lỗi input')).join('');
 }
 async function tsInput(r) {
   const t = TSD.inputs[r.id];
@@ -1530,86 +1572,60 @@ async function tsInput(r) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.text();
 }
-function tsDetail(r, text) {
-  const live = ts.live[r.id];
+function tsDetail(r, text, loaded) {
+  const C = TSD.meta.cpp;
   const dd = (k, v) => v == null || v === '' ? '' : `<dt>${k}</dt><dd>${v}</dd>`;
-  const sys = r.errors ? `${r.errors} lỗi: ${esc(r.msg)}`
-    : `tham lam ${r.greedyK} màu (${tsMs(r.greedyMs)})` + (r.btStatus === 'xong' ? ` · quay lui ${r.btK} màu, ${r.btCalls.toLocaleString('vi-VN')} lời gọi (${tsMs(r.btMs)})` : r.btStatus ? ` · quay lui: ${esc(r.btStatus)}` : '');
-  const liveTxt = live ? (live.errors ? `${live.errors} lỗi` : `tham lam ${live.greedyK} (${tsMs(live.greedyMs)})` +
-    (live.btStatus === 'xong' ? ` · quay lui ${live.btK} (${tsMs(live.btMs)})` : '')) + ` → ${live.status}` : null;
-  const canLoad = r.limit === 'web' && !r.errors;
+  const js = r.errors ? `${r.errors} lỗi: ${esc(r.msg)}`
+    : `tham lam ${r.greedyK} màu (${tsMs(r.greedyMs)})` + (r.btStatus === 'xong' ? ` · quay lui ${r.btK} màu, ${r.btCalls.toLocaleString('vi-VN')} lời gọi (${tsMs(r.btMs)})`
+      : r.btStatus ? ` · quay lui: ${esc(r.btStatus)}${r.btStatus === 'bỏ qua' ? ` (n > ${TSD.meta.btMaxN})` : ''}` : '');
+  const cpp = r.cppGreedyK == null ? null : `tham lam ${r.cppGreedyK} màu (${tsMs(r.cppGreedyMs)}) · quay lui ` +
+    (r.cppBtStatus === 'xong' ? `${r.cppBtK} màu (${tsMs(r.cppBtMs)})` : r.cppBtStatus === 'quá thời gian' ? `chưa xong sau ${C.timeoutS} s` : esc(r.cppBtStatus));
   $('#tsDetail').innerHTML = `<h3>${esc(r.id)} ${tsPill(r.status)}</h3><p>${esc(r.desc)}</p><dl>` +
-    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.fmt === 'dimacs' ? 'DIMACS' : 'danh sách cạnh'}`) +
+    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.fmt === 'dimacs' ? 'DIMACS' : r.norm ? 'chuẩn hoá cho C++' : 'danh sách cạnh (thô)'}`) +
     dd('Mong đợi', tsExpect(r) + (r.src && !r.expErr ? ` <small>(${TS_SRC[r.src] || esc(r.src)})</small>` : '')) +
-    dd('Node', sys) + dd('Trình duyệt', liveTxt) + dd('Trace', r.trace && r.trace !== '—' ? esc(r.trace) : null) +
+    dd('JS (web)', js) + dd('C++', cpp) + dd('Trace', r.trace && r.trace !== '—' ? esc(r.trace) : null) +
+    dd('Demo', r.demo ? (loaded ? 'đã nạp vào khung đồ thị' : 'có') + (r.demoWhy ? ` · ${esc(r.demoWhy)}` : '') : `không — ${esc(r.demoWhy)}`) +
     dd('Ghi chú', r.notes.length ? esc(r.notes.join(' · ')) : null) +
     (r.fails.length ? dd('Lỗi', `<span class="fails">${esc(r.fails.join(' · '))}</span>`) : '') + '</dl>' +
-    (text != null && !canLoad && r.limit === 'web' ? `<pre>${esc(text.length > 600 ? text.slice(0, 600) + '\n…' : text) || '(file rỗng)'}</pre>` : '') +
-    (r.limit === 'node' ? '<p>n > 120 vượt giới hạn hiển thị 3D, testcase này chỉ chạy bằng Node.</p>' : '') +
-    `<div class="btns">${canLoad ? '<button class="btn small" type="button" data-ts-go="demo">Xem từng bước ở Demo</button>' : ''}</div>`;
+    (text != null && r.errors ? `<pre>${esc(text.length > 600 ? text.slice(0, 600) + '\n…' : text) || '(file rỗng)'}</pre>` : '') +
+    `<div class="btns">${r.demo && loaded ? '<button class="btn small" type="button" data-ts-go="demo">Xem từng bước ở Demo</button>' : ''}</div>`;
 }
 async function tsSelect(id) {
   const r = tsRow(id);
   if (!r) return;
   ts.sel = id;
   $$('#tsBody tr[data-ts]').forEach(tr => tr.classList.toggle('sel', tr.dataset.ts === id));
-  tsDetail(r, null);
-  if (r.limit !== 'web') return;
+  tsDetail(r, null, false);
+  if (!r.demo && !r.errors) return;                      // nạp nặng: chỉ hiện kết quả, không đụng tới trang
   let text;
-  try { text = await tsInput(r); } catch (e) { tsDetail(r, null); $('#tsDetail .btns').insertAdjacentHTML('beforebegin', `<p class="fails">Không tải được file (${esc(e.message)}). Mở trang qua web server để xem.</p>`); return; }
+  try { text = await tsInput(r); } catch (e) {
+    $('#tsDetail .btns').insertAdjacentHTML('beforebegin', `<p class="fails">Không tải được file (${esc(e.message)}). Mở trang qua web server để xem.</p>`); return;
+  }
   if (ts.sel !== id) return;
-  tsDetail(r, text);
-  if (r.errors) return;
+  if (r.errors) { tsDetail(r, text, false); return; }
   const pr = S.parseInput(text);
   if (pr.graph) loadGraph(pr.graph, { id: `tc:${r.id}`, name: `Testcase ${r.id}`, chi: r.chi, desc: r.desc });
-}
-async function tsRunAll() {
-  if (ts.running || !TSU) return;
-  ts.running = true;
-  const btn = $('#tsRun'), msg = $('#tsRunMsg');
-  btn.disabled = true;
-  const rows = TSD.rows.filter(r => r.limit === 'web');
-  let pass = 0, skipped = 0;
-  const t0 = performance.now();
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    msg.textContent = `Đang chạy ${i + 1}/${rows.length}: ${r.id}…`;
-    await new Promise(res => setTimeout(res, 0));           // nhường trình duyệt vẽ lại giữa các testcase
-    let text;
-    try { text = await tsInput(r); } catch (e) { skipped++; continue; }
-    const tc = { id: r.id, group: r.group, limit: r.limit, chi: r.chi, err: r.expErr, errCount: r.expErrCount, warn: r.expWarn };
-    const live = TSU.runCase(S, tc, text, { minMs: 5 });
-    ts.live[r.id] = live;
-    if (live.status === 'Đạt') pass++;
-    const tr = $(`#tsBody tr[data-ts="${r.id}"]`);
-    if (tr) tr.outerHTML = tsRowHtml(r);
-  }
-  const sec = ((performance.now() - t0) / 1000).toFixed(1);
-  const done = rows.length - skipped;
-  msg.innerHTML = `<span class="${pass === done ? 'ok' : 'e'}">Trình duyệt: ${pass}/${done} testcase đạt (${sec} s)</span>` +
-    (skipped ? ` · ${skipped} file không tải được (cần mở qua web server)` : '') + ' · nhóm Dữ liệu lớn chỉ chạy bằng Node';
-  btn.disabled = false; ts.running = false;
-  if (ts.sel) tsSelect(ts.sel);
+  tsDetail(r, null, true);
 }
 (function initTests() {
-  if (!TSD) {
-    $('#tsSub').textContent = 'Chưa có kết quả: chạy "node testcases/run_tests.js" rồi "python build.py".';
-    $('#tsRun').hidden = true;
-    return;
-  }
-  const M = TSD.meta, day = new Date(M.date).toLocaleDateString('vi-VN');
+  if (!TSD) { $('#tsSub').textContent = 'Chưa có kết quả: chạy "node testcases/run_tests.js" rồi "python build.py".'; return; }
+  const M = TSD.meta, C = M.cpp, day = new Date(M.date).toLocaleDateString('vi-VN');
   $('#tsTitle').textContent = `${M.pass}/${M.total} testcase đạt`;
-  $('#tsSub').textContent = `${M.total} testcase chia ${TSD.summary.length} nhóm, đáp án lấy từ lý thuyết, vét cạn hoặc thuật toán kiểm chứng độc lập. ` +
-    `Chạy bằng Node ${M.node} ngày ${day} trên ${M.cpu}. Bấm một dòng để nạp đồ thị đó vào khung đồ thị.`;
+  $('#tsSub').textContent = `${M.total} testcase, ${TSD.summary.length} nhóm, đáp án từ lý thuyết, vét cạn hoặc thuật toán kiểm chứng độc lập. ` +
+    `Chạy trên máy ngày ${day} bằng JS của trang (Node ${M.node}) và code C++` + (C ? ` (${C.compiler.split(' (')[0]} ${C.flags})` : '') +
+    '; trang chỉ hiển thị kết quả, bấm dòng có "▶ xem demo" để nạp đồ thị.';
+  $('#tsNote').innerHTML = C
+    ? `<b>Khi chạy testcase, code C++ chỉ in kết quả cuối cùng, không in log từng bước</b> (cpp/tham_lam.cpp, cpp/quay_lui.cpp — cùng thuật toán với code trên panel). ` +
+      `Quay lui C++ chạy cho mọi n, dừng sau ${C.timeoutS} s; thời gian C++ đo từ ngoài tiến trình, đã gồm ≈ ${C.startMs} ms khởi động và đọc input. ` +
+      `Trang chỉ chạy quay lui khi n ≤ ${M.btMaxN}. Testcase nạp quá ${M.webMaxMs} ms tính toán thì chỉ xem kết quả, tránh làm trang đứng.`
+    : 'Máy chạy testcase không có g++ nên chưa có kết quả C++.';
   tsTiles(); tsRender();
   $('#tsTiles').addEventListener('click', e => { const b = e.target.closest('.ts-tile'); if (b) { ts.group = b.dataset.g; tsRender(); } });
   const pick = e => { const tr = e.target.closest('tr[data-ts]'); if (tr) tsSelect(tr.dataset.ts); };
   $('#tsBody').addEventListener('click', pick);
   $('#tsBody').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); } });
   $('#tsDetail').addEventListener('click', e => { if (e.target.closest('[data-ts-go="demo"]')) scrollToEl($('#demo')); });
-  $('#tsRun').addEventListener('click', tsRunAll);
-  $('#tsRunMsg').textContent = `${TSD.rows.filter(r => r.limit === 'web').length} testcase có n ≤ 120 chạy lại được ngay trên trình duyệt này.`;
-  tsDetail(tsRow('khoang_chua') || TSD.rows[0], null);
+  tsDetail(tsRow('khoang_chua') || TSD.rows[0], null, false);
 })();
 
 /* =====================================================================
@@ -2050,6 +2066,12 @@ function buildPairs(g) {
   if (!pairBox) return;
   const n = g.n, L = g.labels, nm = i => esc(L ? L[i].sym : String(i));
   EA.g = g; edgeOrder(g); EA.on = false;
+  if (n > S.UI.TABLE_MAX_N) {                             // n² ô quá lớn: chỉ ghi chú, ticker vẫn chạy theo cạnh
+    pairBox.querySelector('.adj-wrap').innerHTML = `<p class="pairs-big">n = ${n}: ma trận ${n} × ${n} quá lớn để vẽ.</p>`;
+    pairEls = []; pairState = []; pairOrd = []; pairCell = null; pairCapKey = '';
+    pairBox.querySelector('.pairs-n').textContent = `· ${g.edges.length} cặp`;
+    return;
+  }
   const eAt = new Int32Array(n * n).fill(-1);
   g.edges.forEach(([a, b], e) => { eAt[a * n + b] = e; eAt[b * n + a] = e; });
   let h = '<table class="adj"><tr><th></th>';

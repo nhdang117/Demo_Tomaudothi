@@ -1,5 +1,3 @@
-# dinh_ke_tat_ca — Một đỉnh kề mọi đỉnh (như phản vật chất) + K₄,₄ → 2 + 1
-# χ mong đợi = 3 (nguồn: ly_thuyet)
 9
 0 4
 0 5
