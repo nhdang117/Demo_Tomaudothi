@@ -351,8 +351,11 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ht tr:not(.picked) td.hv > span,.ht tr:not(.colored) td.hc > span{display:none}
 .ht tr:not(.picked) td.hv::before,.ht tr:not(.colored) td.hc::before{content:"?";color:var(--ink-faint)}
 .ht.tiny td,.ht.tiny th{font-size:8px}
-/* dòng đang chạy số (chưa tới lúc chọn đỉnh): viền mảnh; trượt xuống từ dòng trên khi hiện ra, ô đổi giá trị thì nháy */
+/* dòng đang chạy số (chưa tới lúc chọn đỉnh): viền mảnh; trượt xuống từ dòng trên khi hiện ra, ô đổi giá trị thì nháy.
+   Chưa vào vòng lặp của dòng đó (.pend): mờ và ẩn số lần ở cột đầu */
 .ht tr.live:not(.cur) td:not(.hv):not(.hc){background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.ht tr.pend > *{opacity:.4}
+.ht tr.pend > th:first-child{color:transparent}
 .ht tr.slide > *{animation:htSlide .5s cubic-bezier(.2,.8,.2,1)}
 .ht td.chg{animation:htChg .6s ease-out}
 @keyframes htSlide{from{transform:translateY(calc(-100% - 2px));opacity:.3}}
@@ -3078,7 +3081,7 @@ function buildHand() {
     h += `<td class="hv"><span>${r.v}</span></td><td class="hc"><span>${r.c >= 0 ? swatch(r.c) + r.c : ''}</span></td></tr>`;
   });
   body.innerHTML = '<p class="tb-key">Mỗi dòng là bảng bậc lúc chọn đỉnh. Ô đậm = bậc cao nhất được chọn, khung = hòa bậc ' +
-    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô. Dòng viền mảnh = bậc đang hạ theo từng dòng code; dòng sáng = lần đang chạy.</p>' + h + '</table>';
+    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô. Dòng mờ = bậc đang hạ theo từng dòng code, chưa tới lần đó; dòng sáng = lần đang chạy.</p>' + h + '</table>';
   TB.trs = [...body.querySelectorAll('tr')].slice(1);
   TB.rowHtml = TB.trs.map(tr => tr.innerHTML);
 }
@@ -3092,6 +3095,7 @@ function updateHandGreedy(i, animate) {
     if (!vis) return;
     if (i >= r.enter) cur = k;
     if (i < r.at) live = k;
+    tr.classList.toggle('pend', i < r.enter);             // chưa vào vòng lặp của dòng này: mờ, chưa có số lần
     tr.classList.toggle('picked', i >= r.at);
     tr.classList.toggle('colored', i >= r.cAt);
   });

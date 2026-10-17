@@ -1019,7 +1019,7 @@ function buildHand() {
     h += `<td class="hv"><span>${r.v}</span></td><td class="hc"><span>${r.c >= 0 ? swatch(r.c) + r.c : ''}</span></td></tr>`;
   });
   body.innerHTML = '<p class="tb-key">Mỗi dòng là bảng bậc lúc chọn đỉnh. Ô đậm = bậc cao nhất được chọn, khung = hòa bậc ' +
-    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô. Dòng viền mảnh = bậc đang hạ theo từng dòng code; dòng sáng = lần đang chạy.</p>' + h + '</table>';
+    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô. Dòng mờ = bậc đang hạ theo từng dòng code, chưa tới lần đó; dòng sáng = lần đang chạy.</p>' + h + '</table>';
   TB.trs = [...body.querySelectorAll('tr')].slice(1);
   TB.rowHtml = TB.trs.map(tr => tr.innerHTML);
 }
@@ -1033,6 +1033,7 @@ function updateHandGreedy(i, animate) {
     if (!vis) return;
     if (i >= r.enter) cur = k;
     if (i < r.at) live = k;
+    tr.classList.toggle('pend', i < r.enter);             // chưa vào vòng lặp của dòng này: mờ, chưa có số lần
     tr.classList.toggle('picked', i >= r.at);
     tr.classList.toggle('colored', i >= r.cAt);
   });
