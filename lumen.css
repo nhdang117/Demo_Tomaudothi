@@ -144,3 +144,18 @@ textarea:focus{border-color:var(--holo);box-shadow:0 0 0 3px rgba(91,91,240,.16)
 .mx th,.mx td,.ht th,.ht td{border-radius:4px}
 .ht td{background:rgba(255,255,255,.55)}
 .mx th.cur,.mx tr.cur > th:first-child,.ht tr.cur > th:first-child,.ht tr.picked td.sel{background:var(--grad)}
+
+/* thanh cuộn mảnh, bo tròn, không mũi tên; đậm dần khi rê chuột vào vùng cuộn.
+   Chrome/Edge 121+ bỏ qua ::-webkit-scrollbar nếu có scrollbar-color → chỉ đặt cho Firefox. */
+::-webkit-scrollbar{width:6px;height:6px}
+html::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-track{margin:8px}
+::-webkit-scrollbar-thumb{background:rgba(91,91,240,.18);border-radius:999px}
+:hover::-webkit-scrollbar-thumb{background:rgba(91,91,240,.34)}
+::-webkit-scrollbar-thumb:hover{background:rgba(91,91,240,.6)}
+::-webkit-scrollbar-thumb:active{background:#7c4dff}
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:rgba(91,91,240,.34) transparent}
+}
