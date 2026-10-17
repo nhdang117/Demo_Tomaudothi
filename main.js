@@ -1074,15 +1074,34 @@ function buildTree() {
     }
     focus[i] = f.id;
   });
-  let leaf = 0;                                          // xếp lá lần lượt, nút trong nằm giữa các con
-  (function walk(nd) {
-    if (!nd.kids.length) { nd.x = leaf++; return; }
-    nd.kids.forEach(walk);
-    nd.x = (nd.kids[0].x + nd.kids[nd.kids.length - 1].x) / 2;
+  /* xếp gọn kiểu Reingold–Tilford: mỗi cây con mang đường viền trái/phải theo từng tầng; anh em đặt sát nhau
+     sao cho ở mọi tầng chung cách nhau ≥ 1 ô, cha nằm giữa con đầu và con cuối. Nhờ vậy nhánh sâu bên phải
+     chui được xuống dưới các lá đỏ bên trái thay vì mỗi lá chiếm riêng một cột (cách cũ làm cây dàn ngang). */
+  (function lay(nd) {                                    // trả về { l, r }: viền theo tầng, tính từ nd (nd ở 0)
+    if (!nd.kids.length) return { l: [0], r: [0] };
+    const cs = nd.kids.map(lay), off = [], L = [], R = [];
+    cs.forEach((c, k) => {
+      let o = k ? -Infinity : 0;
+      for (let d = 0; d < c.l.length && d < R.length; d++) o = Math.max(o, R[d] - c.l[d] + 1);
+      if (o === -Infinity) o = off[k - 1] + 1;           // không có tầng chung (không xảy ra vì mọi con cùng tầng) — phòng hờ
+      off.push(o);
+      for (let d = 0; d < c.l.length; d++) {
+        L[d] = d < L.length ? Math.min(L[d], c.l[d] + o) : c.l[d] + o;
+        R[d] = d < R.length ? Math.max(R[d], c.r[d] + o) : c.r[d] + o;
+      }
+    });
+    const mid = (off[0] + off[off.length - 1]) / 2;
+    nd.kids.forEach((kd, k) => { kd.dx = off[k] - mid; });
+    return { l: [0, ...L.map(v => v - mid)], r: [0, ...R.map(v => v - mid)] };
   })(root);
+  let x0 = 0, x1 = 0;
+  (function place(nd, x) {
+    nd.x = x; x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+    for (const kd of nd.kids) place(kd, x + kd.dx);
+  })(root, 0);
   const XU = 32, YU = 50, NH = 20, LX = 44, top = 18;    // LX: lề trái cho nhãn tầng
-  const px = nd => LX + nd.x * XU + XU / 2, py = nd => top + NH / 2 + nd.level * YU;
-  TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + n * YU + 12;
+  const px = nd => LX + (nd.x - x0) * XU + XU / 2, py = nd => top + NH / 2 + nd.level * YU;
+  TR.W = LX + (x1 - x0 + 1) * XU + 8; TR.H = top + NH + n * YU + 12;
 
   const body = $('#tbHtBody');
   body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh thuTu[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
