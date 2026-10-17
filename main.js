@@ -899,7 +899,7 @@ function updateHudColors(s) {
 /* ---------------- Ma trận kề + bảng tính tay ----------------
    Đủ chỗ: 2 bảng mở sẵn thành một cột cạnh đồ thị, đồ thị lùi sang phải (.tb-dock).
    Thiếu chỗ: thu thành 2 nút ở góc đồ thị, bấm để mở đè lên đồ thị. */
-const TB = { wide: null, open: { mx: false, ht: false }, mx: null, hot: [], headC: null, cross: null, rows: [], trs: [], order: null };
+const TB = { wide: null, open: { mx: false, ht: false }, btWide: false, mx: null, hot: [], headC: null, cross: null, rows: [], trs: [], order: null };
 const tbLab = $('.lab'), tbSec = { mx: $('#tbMx'), ht: $('#tbHt') };
 const tbCell = n => n <= 16 ? 20 : n <= 30 ? 16 : 12;
 const swatch = c => `<span class="sw" style="--c:${palHex(c)}"></span>`;
@@ -916,6 +916,12 @@ function tbApply() {
     $('.tb-head', tbSec[k]).setAttribute('aria-expanded', String(TB.open[k]));
   }
   tbLab.classList.toggle('tb-dock', !!TB.wide && (TB.open.mx || TB.open.ht));
+  if (!TB.open.ht || st.algo === 'greedy') TB.btWide = false;
+  const btw = TB.btWide && !!TB.wide;                     // cây mở rộng: giãn sang phải, đè lên khung 3D
+  if (btw !== tbLab.classList.contains('bt-wide')) TR.fresh = true;   // khung cây đổi cỡ → căn lại cây
+  tbLab.classList.toggle('bt-wide', btw);
+  const exp = $('.bt-exp', tbSec.ht);
+  if (exp) { exp.textContent = btw ? '✕ Thu lại' : '⛶ Mở rộng'; exp.setAttribute('aria-pressed', String(btw)); }
   AN.tick = 0;                                            // bảng đổi kích thước → chú thích nổi né lại
   if (st.steps.length) requestAnimationFrame(tbScroll);
 }
@@ -1082,7 +1088,8 @@ function buildTree() {
   body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh thuTu[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
     '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
-    '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button></div>';
+    '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button>' +
+    '<button type="button" class="bt-exp" aria-pressed="false" title="Mở rộng cây đè lên khung 3D (Esc để thu lại)">⛶ Mở rộng</button></div>';
   const stage = $('.bt-stage', body), svg = $('svg', stage), g = svgEl('g', { class: 'bt-view' }, svg);
   const rowsG = svgEl('g', {}, g), edgeG = svgEl('g', {}, g), nodeG = svgEl('g', {}, g);
   for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh ord[i] = order[i-1]
@@ -1107,7 +1114,8 @@ function buildTree() {
   }
   Object.assign(TR, { nodes, focus, stage, g, fresh: true });
   $('.bt-fit', stage).addEventListener('click', () => trFit(true));
-  stage.addEventListener('dblclick', () => trFit(true));
+  $('.bt-exp', stage).addEventListener('click', () => { TB.btWide = !TB.btWide; tbApply(); });
+  stage.addEventListener('dblclick', e => { if (!e.target.closest('button')) trFit(true); });
   stage.addEventListener('wheel', e => {                 // lăn chuột: phóng to/thu nhỏ quanh con trỏ
     e.preventDefault();
     const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, v = TR.v;
@@ -1117,7 +1125,7 @@ function buildTree() {
   }, { passive: false });
   let drag = null;                                       // kéo để di chuyển (chuột lẫn cảm ứng)
   stage.addEventListener('pointerdown', e => {
-    if (e.target.closest('.bt-fit')) return;
+    if (e.target.closest('button')) return;
     drag = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); stage.classList.add('dragging');
   });
   stage.addEventListener('pointermove', e => {
@@ -1129,6 +1137,7 @@ function buildTree() {
   stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
   if (TR.ro) TR.ro.disconnect();                         // khung mở/đổi cỡ → căn lại lần đầu, sau đó chỉ bám nút đang xét
   TR.sw = TR.sh = 0;
+  tbApply();                                             // nhãn nút Mở rộng theo trạng thái hiện tại
   TR.ro = new ResizeObserver(([e]) => {                 // nhớ cỡ khung để mỗi bước không phải đo lại (đo = ép tính layout)
     TR.sw = e.contentRect.width; TR.sh = e.contentRect.height;
     if (TR.sw && TR.fresh) trInit();
@@ -1507,6 +1516,7 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ' && !(t.tagName === 'BUTTON')) { e.preventDefault(); play(!st.playing); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); play(false); setStep(st.idx + 1, true); }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); play(false); setStep(st.idx - 1, true); }
+  else if (e.key === 'Escape' && TB.btWide) { TB.btWide = false; tbApply(); }   // thu cây đang mở rộng
   else if (e.key === 'Escape' && !TB.wide && (TB.open.mx || TB.open.ht)) { TB.open.mx = TB.open.ht = false; tbApply(); }   // đóng bảng đang đè lên đồ thị
 });
 

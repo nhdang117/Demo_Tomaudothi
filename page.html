@@ -363,6 +363,14 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .bt-fit{position:absolute;right:8px;bottom:8px;z-index:1;font:500 11px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);
   background:var(--plate-solid);color:var(--ink-dim);cursor:pointer}
 .bt-fit:hover{color:var(--holo);border-color:var(--holo)}
+.bt-exp{position:absolute;right:8px;top:8px;z-index:1;font:500 11px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);
+  background:var(--plate-solid);color:var(--ink-dim);cursor:pointer}
+.bt-exp:hover,.bt-exp[aria-pressed="true"]{color:var(--holo);border-color:var(--holo)}
+.lab:not(.tb-dock) .bt-exp{display:none}                             /* chỉ mở rộng khi bảng thành cột cạnh đồ thị */
+/* cây mở rộng: cột bảng giãn tới sát cột HUD/Output, đè lên khung 3D; ma trận giữ bề rộng cũ; chừa đáy cho hàng công cụ */
+.lab.bt-wide .lab-tables{width:calc(100% - var(--side) - 20px);max-width:none;margin-bottom:48px}
+.lab.bt-wide .tb-sec.open:not(.tree-mode){width:var(--tbw,380px)}
+.lab.bt-wide .lab-right .tools{margin-left:0}
 .lab.tb-dock .tb-sec.tree-mode.open{flex:1 1 0}                       /* cột bảng: cây chiếm hết phần còn lại */
 .lab.tb-dock .tb-sec.tree-mode .tb-body{flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden}
 .lab.tb-dock .tb-sec.tree-mode .bt-stage{flex:1 1 auto;height:auto;min-height:200px}
