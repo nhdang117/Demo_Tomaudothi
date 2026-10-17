@@ -1534,6 +1534,10 @@ const Solver = (() => {
     17: 'c++;', 19: 'soMau++;', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
     22: '// hạ bậc', 31: 'cout << "So mau',
   };
+  const GREEDY_CPP_OUT = {
+    select: 'cout << "Lan "', conflict: '" trung', newcolor: '"  mau moi "', assign: 'cout << "  mau["',
+    dec: 'cout << "  bac["', done: 'cout << "So mau',
+  };
 
   const BT_CPP = () => [
     '#include <iostream>',
@@ -1616,6 +1620,26 @@ const Solver = (() => {
     15: 'if (soMauMoi >= soMauMin)', 16: 'if (trungMau(v, c))', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
     26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
   };
+  const BT_CPP_OUT = {
+    select: 'cout << "B"', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
+    found: '"  LG moi', backtrack: '"  go mau["', init: 'cout << "thuTu:"', done: 'cout << "So mau',
+  };
+
+  /** Loại bước → dòng C++ chứa lệnh cout in ra `out` của bước đó, dựng từ bảng *_CPP_OUT. */
+  function cppOutMap(cpp, at) {
+    const map = {};
+    for (const k in at) {
+      const j = cpp.findIndex(t => t.includes(at[k]));
+      if (j < 0) throw new Error('cppOutMap: không thấy "' + at[k] + '"');
+      map[k] = j;
+    }
+    return map;
+  }
+  /** Dòng C++ tô sáng của một bước: bước có in → đúng dòng cout sinh ra dòng log đó (để panel code và
+      Output C++ khớp nhau); bước không in → dòng C++ tương ứng với dòng mã giả. */
+  function cppLineOf(lineMap, outMap) {
+    return s => (s.out != null && outMap[s.type] != null ? outMap[s.type] : lineMap[s.line]) ?? -1;
+  }
 
   /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
   function cppLineMap(cpp, at) {
@@ -1630,11 +1654,11 @@ const Solver = (() => {
 
   const ALGOS = {
     greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
-                cpp: () => GREEDY_CPP(), cppLine: cppLineMap(GREEDY_CPP(), GREEDY_CPP_AT),
+                cpp: () => GREEDY_CPP(), cppLine: cppLineOf(cppLineMap(GREEDY_CPP(), GREEDY_CPP_AT), cppOutMap(GREEDY_CPP(), GREEDY_CPP_OUT)),
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
                 exact: false, cx: 'O(n² + k·m)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), cpp: () => BT_CPP(), cppLine: cppLineMap(BT_CPP(), BT_CPP_AT), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
+                code: () => BT_CODE(), cpp: () => BT_CPP(), cppLine: cppLineOf(cppLineMap(BT_CPP(), BT_CPP_AT), cppOutMap(BT_CPP(), BT_CPP_OUT)), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
   };
 
   /** Chạy thuật toán có ghi trace. */
@@ -2496,7 +2520,7 @@ algoSel.addEventListener('change', () => {
 const langSw = $('#langSw');
 st.lang = 'pseudo';
 try { if (localStorage.getItem('cc-lang') === 'cpp') st.lang = 'cpp'; } catch (e) { /* không có storage: giữ mã giả */ }
-const codeLine = s => st.lang === 'cpp' ? (S.ALGOS[st.algo].cppLine[s.line] ?? -1) : s.line;
+const codeLine = s => st.lang === 'cpp' ? S.ALGOS[st.algo].cppLine(s) : s.line;
 langSw.addEventListener('click', () => {
   st.lang = st.lang === 'cpp' ? 'pseudo' : 'cpp';
   try { localStorage.setItem('cc-lang', st.lang); } catch (e) { /* bỏ qua */ }
@@ -2589,7 +2613,7 @@ function updateLog(i) {
   more.textContent = `… phần in từ ${TL.from} bước trước không hiện`;
   L.querySelector('.cur')?.classList.remove('cur');
   const last = L.lastElementChild;
-  last?.classList.add('cur');
+  if (last && +last.dataset.i === i) last.classList.add('cur');   // chỉ sáng khi chính bước này in ra dòng đó
   if (last) {                                              // đệ quy sâu → dòng thụt nhiều: cuộn ngang để thấy dòng mới nhất
     const lead = st.steps[+last.dataset.i].out.match(/^ */)[0].length;
     TL.cw = TL.cw || (() => { const c = document.createElement('canvas').getContext('2d'); c.font = getComputedStyle(L).font; return c.measureText('0').width; })();

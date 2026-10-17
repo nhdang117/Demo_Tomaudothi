@@ -211,5 +211,23 @@ console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so 
   }
 }
 
+console.log('9) Panel C++ tô sáng đúng dòng cout sinh ra dòng log của bước');
+{
+  const graphs = S.PRESETS.map(p => p.build());
+  for (let seed = 1; seed <= 20; seed++) graphs.push(S.randomGraph(1 + seed % 12, [0.2, 0.4, 0.7][seed % 3], seed));
+  for (const id of Object.keys(S.ALGOS)) {
+    const A = S.ALGOS[id], cpp = A.cpp();
+    let bad = 0, ex = '';
+    for (const g of graphs) for (const s of S.trace(id, g, 1e5).steps) {
+      const ln = A.cppLine(s);
+      if (ln < 0 || ln >= cpp.length) { bad++; ex = ex || `${s.type}: không có dòng C++`; continue; }
+      if (s.out == null) continue;
+      const head = s.out.split('\n')[0], words = head.match(/[A-Za-z]{2,}/g) || [];   // chữ của dòng log phải nằm trong lệnh cout được tô
+      if (!cpp[ln].includes('cout') || !words.every(w => cpp[ln].includes(w))) { bad++; ex = ex || `${s.type} "${head}" ↔ ${cpp[ln].trim()}`; }
+    }
+    check(`${id}: mọi bước có in đều tô dòng cout tương ứng`, bad === 0, `${bad} bước lệch, vd ${ex}`);
+  }
+}
+
 console.log(`\nKết quả: ${pass} đạt, ${fail} không đạt`);
 process.exit(fail ? 1 : 0);

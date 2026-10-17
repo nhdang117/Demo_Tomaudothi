@@ -654,7 +654,7 @@ algoSel.addEventListener('change', () => {
 const langSw = $('#langSw');
 st.lang = 'pseudo';
 try { if (localStorage.getItem('cc-lang') === 'cpp') st.lang = 'cpp'; } catch (e) { /* không có storage: giữ mã giả */ }
-const codeLine = s => st.lang === 'cpp' ? (S.ALGOS[st.algo].cppLine[s.line] ?? -1) : s.line;
+const codeLine = s => st.lang === 'cpp' ? S.ALGOS[st.algo].cppLine(s) : s.line;
 langSw.addEventListener('click', () => {
   st.lang = st.lang === 'cpp' ? 'pseudo' : 'cpp';
   try { localStorage.setItem('cc-lang', st.lang); } catch (e) { /* bỏ qua */ }
@@ -747,7 +747,7 @@ function updateLog(i) {
   more.textContent = `… phần in từ ${TL.from} bước trước không hiện`;
   L.querySelector('.cur')?.classList.remove('cur');
   const last = L.lastElementChild;
-  last?.classList.add('cur');
+  if (last && +last.dataset.i === i) last.classList.add('cur');   // chỉ sáng khi chính bước này in ra dòng đó
   if (last) {                                              // đệ quy sâu → dòng thụt nhiều: cuộn ngang để thấy dòng mới nhất
     const lead = st.steps[+last.dataset.i].out.match(/^ */)[0].length;
     TL.cw = TL.cw || (() => { const c = document.createElement('canvas').getContext('2d'); c.font = getComputedStyle(L).font; return c.measureText('0').width; })();
