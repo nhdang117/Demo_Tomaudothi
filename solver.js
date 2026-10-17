@@ -219,10 +219,11 @@ const Solver = (() => {
     '',
     'main()',
     '{',
+    '  đọc G: n đỉnh, danh sách kề',
     '  v_1..v_n = các đỉnh theo bậc giảm dần',
     '  color[v] = -1 với mọi v;  kmin = n + 1',
     '  tomau(1, 0)',
-    '  return kmin, Smin',
+    '  xuất kmin, Smin',
     '}',
   ];
 
@@ -280,10 +281,10 @@ const Solver = (() => {
     }
 
     try {
-      R && R({ line: 26, type: 'init', order, title: 'Khởi tạo',
+      R && R({ line: 27, type: 'init', order, title: 'Khởi tạo',
         note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, kmin = n + 1 = ${n + 1} (chưa có lời giải).` });
       tomau(0, 0);
-      R && R({ line: 29, type: 'done', k: kmin, title: 'Hoàn tất',
+      R && R({ line: 30, type: 'done', k: kmin, title: 'Hoàn tất',
         note: `Vét hết cây tìm kiếm: sắc số χ(G) = kmin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
     } catch (e) {
       if (e === ABORT) aborted = true;
