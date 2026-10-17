@@ -177,7 +177,7 @@ const Solver = (() => {
           note: `Gán bậc của đỉnh ${v} = −1 để không bị chọn lại.` });
         const dec = [];
         for (const u of adj[v]) if (deg[u] >= 0) { deg[u]--; dec.push(u); }
-        R && R({ line: 22, type: 'dec', v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
+        R && R({ line: 22, type: 'dec', out: dec.length ? dec.map(u => `  bac[${u}]: ${deg[u] + 1}->${deg[u]}`).join('\n') : undefined, v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
           note: dec.length
             ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
             : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
@@ -366,7 +366,10 @@ const Solver = (() => {
     '        cout << "  mau[" << v << "]=" << c << "\\n";',
     '        bac[v] = -1;                 // P = P - {v}',
     '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
-    '            if (a[v][u] == 1 && bac[u] >= 0) bac[u]--;',
+    '            if (a[v][u] == 1 && bac[u] >= 0) {',
+    '                bac[u]--;',
+    '                cout << "  bac[" << u << "]: " << bac[u] + 1 << "->" << bac[u] << "\\n";',
+    '            }',
     '    }',
     '}',
     '',
