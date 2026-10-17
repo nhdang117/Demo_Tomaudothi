@@ -262,7 +262,7 @@ const Solver = (() => {
         note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
-          R && R({ line: 14, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
+          R && R({ line: 14, type: 'sym', out: `${ind}  c=${c} doi xung`, v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
             note: `Màu ${c} > soMau = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
           break;
         }
@@ -423,8 +423,11 @@ const Solver = (() => {
     '    int v = thuTu[i];',
     '    thutLe(i); cout << "B" << i << ": v=" << v << " soMau=" << soMau << "\\n";',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
-    '        int soMauMoi = (c + 1 > soMau) ? c + 1 : soMau;  // max(soMau, c + 1)',
-    '        if (c > soMau) break;        // phá đối xứng (màu sau cũng vậy)',
+    '        if (c > soMau) {             // phá đối xứng: màu mới soMau đã thử rồi,',
+    '            thutLe(i); cout << "  c=" << c << " doi xung\\n";  // màu mới khác chỉ là đổi tên',
+    '            break;                   // → dừng (màu sau cũng vậy)',
+    '        }',
+    '        int soMauMoi = (c == soMau) ? soMau + 1 : soMau;  // c == soMau: mở màu mới',
     '        if (soMauMoi >= soMauMin) {  // cắt tỉa (màu sau cũng vậy)',
     '            thutLe(i); cout << "  c=" << c << " cat tia\\n";',
     '            break;',
@@ -471,12 +474,12 @@ const Solver = (() => {
     '}',
   ];
   const BT_CPP_AT = {
-    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) break;',
+    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) {',
     15: 'if (soMauMoi >= soMauMin)', 16: 'if (trungMau(v, c))', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
     26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
   };
   const BT_CPP_OUT = {
-    select: 'cout << "B"', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
+    select: 'cout << "B"', sym: '" doi xung', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
     found: '"  LG moi', backtrack: '"  go mau["', init: 'cout << "thuTu:"', done: 'cout << "So mau',
   };
 

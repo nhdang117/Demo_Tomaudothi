@@ -1058,7 +1058,8 @@ function buildTree() {
   const par = d => d > 0 ? path[d - 1] : root;
   steps.forEach((s, i) => {
     switch (s.type) {
-      case 'select': case 'fail': case 'sym': f = par(s.depth); break;
+      case 'select': case 'fail': f = par(s.depth); break;
+      case 'sym': f = mk(s.depth + 1, '⇄', par(s.depth), i, { v: s.v, sym: s.c, rej: true }); break;
       case 'conflict': f = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v, u: s.u, rej: true }); break;
       case 'prune': f = mk(s.depth + 1, '✂', par(s.depth), i, { v: s.v, cut: s.c, kmin: s.kmin, rej: true }); break;
       case 'assign': f = path[s.depth] = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v }); break;
@@ -1105,7 +1106,7 @@ function buildTree() {
 
   const body = $('#tbHtBody');
   body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh thuTu[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
-    '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
+    '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k">⇄</b> phá đối xứng · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button>' +
     '<button type="button" class="bt-exp" aria-pressed="false" title="Mở rộng cây đè lên khung 3D (Esc để thu lại)">⛶ Mở rộng</button></div>';
@@ -1127,6 +1128,7 @@ function buildTree() {
     if (nd.c != null) svgEl('circle', { cx: x - w / 2 + 7, cy: y, r: 3.5, fill: palHex(nd.c), class: 't-dot' }, gg);
     svgEl('text', { x: nd.c != null ? x + 4 : x, y: y + 1, class: 't-label' }, gg).textContent = nd.label;
     svgEl('title', {}, gg).textContent = nd.kind === 'root' ? 'Tìm sắc số χ(G)'
+      : nd.sym != null ? `Đỉnh ${nd.v}, từ màu ${nd.sym}: màu mới ${nd.sym - 1} đã thử, màu mới khác chỉ là đổi tên → phá đối xứng`
       : nd.cut != null ? `Đỉnh ${nd.v}, từ màu ${nd.cut}: không thể ít hơn soMauMin = ${nd.kmin} màu → cắt tỉa`
       : nd.rej ? `Đỉnh ${nd.v}, màu ${nd.c}: trùng với đỉnh kề ${nd.u} → loại` : `Đỉnh ${nd.v} tô màu ${nd.c}`;
     nd.el = gg; nd.cx = x; nd.cy = y;
@@ -1197,11 +1199,12 @@ function trState(nd, i) {
   if (i < nd.at) return 'todo';
   if (nd.gold != null && i >= nd.gold && !(i >= nd.goldEnd)) return 'leaf';
   if (nd.kind === 'root') return 'root';
+  if (nd.sym != null) return 'symm';
   if (nd.rej) return 'rejected';
   if (nd.back != null && i >= nd.back) return 'done';
   return 'accepted';
 }
-const TR_EDGE = { todo: 'todo', leaf: 'gold', accepted: 'lit', root: 'lit', rejected: 'rej', done: 'dim' };
+const TR_EDGE = { todo: 'todo', leaf: 'gold', accepted: 'lit', root: 'lit', rejected: 'rej', symm: 'sym', done: 'dim' };
 function updateHandBT(i) {
   const fid = TR.focus[i];
   for (const nd of TR.nodes) {

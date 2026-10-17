@@ -394,6 +394,9 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .t-node.accepted .t-label{fill:var(--good,#36e08f)}
 .t-node.rejected .t-shape{stroke:var(--warn);opacity:.8}
 .t-node.rejected .t-label{fill:var(--warn);text-decoration:line-through}
+.t-node.symm .t-shape{stroke:var(--ink-faint);stroke-dasharray:3 2}
+.t-node.symm .t-label{fill:var(--ink-faint)}
+.t-edge.sym{stroke:var(--ink-faint);stroke-dasharray:3 3;opacity:.6}
 .t-node.done{opacity:.42}
 .t-node.leaf .t-shape{stroke:var(--gold,#ffc83d);stroke-width:2;filter:drop-shadow(0 0 4px var(--gold,#ffc83d))}
 .t-node.leaf .t-label{fill:var(--gold,#ffc83d)}
@@ -1407,7 +1410,7 @@ const Solver = (() => {
         note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
-          R && R({ line: 14, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
+          R && R({ line: 14, type: 'sym', out: `${ind}  c=${c} doi xung`, v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
             note: `Màu ${c} > soMau = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
           break;
         }
@@ -1568,8 +1571,11 @@ const Solver = (() => {
     '    int v = thuTu[i];',
     '    thutLe(i); cout << "B" << i << ": v=" << v << " soMau=" << soMau << "\\n";',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
-    '        int soMauMoi = (c + 1 > soMau) ? c + 1 : soMau;  // max(soMau, c + 1)',
-    '        if (c > soMau) break;        // phá đối xứng (màu sau cũng vậy)',
+    '        if (c > soMau) {             // phá đối xứng: màu mới soMau đã thử rồi,',
+    '            thutLe(i); cout << "  c=" << c << " doi xung\\n";  // màu mới khác chỉ là đổi tên',
+    '            break;                   // → dừng (màu sau cũng vậy)',
+    '        }',
+    '        int soMauMoi = (c == soMau) ? soMau + 1 : soMau;  // c == soMau: mở màu mới',
     '        if (soMauMoi >= soMauMin) {  // cắt tỉa (màu sau cũng vậy)',
     '            thutLe(i); cout << "  c=" << c << " cat tia\\n";',
     '            break;',
@@ -1616,12 +1622,12 @@ const Solver = (() => {
     '}',
   ];
   const BT_CPP_AT = {
-    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) break;',
+    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) {',
     15: 'if (soMauMoi >= soMauMin)', 16: 'if (trungMau(v, c))', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
     26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
   };
   const BT_CPP_OUT = {
-    select: 'cout << "B"', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
+    select: 'cout << "B"', sym: '" doi xung', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
     found: '"  LG moi', backtrack: '"  go mau["', init: 'cout << "thuTu:"', done: 'cout << "So mau',
   };
 
@@ -2924,7 +2930,8 @@ function buildTree() {
   const par = d => d > 0 ? path[d - 1] : root;
   steps.forEach((s, i) => {
     switch (s.type) {
-      case 'select': case 'fail': case 'sym': f = par(s.depth); break;
+      case 'select': case 'fail': f = par(s.depth); break;
+      case 'sym': f = mk(s.depth + 1, '⇄', par(s.depth), i, { v: s.v, sym: s.c, rej: true }); break;
       case 'conflict': f = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v, u: s.u, rej: true }); break;
       case 'prune': f = mk(s.depth + 1, '✂', par(s.depth), i, { v: s.v, cut: s.c, kmin: s.kmin, rej: true }); break;
       case 'assign': f = path[s.depth] = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v }); break;
@@ -2971,7 +2978,7 @@ function buildTree() {
 
   const body = $('#tbHtBody');
   body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh thuTu[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
-    '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
+    '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k">⇄</b> phá đối xứng · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button>' +
     '<button type="button" class="bt-exp" aria-pressed="false" title="Mở rộng cây đè lên khung 3D (Esc để thu lại)">⛶ Mở rộng</button></div>';
@@ -2993,6 +3000,7 @@ function buildTree() {
     if (nd.c != null) svgEl('circle', { cx: x - w / 2 + 7, cy: y, r: 3.5, fill: palHex(nd.c), class: 't-dot' }, gg);
     svgEl('text', { x: nd.c != null ? x + 4 : x, y: y + 1, class: 't-label' }, gg).textContent = nd.label;
     svgEl('title', {}, gg).textContent = nd.kind === 'root' ? 'Tìm sắc số χ(G)'
+      : nd.sym != null ? `Đỉnh ${nd.v}, từ màu ${nd.sym}: màu mới ${nd.sym - 1} đã thử, màu mới khác chỉ là đổi tên → phá đối xứng`
       : nd.cut != null ? `Đỉnh ${nd.v}, từ màu ${nd.cut}: không thể ít hơn soMauMin = ${nd.kmin} màu → cắt tỉa`
       : nd.rej ? `Đỉnh ${nd.v}, màu ${nd.c}: trùng với đỉnh kề ${nd.u} → loại` : `Đỉnh ${nd.v} tô màu ${nd.c}`;
     nd.el = gg; nd.cx = x; nd.cy = y;
@@ -3063,11 +3071,12 @@ function trState(nd, i) {
   if (i < nd.at) return 'todo';
   if (nd.gold != null && i >= nd.gold && !(i >= nd.goldEnd)) return 'leaf';
   if (nd.kind === 'root') return 'root';
+  if (nd.sym != null) return 'symm';
   if (nd.rej) return 'rejected';
   if (nd.back != null && i >= nd.back) return 'done';
   return 'accepted';
 }
-const TR_EDGE = { todo: 'todo', leaf: 'gold', accepted: 'lit', root: 'lit', rejected: 'rej', done: 'dim' };
+const TR_EDGE = { todo: 'todo', leaf: 'gold', accepted: 'lit', root: 'lit', rejected: 'rej', symm: 'sym', done: 'dim' };
 function updateHandBT(i) {
   const fid = TR.focus[i];
   for (const nd of TR.nodes) {

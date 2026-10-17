@@ -394,6 +394,9 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .t-node.accepted .t-label{fill:var(--good,#36e08f)}
 .t-node.rejected .t-shape{stroke:var(--warn);opacity:.8}
 .t-node.rejected .t-label{fill:var(--warn);text-decoration:line-through}
+.t-node.symm .t-shape{stroke:var(--ink-faint);stroke-dasharray:3 2}
+.t-node.symm .t-label{fill:var(--ink-faint)}
+.t-edge.sym{stroke:var(--ink-faint);stroke-dasharray:3 3;opacity:.6}
 .t-node.done{opacity:.42}
 .t-node.leaf .t-shape{stroke:var(--gold,#ffc83d);stroke-width:2;filter:drop-shadow(0 0 4px var(--gold,#ffc83d))}
 .t-node.leaf .t-label{fill:var(--gold,#ffc83d)}
