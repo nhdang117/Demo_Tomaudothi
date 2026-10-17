@@ -163,95 +163,118 @@ const Solver = (() => {
   }
 
   /* =================================================================
-   * 2) QUAY LUI tìm sắc số χ(G) — thử k = 1, 2, … ; với mỗi k, gán màu
-   *    lần lượt theo thứ tự bậc giảm dần. Phá đối xứng: đỉnh thứ i chỉ
-   *    được dùng các màu 0..used (không mở "màu mới" thứ hai cùng lúc).
-   *    Độ phức tạp xấu nhất: O(k^n · Δ) cho mỗi k — hàm mũ (NP-khó).
+   * 2) QUAY LUI tìm sắc số χ(G) — theo mô hình try(i) của GV (Buổi 6–7),
+   *    kiểu bài tối ưu "cây khung tối tiểu": vét cạn, giữ LG tốt nhất
+   *    hiện hành (kmin, Smin), gặp LG hoàn chỉnh thì cập nhật.
+   *    Bước i tô đỉnh v_i (đỉnh xếp theo bậc giảm dần), for chạy tối đa
+   *    n màu, loại bằng if:
+   *      - c <= used               : phá đối xứng (chỉ mở màu mới kế tiếp)
+   *      - max(used, c + 1) < kmin : cắt tỉa (không thể ít màu hơn kmin)
+   *      - không đỉnh kề v_i mang màu c : ràng buộc của bài toán
+   *    Hai điều kiện đầu đơn điệu theo c: sai ở c thì sai với mọi c lớn
+   *    hơn, nên bản cài đặt dừng vòng for ngay (kết quả như for chạy hết).
+   *    Không có cận dưới cho χ nên không thoát sớm được: phải vét hết
+   *    cây mới khẳng định kmin là ít nhất.
+   *    Độ phức tạp xấu nhất: O(nⁿ) nút — hàm mũ (NP-khó).
    * ================================================================= */
   const BT_CODE = () => [
-    'def chromatic_number(G):',
-    '    order = sorted(G.V, key=deg, reverse=True)',
-    '    for k in range(1, n + 1):  # k tăng dần',
-    '        if try_color(0, k, used=0):',
-    '            return k',
+    '// S_i = màu của v_i, v_1..v_n: bậc giảm dần',
+    '// color[v] = -1: đỉnh v chưa được tô',
+    '// used: số màu đã dùng (các màu 0..used-1)',
+    '// kmin, Smin: LG tốt nhất hiện hành',
     '',
-    'def try_color(i, k, used):',
-    '    if i == n: return True  # đủ n đỉnh',
-    '    v = order[i]',
-    '    for c in range(min(k, used+1)):  # đối xứng',
-    '        if all(color[u] != c for u in G.adj[v]):',
-    '            color[v] = c',
-    '            if try_color(i+1, k, max(used, c+1)):',
-    '                return True',
-    '            color[v] = None  # quay lui',
-    '    return False  # hết màu để thử',
+    'tomau(i, used)  // bước i: màu S_i cho v_i',
+    '{',
+    '  for (c = 0 -> n-1)  // tối đa n lựa chọn',
+    '    if (c <= used  // phá đối xứng',
+    '        and max(used, c + 1) < kmin  // cắt tỉa',
+    '        and không đỉnh kề v_i mang màu c)',
+    '    {',
+    '      color[v_i] = c  // ghi nhận S_i = c',
+    '      if (i == n)  // đủ n đỉnh: LG hoàn chỉnh',
+    '      {',
+    '        kmin = max(used, c + 1)',
+    '        Smin = color  // lưu bản sao',
+    '      }',
+    '      else',
+    '        tomau(i + 1, max(used, c + 1))',
+    '      color[v_i] = -1  // trả lại trạng thái cũ',
+    '    }',
+    '}',
+    '',
+    'main()',
+    '{',
+    '  v_1..v_n = các đỉnh theo bậc giảm dần',
+    '  color[v] = -1 với mọi v;  kmin = n + 1',
+    '  tomau(1, 0)',
+    '  return kmin, Smin',
+    '}',
   ];
 
   function backtrack(g, rec, opts = {}) {
     const { n, adj } = g;
     const deg = adj.map(a => a.length);
     const order = [...Array(n).keys()].sort((a, b) => deg[b] - deg[a] || a - b);
-    const color = new Int16Array(n).fill(-1);
+    const color = new Int16Array(n).fill(-1), smin = new Int16Array(n).fill(-1);
     const budget = opts.budget ?? 5e6;
-    let calls = 0, bts = 0, aborted = false, found = -1;
-    const R = rec ? ev => rec.push(color, ev) : null;
+    let calls = 0, bts = 0, aborted = false, kmin = n + 1;
+    const R = rec ? (ev, col = color) => { ev.kmin = kmin; ev.backtracks = bts; rec.push(col, ev); } : null;
 
-    function tryColor(i, k, used) {
+    // i: bước giải (0-based trong code, hiển thị i + 1 cho khớp mã giả)
+    function tomau(i, used) {
       if (++calls > budget) throw ABORT;
-      if (i === n) {
-        R && R({ line: 7, type: 'found', k, depth: i, backtracks: bts, title: 'Tìm thấy',
-          note: `Đã tô đủ ${n} đỉnh chỉ với ${k} màu.` });
-        return true;
-      }
       const v = order[i];
-      R && R({ line: 8, type: 'select', v, k, depth: i, deg: deg[v], backtracks: bts, title: 'Chọn đỉnh',
-        note: `Độ sâu ${i}: xét đỉnh ${v} (bậc ${deg[v]}).` });
-      const lim = Math.min(k, used + 1);
-      for (let c = 0; c < lim; c++) {
+      R && R({ line: 5, type: 'select', v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
+        note: `Tìm màu cho đỉnh v_${i + 1} = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, kmin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
+      for (let c = 0; c < n; c++) {
+        if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
+          R && R({ line: 8, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
+            note: `Màu ${c} > used = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
+          break;
+        }
+        if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
+          R && R({ line: 9, type: 'prune', v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
+            note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ kmin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
+          break;
+        }
         let clash = -1;
         for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
         if (clash >= 0) {
-          R && R({ line: 10, type: 'conflict', v, u: clash, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Xung đột',
-            note: `Màu ${c} trùng với hàng xóm ${clash} → loại.` });
+          R && R({ line: 10, type: 'conflict', v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
+            note: `Đỉnh kề ${clash} đang mang màu ${c} → loại màu ${c}.` });
           continue;
         }
         color[v] = c;
-        R && R({ line: 11, type: 'assign', v, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Gán màu',
-          note: `Màu ${c} không trùng hàng xóm nào → tô đỉnh ${v}.` });
-        if (tryColor(i + 1, k, Math.max(used, c + 1))) return true;
+        R && R({ line: 12, type: 'assign', v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
+          note: `Màu ${c} hợp lệ → S_${i + 1} = ${c}, tô đỉnh ${v}.` });
+        if (i === n - 1) {
+          kmin = Math.max(used, c + 1);
+          smin.set(color);
+          R && R({ line: 15, type: 'found', k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
+            note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật kmin = ${kmin}, lưu Smin.` });
+        } else {
+          tomau(i + 1, Math.max(used, c + 1));
+        }
         color[v] = -1;
         bts++;
-        R && R({ line: 14, type: 'backtrack', v, c, k, depth: i, deg: deg[v], backtracks: bts, title: 'Quay lui',
-          note: `Nhánh "đỉnh ${v} = màu ${c}" thất bại → gỡ màu (quay lui lần ${bts}).` });
+        R && R({ line: 20, type: 'backtrack', v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
+          note: `Gỡ màu ${c} của đỉnh ${v} (quay lui lần ${bts}) rồi thử màu kế tiếp.` });
       }
-      R && R({ line: 15, type: 'fail', v, k, depth: i, deg: deg[v], backtracks: bts, title: 'Hết màu',
-        note: lim < k
-          ? `Đã thử các màu 0..${lim - 1} (màu mới khác là đối xứng, bỏ qua) → trả về False.`
-          : `Không màu nào trong 0..${k - 1} hợp lệ cho đỉnh ${v} → trả về False.` });
-      return false;
+      R && R({ line: 7, type: 'fail', v, depth: i, deg: deg[v], title: 'Hết lựa chọn',
+        note: i ? `Đã xét hết màu cho đỉnh ${v} → quay về bước ${i}.` : `Đã xét hết màu cho đỉnh đầu tiên → vét xong cây tìm kiếm.` });
     }
 
     try {
-      R && R({ line: 1, type: 'init', order, title: 'Khởi tạo',
-        note: `Sắp đỉnh theo bậc giảm dần: ${fmtOrder(order)}.` });
-      for (let k = 1; k <= n; k++) {
-        color.fill(-1);
-        R && R({ line: 2, type: 'kloop', k, backtracks: bts, title: `Thử k = ${k}`,
-          note: `Thử tô toàn bộ đồ thị chỉ với ${k} màu.` });
-        if (tryColor(0, k, 0)) {
-          found = k;
-          R && R({ line: 4, type: 'done', k, backtracks: bts, title: 'Hoàn tất',
-            note: `Sắc số χ(G) = ${k}. Tổng số lần quay lui: ${bts}.` });
-          break;
-        }
-        R && R({ line: 2, type: 'kfail', k, backtracks: bts, title: `k = ${k} không đủ`,
-          note: `Không thể tô với ${k} màu → tăng k.` });
-      }
+      R && R({ line: 26, type: 'init', order, title: 'Khởi tạo',
+        note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, kmin = n + 1 = ${n + 1} (chưa có lời giải).` });
+      tomau(0, 0);
+      R && R({ line: 29, type: 'done', k: kmin, title: 'Hoàn tất',
+        note: `Vét hết cây tìm kiếm: sắc số χ(G) = kmin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
     } catch (e) {
       if (e === ABORT) aborted = true;
       else if (e !== TRUNC) throw e;
     }
-    return { colors: color, k: found, aborted, calls, backtracks: bts };
+    return { colors: smin, k: aborted ? -1 : kmin, aborted, calls, backtracks: bts };
   }
 
   const ALGOS = {
@@ -259,7 +282,7 @@ const Solver = (() => {
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
                 exact: false, cx: 'O(n² + k·m)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), desc: 'Vét cạn có cắt tỉa: thử k = 1, 2, … đến khi tô được.', exact: true, cx: 'O(kⁿ) xấu nhất' },
+                code: () => BT_CODE(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
   };
 
   /** Chạy thuật toán có ghi trace. */

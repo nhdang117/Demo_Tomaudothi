@@ -634,9 +634,9 @@ function buildLabels(n) {
 
 const codeEl = $('#code');
 let curLine = -1;
-const KW = /\b(def|for|in|if|while|return|not|is|None|True|False|lambda|and|or)\b|\b(all|any|max|min|argmax|range|set|sorted|len)\b|\b(\d+)\b/g;
+const KW = /\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|main)\b|\b(\d+)\b/g;
 function hl(line) {
-  const hi = line.indexOf('#');
+  const hi = line.search(/#|\/\//);                     // chú thích: # (Python) hoặc // (mã giả kiểu GV)
   const code = hi >= 0 ? line.slice(0, hi) : line, cm = hi >= 0 ? line.slice(hi) : '';
   const c = esc(code).replace(KW, (m, kw, fn, nu) => kw ? `<span class="kw">${kw}</span>` : fn ? `<span class="fn">${fn}</span>` : `<span class="nu">${nu}</span>`);
   return c + (cm ? `<span class="cm">${esc(cm)}</span>` : '');
@@ -704,22 +704,20 @@ const fmtArr = (a, max = 16) => a.length <= max ? a.join(', ') : a.slice(0, max)
 function logText(s) {
   const sw = c => `<span class="sw" style="--c:${palHex(c)}"></span>${c}`, G = st.algo === 'greedy';
   if (!G) switch (s.type) {                               // quay lui: kiểu log của file Tuần 6 (CHỌN / LOẠI / gọi đệ quy / quay lui)
-    case 'kloop': return `— thử k = ${s.k} màu —`;
-    case 'select': return `↳ i=<b>${s.depth}</b> · xét v = ${s.v}`;
+    case 'init': return `order = [${fmtArr(s.order)}] · kmin = ${s.kmin}`;
+    case 'select': return `↳ i=<b>${s.depth + 1}</b> · xét v = ${s.v} · used = ${s.used}`;
     case 'conflict': return `màu ${sw(s.c)} trùng v${s.u} → LOẠI`;
+    case 'sym': return `màu ${s.c} > used → bỏ (đối xứng)`;
+    case 'prune': return `✂ màu ${s.c}: cần ${Math.max(s.used, s.c + 1)} ≥ kmin = ${s.kmin} → CẮT`;
     case 'assign': return `màu ${sw(s.c)} → CHỌN`;
     case 'backtrack': return `↰ quay lui: gỡ màu ${s.c} của v${s.v}`;
-    case 'fail': return `✗ v${s.v} hết màu → False`;
-    case 'found': return `★ đủ ${st.g.n} đỉnh → TÌM THẤY`;
-    case 'kfail': return `k = ${s.k} không đủ → tăng k`;
-    case 'done': return `χ(G) = ${s.k} · ${s.backtracks} lần quay lui`;
+    case 'fail': return `✗ v${s.v} hết lựa chọn → về bước trước`;
+    case 'found': return `★ LG mới: kmin = ${s.k}`;
+    case 'done': return `χ(G) = kmin = ${s.k} · ${s.backtracks} lần quay lui`;
   }
   switch (s.type) {
-    case 'init': return s.order ? `order = [${fmtArr(s.order)}]` : `deg = [${fmtArr(Array.from(s.degs))}] · used = 0`;
-    case 'kloop': return `k = ${s.k}`;
-    case 'kfail': return `k = ${s.k} không đủ → k + 1`;
-    case 'select': return G ? `v = ${s.v} · deg[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '')
-                            : `i = ${s.depth} → v = order[${s.depth}] = ${s.v}`;
+    case 'init': return `deg = [${fmtArr(Array.from(s.degs))}] · used = 0`;
+    case 'select': return `v = ${s.v} · deg[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '');
     case 'try': return s.c == null ? 'used = 0 → chưa có màu cũ' : `c = ${s.c}`;
     case 'conflict': return `color[${s.u}] == ${s.c} → ` + (G ? `c += 1` : `bỏ màu ${s.c}`);
     case 'ok': return `c = ${s.c} không trùng → dùng lại`;
@@ -731,19 +729,16 @@ function logText(s) {
       const parts = s.us.slice(0, 8).map(u => `deg[${u}] ${s.degs[u] + 1}→${s.degs[u]}`);
       return parts.join(', ') + (s.us.length > 8 ? `, … (+${s.us.length - 8})` : '');
     }
-    case 'backtrack': return `color[${s.v}] = None ↶ #${s.backtracks}`;
-    case 'fail': return `try_color(${s.depth}) → False`;
-    case 'found': return 'i == n → True';
-    case 'done': return G ? `return color · ${s.used} màu` : `return χ = ${s.k}`;
+    case 'done': return `return color · ${s.used} màu`;
   }
   return esc(s.title || s.type);
 }
 function logLine(i) {
   const s = st.steps[i], t = s.type;
   const G = st.algo === 'greedy';
-  const cls = [(t === 'select' && G) || t === 'kloop' ? 'grp' : '',
-    t === 'kloop' || (t === 'select' && G) ? 'k-sel' : t === 'conflict' ? 'k-bad' : t === 'assign' && !G ? 'k-ok'
-      : t === 'backtrack' || t === 'fail' || t === 'kfail' ? 'k-back' : t === 'found' && !G ? 'k-gold' : t === 'done' || t === 'found' ? 'k-end' : '']
+  const cls = [t === 'select' && G ? 'grp' : '',
+    t === 'select' && G ? 'k-sel' : t === 'conflict' || t === 'prune' ? 'k-bad' : t === 'assign' && !G ? 'k-ok'
+      : t === 'backtrack' || t === 'fail' ? 'k-back' : t === 'found' ? 'k-gold' : t === 'done' ? 'k-end' : '']
     .filter(Boolean).join(' ');
   const ind = !G && s.depth != null ? ` style="--d:${s.depth}"` : '';   // quay lui: thụt lề theo độ sâu
   return `<li${cls ? ` class="${cls}"` : ''} data-i="${i}" title="${esc(s.note || '')}"><span class="n">${i + 1}</span><span class="x"${ind}>${logText(s)}</span></li>`;
@@ -869,7 +864,8 @@ function annoChips(s) {
   if (s.type === 'newcolor') return s.c != null ? chip(s.c) + '<span class="chip">màu mới</span>' : '';
   if (s.type === 'conflict' || s.type === 'assign' || s.type === 'ok' || s.type === 'try') return s.c != null ? chip(s.c) : '';
   if (s.type === 'select' && s.ties && s.ties.length > 1) return `<span class="chip">bậc ${s.deg} · ${s.ties.length} đỉnh hòa → chỉ số nhỏ nhất</span>`;
-  if (s.type === 'select' && s.deg != null) return `<span class="chip">bậc ${s.deg}</span>`;
+  if (s.type === 'prune') return `<span class="chip">kmin = ${s.kmin}</span><span class="chip over">cắt tỉa</span>`;
+  if (s.type === 'select' && s.deg != null) return `<span class="chip">bậc ${s.deg}</span>` + (s.kmin != null ? `<span class="chip">kmin = ${s.kmin}</span>` : '');
   return '';
 }
 function updateAnnoContent(s, animate) {
@@ -886,7 +882,7 @@ function updateAnnoContent(s, animate) {
   }
   AN.tick = 0; AN.evalT = 0;                             // nội dung đổi → đo lại hộp chú thích, chọn chỗ lại ngay
   anno.classList.toggle('is-conflict', s.type === 'conflict');
-  anno.classList.toggle('is-back', s.type === 'backtrack' || s.type === 'fail' || s.type === 'kfail');
+  anno.classList.toggle('is-back', s.type === 'backtrack' || s.type === 'fail' || s.type === 'prune');
 }
 
 function updateHUD() {
@@ -1041,7 +1037,8 @@ function updateHandGreedy(i) {
 /* ---------------- Cây quay lui (thay bảng tính tay khi chạy quay lui) ----------------
    Cách làm theo file Tuần 6 (sinh_hoanvi_neon_responsive.html): dựng cả cây tìm kiếm từ trace một lần,
    nút chưa tới vẽ mờ; mỗi bước chỉ đổi class: đang xét (sáng) · chọn (xanh) · loại (đỏ, gạch) ·
-   đã quay lui (mờ) · lời giải (vàng). Gốc χ → mỗi k một nhánh → tầng i là các màu đã thử cho đỉnh order[i].
+   đã quay lui (mờ) · cắt tỉa (✂) · lời giải tốt nhất hiện hành (vàng). Gốc χ → tầng i là các màu đã thử cho đỉnh v_i.
+   Mỗi lần gặp lời giải tốt hơn, đường vàng cũ hết vàng (thành mờ) và đường mới sáng vàng.
    Kéo để di chuyển, lăn chuột để phóng to, nhấp đúp hoặc nút "Vừa khung" để xem cả cây; cây tự cuộn theo nút đang xét. */
 const SVGNS = 'http://www.w3.org/2000/svg';
 const TR = { nodes: [], focus: null, stage: null, g: null, v: { s: 1, x: 0, y: 0 }, W: 0, H: 0, fresh: true, ro: null };
@@ -1059,17 +1056,22 @@ function buildTree() {
     return nd;
   };
   const root = mk(0, 'χ', null, 0, { kind: 'root' });
-  let kn = root, path = [], f = root;
-  const par = d => d > 0 ? path[d - 1] : kn;
+  let path = [], best = [], f = root;
+  const par = d => d > 0 ? path[d - 1] : root;
   steps.forEach((s, i) => {
     switch (s.type) {
-      case 'kloop': kn = mk(1, `k=${s.k}`, root, i, { kind: 'k', k: s.k }); path = []; f = kn; break;
-      case 'select': case 'fail': f = par(s.depth); break;
-      case 'conflict': f = mk(s.depth + 2, s.c, par(s.depth), i, { c: s.c, v: s.v, u: s.u, rej: true }); break;
-      case 'assign': f = path[s.depth] = mk(s.depth + 2, s.c, par(s.depth), i, { c: s.c, v: s.v }); break;
+      case 'select': case 'fail': case 'sym': f = par(s.depth); break;
+      case 'conflict': f = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v, u: s.u, rej: true }); break;
+      case 'prune': f = mk(s.depth + 1, '✂', par(s.depth), i, { v: s.v, cut: s.c, kmin: s.kmin, rej: true }); break;
+      case 'assign': f = path[s.depth] = mk(s.depth + 1, s.c, par(s.depth), i, { c: s.c, v: s.v }); break;
       case 'backtrack': f = path[s.depth]; f.back = i; break;
-      case 'kfail': kn.back = i; f = kn; break;
-      case 'found': for (let d = 0; d < n; d++) if (path[d]) path[d].gold = i; kn.gold = i; f = path[n - 1] || kn; break;
+      case 'found': {                                    // đường vàng cũ hết vàng, đường mới vàng
+        const now = path.slice(0, n);
+        for (const nd of best) if (!now.includes(nd)) nd.goldEnd = i;
+        for (const nd of now) if (nd.gold == null) nd.gold = i;
+        best = now; f = path[n - 1];
+        break;
+      }
       case 'done': root.gold = i; f = root; break;
     }
     focus[i] = f.id;
@@ -1082,22 +1084,22 @@ function buildTree() {
   })(root);
   const XU = 32, YU = 50, NH = 20, LX = 44, top = 18;    // LX: lề trái cho nhãn tầng
   const px = nd => LX + nd.x * XU + XU / 2, py = nd => top + NH / 2 + nd.level * YU;
-  TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + (n + 1) * YU + 12;
+  TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + n * YU + 12;
 
   const body = $('#tbHtBody');
-  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh order[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
-    '<b class="t-k gold">vàng</b> lời giải · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
+  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh v_i. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
+    '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button></div>';
   const stage = $('.bt-stage', body), svg = $('svg', stage), g = svgEl('g', { class: 'bt-view' }, svg);
   const rowsG = svgEl('g', {}, g), edgeG = svgEl('g', {}, g), nodeG = svgEl('g', {}, g);
-  for (let L = 1; L <= n + 1; L++) {                     // nhãn tầng: k, rồi đỉnh order[i]
+  for (let L = 1; L <= n; L++) {                         // nhãn tầng i: đỉnh v_i = order[i-1]
     const y = top + NH / 2 + L * YU;
     svgEl('line', { x1: LX - 6, x2: TR.W, y1: y, y2: y, class: 't-row' }, rowsG);
-    svgEl('text', { x: 4, y: y + 1, class: 't-rowl' }, rowsG).textContent = L === 1 ? 'k' : `v${order[L - 2]}`;
+    svgEl('text', { x: 4, y: y + 1, class: 't-rowl' }, rowsG).textContent = `v${order[L - 1]}`;
   }
   for (const nd of nodes) {
-    const x = px(nd), y = py(nd), w = nd.kind === 'k' ? 40 : nd.kind === 'root' ? 30 : 28;
+    const x = px(nd), y = py(nd), w = nd.kind === 'root' ? 30 : 28;
     if (nd.parent) {
       const x0 = px(nd.parent), y0 = py(nd.parent), my = (y0 + y) / 2;
       nd.edge = svgEl('path', { d: `M${x0} ${y0 + NH / 2} C${x0} ${my} ${x} ${my} ${x} ${y - NH / 2}`, class: 't-edge' }, edgeG);
@@ -1106,7 +1108,8 @@ function buildTree() {
     svgEl('rect', { x: x - w / 2, y: y - NH / 2, width: w, height: NH, rx: 6, class: 't-shape' }, gg);
     if (nd.c != null) svgEl('circle', { cx: x - w / 2 + 7, cy: y, r: 3.5, fill: palHex(nd.c), class: 't-dot' }, gg);
     svgEl('text', { x: nd.c != null ? x + 4 : x, y: y + 1, class: 't-label' }, gg).textContent = nd.label;
-    svgEl('title', {}, gg).textContent = nd.kind === 'root' ? 'Tìm sắc số χ(G)' : nd.kind === 'k' ? `Thử tô cả đồ thị với k = ${nd.k} màu`
+    svgEl('title', {}, gg).textContent = nd.kind === 'root' ? 'Tìm sắc số χ(G)'
+      : nd.cut != null ? `Đỉnh ${nd.v}, từ màu ${nd.cut}: không thể ít hơn kmin = ${nd.kmin} màu → cắt tỉa`
       : nd.rej ? `Đỉnh ${nd.v}, màu ${nd.c}: trùng với đỉnh kề ${nd.u} → loại` : `Đỉnh ${nd.v} tô màu ${nd.c}`;
     nd.el = gg; nd.cx = x; nd.cy = y;
   }
@@ -1172,10 +1175,10 @@ function trFollow(nd, smooth) {                           // nút đang xét ra 
 }
 function trState(nd, i) {
   if (i < nd.at) return 'todo';
-  if (nd.gold != null && i >= nd.gold) return 'leaf';
+  if (nd.gold != null && i >= nd.gold && !(i >= nd.goldEnd)) return 'leaf';
   if (nd.kind === 'root') return 'root';
   if (nd.rej) return 'rejected';
-  if (nd.back != null && i >= nd.back) return nd.kind === 'k' ? 'rejected' : 'done';
+  if (nd.back != null && i >= nd.back) return 'done';
   return 'accepted';
 }
 const TR_EDGE = { todo: 'todo', leaf: 'gold', accepted: 'lit', root: 'lit', rejected: 'rej', done: 'dim' };
@@ -1190,10 +1193,8 @@ function updateHandBT(i) {
   }
   if (!TR.fresh) trFollow(TR.nodes[fid], true);
   const s = st.steps[i];
-  let k = 0;
-  for (let j = i; j >= 0; j--) if (st.steps[j].type === 'kloop') { k = st.steps[j].k; break; }
   $('#tbHtMeta').textContent = s.type === 'done' ? `χ = ${s.k} · quay lui ${s.backtracks}`
-    : k ? `k = ${k} · quay lui ${s.backtracks ?? 0}` : 'thứ tự xét đỉnh';
+    : `kmin = ${s.kmin}${s.kmin > st.g.n ? ' (n+1)' : ''} · quay lui ${s.backtracks}`;
 }
 function tbScroll() {                                     // giữ dòng đang xét trong tầm nhìn của cả 2 bảng
   const s = st.steps[st.idx];
@@ -1295,7 +1296,7 @@ function triggerFx(s) {
     case 'assign': spawnRipple(s.v, palColor(s.c)); break;
     case 'dec': for (const u of s.us) spawnPulse(s.v, u, palColor(s.c), 0.9); break;
     case 'backtrack': GV.glitch[s.v] = 0.5; spawnRipple(s.v, AMBER); break;
-    case 'kloop': for (let i = 0; i < GV.n; i++) GV.glitch[i] = 0.25; break;
+    case 'prune': GV.glitch[s.v] = 0.4; break;
     case 'done': case 'found': {
       const cols = st.steps[st.idx].colors;
       for (let i = 0; i < Math.min(GV.n, ripples.length); i++) spawnRipple(i, palColor(Math.max(0, cols[i])), i * 0.06);
@@ -1725,7 +1726,7 @@ const curBox = { x: 0, y: 0, s: 300, init: false };
 const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpC = new THREE.Color(), tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3();
 const ident = new THREE.Quaternion(), tgtQ = new THREE.Quaternion(), euler = new THREE.Euler(0, 0, 'YXZ');
 const raycaster = new THREE.Raycaster();
-const FOCUS_TYPES = new Set(['select', 'try', 'ok', 'newcolor', 'assign', 'mark', 'dec', 'conflict', 'backtrack', 'fail']);
+const FOCUS_TYPES = new Set(['select', 'try', 'ok', 'newcolor', 'assign', 'mark', 'dec', 'conflict', 'sym', 'prune', 'backtrack', 'fail']);
 const tip = $('#tip');
 let labelSz = [], labelA = [];
 /* Frost, phần bài toán: cạnh trắng lần lượt mọc từ đỉnh này sang đỉnh kia (lan theo BFS), giữ, mờ, lặp lại */
@@ -1902,7 +1903,7 @@ const pad2 = v => v == null ? '--' : String(v).padStart(2, '0');
 function lockText(s) {
   const L = st.g.labels;
   const head = s.v != null ? `MẪU_${pad2(s.v)}${L ? ' · ' + L[s.v].sym : ''}` : '';
-  const tel = st.algo === 'backtrack' ? `K ${pad2(s.k)} / ĐỘ SÂU ${pad2(s.depth)}` : `BẬC ${pad2(s.deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
+  const tel = st.algo === 'backtrack' ? `KMIN ${pad2(s.kmin)} / BƯỚC ${pad2(s.depth != null ? s.depth + 1 : null)}` : `BẬC ${pad2(s.deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
   return head ? `${head}\n${tel}` : '';
 }
 function demoVisOf(sec) {

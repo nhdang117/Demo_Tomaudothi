@@ -72,6 +72,17 @@ console.log('2) Trường hợp đặc biệt');
   for (const id of Object.keys(S.ALGOS)) check(`K6/${id}: 6 màu`, S.ALGOS[id].run(kn, null).k === 6);
   const disc = S.makeGraph(7, [[0, 1], [1, 2], [2, 0], [4, 5]]);
   check('không liên thông: χ = 3', S.backtrack(disc, null).k === 3);
+  // quay lui kiểu kmin: mỗi lời giải gặp sau phải ÍT màu hơn hẳn lời giải trước, cái cuối = χ
+  const graphs = S.PRESETS.map(p => p.build());
+  for (let seed = 1; seed <= 100; seed++) graphs.push(S.randomGraph(2 + seed % 12, [0.2, 0.4, 0.7][seed % 3], seed));
+  let bad = 0;
+  for (const g of graphs) {
+    const t = S.trace('backtrack', g, 200000);
+    const ks = t.steps.filter(s => s.type === 'found').map(s => s.k);
+    if (!ks.length || ks[ks.length - 1] !== t.result.k) bad++;
+    for (let i = 1; i < ks.length; i++) if (ks[i] >= ks[i - 1]) bad++;
+  }
+  check(`quay lui: kmin giảm ngặt ở mỗi lời giải mới (${graphs.length} đồ thị)`, bad === 0, `${bad} chỗ sai`);
 }
 
 console.log('3) Ví dụ Buổi 10 (slide 18) — trace khớp bảng cô chạy tay');
