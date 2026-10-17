@@ -162,7 +162,7 @@ const Solver = (() => {
           if (c < used) R && R({ line: 15, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
         }
         if (c < used) {
-          R && R({ line: 17, type: 'ok', v, c, deg: d, title: 'Dùng lại màu cũ',
+          R && R({ line: 17, type: 'ok', out: `  c=${c} khong trung`, v, c, deg: d, title: 'Dùng lại màu cũ',
             note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
         } else {
           used++;
@@ -355,7 +355,10 @@ const Solver = (() => {
     '        cout << "Lan " << i << ": v=" << v << " bac=" << bac[v] << "\\n";',
     '        int c;                       // thử lần lượt các màu đã dùng',
     '        for (c = 0; c < soMau; c++) {',
-    '            if (!trungMau(v, c)) break;  // không trùng → dùng màu c',
+    '            if (!trungMau(v, c)) {',
+    '                cout << "  c=" << c << " khong trung\\n";',
+    '                break;               // không trùng → dùng màu c',
+    '            }',
     '            cout << "  c=" << c << " trung\\n";',
     '        }',
     '        if (c == soMau) {            // for chạy hết → màu mới',
@@ -391,7 +394,7 @@ const Solver = (() => {
     22: '// hạ bậc', 31: 'cout << "So mau',
   };
   const GREEDY_CPP_OUT = {
-    select: 'cout << "Lan "', conflict: '" trung', newcolor: '"  mau moi "', assign: 'cout << "  mau["',
+    select: 'cout << "Lan "', conflict: '" trung', ok: '" khong trung', newcolor: '"  mau moi "', assign: 'cout << "  mau["',
     mark: '" da to: bac=-1', dec: 'cout << "  bac["', done: 'cout << "So mau',
   };
 
