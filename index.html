@@ -1038,8 +1038,8 @@ html::-webkit-scrollbar{width:8px}
           <button class="tb-head" type="button" aria-expanded="false" aria-controls="tbMxBody"><span class="eyebrow">Ma trận kề</span><span class="tb-meta" id="tbMxMeta">—</span><i class="tb-car" aria-hidden="true"></i></button>
           <div class="tb-body" id="tbMxBody" data-lenis-prevent></div>
         </section>
-        <section class="plate tb-sec" id="tbHt" aria-label="Bảng tính tay">
-          <button class="tb-head" type="button" aria-expanded="false" aria-controls="tbHtBody"><span class="eyebrow">Bảng tính tay</span><span class="tb-meta" id="tbHtMeta">—</span><i class="tb-car" aria-hidden="true"></i></button>
+        <section class="plate tb-sec" id="tbHt" aria-label="Bảng trạng thái">
+          <button class="tb-head" type="button" aria-expanded="false" aria-controls="tbHtBody"><span class="eyebrow">Bảng trạng thái</span><span class="tb-meta" id="tbHtMeta">—</span><i class="tb-car" aria-hidden="true"></i></button>
           <div class="tb-body" id="tbHtBody" data-lenis-prevent></div>
         </section>
       </div>
@@ -3039,8 +3039,8 @@ function updateMatrix(s) {
 function buildHand() {
   const body = $('#tbHtBody'), n = st.g.n, cs = tbCell(n), G = st.algo === 'greedy';
   TB.rows = []; TB.trs = [];
-  $('#tbHt .eyebrow').textContent = G ? 'Bảng tính tay' : 'Cây quay lui';
-  tbSec.ht.setAttribute('aria-label', G ? 'Bảng tính tay' : 'Cây quay lui');
+  $('#tbHt .eyebrow').textContent = G ? 'Bảng trạng thái' : 'Cây quay lui';
+  tbSec.ht.setAttribute('aria-label', G ? 'Bảng trạng thái' : 'Cây quay lui');
   tbSec.ht.classList.toggle('tree-mode', !G);
   if (!G) { buildTree(); return; }
   if (TR.ro) { TR.ro.disconnect(); TR.ro = null; }

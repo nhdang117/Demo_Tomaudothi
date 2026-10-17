@@ -987,8 +987,8 @@ function updateMatrix(s) {
 function buildHand() {
   const body = $('#tbHtBody'), n = st.g.n, cs = tbCell(n), G = st.algo === 'greedy';
   TB.rows = []; TB.trs = [];
-  $('#tbHt .eyebrow').textContent = G ? 'Bảng tính tay' : 'Cây quay lui';
-  tbSec.ht.setAttribute('aria-label', G ? 'Bảng tính tay' : 'Cây quay lui');
+  $('#tbHt .eyebrow').textContent = G ? 'Bảng trạng thái' : 'Cây quay lui';
+  tbSec.ht.setAttribute('aria-label', G ? 'Bảng trạng thái' : 'Cây quay lui');
   tbSec.ht.classList.toggle('tree-mode', !G);
   if (!G) { buildTree(); return; }
   if (TR.ro) { TR.ro.disconnect(); TR.ro = null; }
