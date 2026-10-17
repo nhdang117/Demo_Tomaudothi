@@ -1609,11 +1609,9 @@ async function tsSelect(id) {
 }
 (function initTests() {
   if (!TSD) { $('#tsSub').textContent = 'Chưa có kết quả: chạy "node testcases/run_tests.js" rồi "python build.py".'; return; }
-  const M = TSD.meta, C = M.cpp, day = new Date(M.date).toLocaleDateString('vi-VN');
+  const M = TSD.meta, C = M.cpp;
   $('#tsTitle').textContent = `${M.pass}/${M.total} testcase đạt`;
-  $('#tsSub').textContent = `${M.total} testcase, ${TSD.summary.length} nhóm, đáp án từ lý thuyết, vét cạn hoặc thuật toán kiểm chứng độc lập. ` +
-    `Chạy trên máy ngày ${day} bằng JS của trang (Node ${M.node}) và code C++` + (C ? ` (${C.compiler.split(' (')[0]} ${C.flags})` : '') +
-    '; trang chỉ hiển thị kết quả, bấm dòng có "▶ xem demo" để nạp đồ thị.';
+  $('#tsSub').textContent = `${M.total} testcase, ${TSD.summary.length} nhóm, bấm dòng có "▶ xem demo" để nạp đồ thị.`;
   $('#tsNote').innerHTML = C
     ? `<b>Khi chạy testcase, code C++ chỉ in kết quả cuối cùng, không in log từng bước</b> (cpp/tham_lam.cpp, cpp/quay_lui.cpp — cùng thuật toán với code trên panel). ` +
       `Quay lui C++ chạy cho mọi n, dừng sau ${C.timeoutS} s; thời gian C++ đo từ ngoài tiến trình, đã gồm ≈ ${C.startMs} ms khởi động và đọc input. ` +
