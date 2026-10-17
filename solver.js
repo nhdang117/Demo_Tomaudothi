@@ -173,7 +173,7 @@ const Solver = (() => {
         R && R({ line: 20, type: 'assign', out: `  mau[${v}]=${c}`, v, c, deg: d, title: 'Tô màu',
           note: `Tô đỉnh ${v} màu ${c} → xếp vào ngăn ${c + 1}.` });
         deg[v] = -1;
-        R && R({ line: 21, type: 'mark', v, c, deg: d, title: 'Đánh dấu đã tô',
+        R && R({ line: 21, type: 'mark', out: `  dinh ${v} da to: bac=-1`, v, c, deg: d, title: 'Đánh dấu đã tô',
           note: `Gán bậc của đỉnh ${v} = −1 để không bị chọn lại.` });
         const dec = [];
         for (const u of adj[v]) if (deg[u] >= 0) { deg[u]--; dec.push(u); }
@@ -365,6 +365,7 @@ const Solver = (() => {
     '        mau[v] = c;                  // S_i = v, tô màu c',
     '        cout << "  mau[" << v << "]=" << c << "\\n";',
     '        bac[v] = -1;                 // P = P - {v}',
+    '        cout << "  dinh " << v << " da to: bac=-1\\n";',
     '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
     '            if (a[v][u] == 1 && bac[u] >= 0) {',
     '                bac[u]--;',
@@ -391,7 +392,7 @@ const Solver = (() => {
   };
   const GREEDY_CPP_OUT = {
     select: 'cout << "Lan "', conflict: '" trung', newcolor: '"  mau moi "', assign: 'cout << "  mau["',
-    dec: 'cout << "  bac["', done: 'cout << "So mau',
+    mark: '" da to: bac=-1', dec: 'cout << "  bac["', done: 'cout << "So mau',
   };
 
   const BT_CPP = () => [
