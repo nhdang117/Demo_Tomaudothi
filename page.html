@@ -232,7 +232,8 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .tl-list li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;padding:2px 12px 2px 8px;border-left:2px solid transparent;color:var(--ink-dim);cursor:pointer}
 .tl-list li:hover{background:var(--holo-soft)}
 .tl-list .n{text-align:right;font-size:10px;color:var(--ink-faint);padding-top:1px}
-.tl-list .x{overflow-wrap:anywhere}
+.tl-list .x{white-space:pre}   /* như console: giữ khoảng trắng đầu dòng của cout, dòng dài thì cuộn ngang */
+.tl-list li{min-width:100%;width:max-content}
 .tl-list li.grp{margin-top:3px;padding-top:5px;border-top:1px solid var(--line)}   /* bắt đầu một vòng chọn đỉnh / một giá trị k */
 .tl-list li.k-sel .x{color:var(--ink);font-weight:600}
 .tl-list li.k-bad .x{color:var(--warn)}
@@ -240,7 +241,6 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .tl-list li.k-end .x{color:var(--holo);font-weight:700}
 .tl-list li.k-ok .x{color:var(--good,#36e08f)}
 .tl-list li.k-gold .x{color:var(--gold,#ffc83d);font-weight:700}
-.tl-list .x[style]{padding-left:calc(min(var(--d,0),8) * 3px)}   /* quay lui: thụt lề theo độ sâu */
 .tl-list .x b{color:var(--holo);font-weight:700}
 .tl-list li.cur{background:var(--holo-soft);border-left-color:var(--holo)}
 .tl-list li.cur .n{color:var(--holo);font-weight:700}
@@ -624,9 +624,9 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
         </div>
         <!-- màn hẹp (≤ 820px): main.js chuyển khối này về cuối .lab-left, dưới khung code -->
         <div class="plate tlog">
-          <div class="tl-head"><p class="eyebrow">Log trace</p><span class="tl-meta" id="tlMeta">—</span></div>
+          <div class="tl-head"><p class="eyebrow" title="Đúng những gì chương trình C++ trên panel code in ra (cout)">Output C++</p><span class="tl-meta" id="tlMeta">—</span></div>
           <p class="tl-more" id="tlMore" hidden></p>
-          <ol class="tl-list" id="tlList" data-lenis-prevent aria-label="Nhật ký thay đổi của từng bước, bấm một dòng để về bước đó"></ol>
+          <ol class="tl-list" id="tlList" data-lenis-prevent aria-label="Output của chương trình C++ (cout), bấm một dòng để về bước in ra dòng đó"></ol>
         </div>
         <div class="tools" role="toolbar" aria-label="Điều khiển góc nhìn">
           <button class="tbtn accent" id="tOpts" type="button">Tuỳ chọn &amp; nhập đồ thị</button>

@@ -193,16 +193,19 @@ console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so 
       const c = spawnSync('g++', ['-O2', '-Wall', '-Wextra', '-o', exe, src], { encoding: 'utf8' });
       check(`C++ ${id}: biên dịch được, không cảnh báo`, c.status === 0 && !c.stderr.trim(), c.stderr);
       if (c.status !== 0) continue;
-      let bad = 0;
+      let bad = 0, badOut = 0;
       for (const g of graphs) {
         const input = `${g.n}\n` + g.edges.map(e => e.join(' ')).join('\n') + '\n';
         const out = spawnSync(exe, [], { input, encoding: 'utf8' }).stdout;
-        const k = +(out.match(/: (\d+)/) || [])[1];
-        const cols = [...out.matchAll(/mau (-?\d+)/g)].map(m => m[1]).join();
+        const k = +(out.match(/So mau: (\d+)/) || [])[1];
+        const cols = [...out.matchAll(/Dinh \d+: mau (-?\d+)/g)].map(m => m[1]).join();
         const r = S.ALGOS[id].run(g, null);
         if (k !== r.k || cols !== Array.from(r.colors).join()) bad++;
+        const t = S.trace(id, g, 1e6);
+        if (t.truncated || S.stdoutOf(t.steps) !== out.replace(/\r\n/g, '\n')) badOut++;
       }
       check(`C++ ${id}: số màu và cách tô trùng solver trên ${graphs.length} đồ thị`, bad === 0, `${bad} đồ thị lệch`);
+      check(`C++ ${id}: log trên web trùng TỪNG KÝ TỰ stdout của C++ trên ${graphs.length} đồ thị`, badOut === 0, `${badOut} đồ thị lệch`);
     }
     fs.rmSync(dir, { recursive: true, force: true });
   }

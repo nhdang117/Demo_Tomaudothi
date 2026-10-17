@@ -710,71 +710,49 @@ function setActiveLine(i, animate) {
 
 const chip = c => `<span class="chip"><i style="--c:${palHex(c)}"></i>${c} · ngăn ${c + 1}</span>`;
 
-/* ---------------- Log trace ----------------
-   Mỗi bước một dòng ghi biến nào đổi (lời giải thích đầy đủ nằm ở title và ở chú thích nổi).
+/* ---------------- Log = stdout của code C++ ----------------
+   Mỗi bước trace có `out` khi đúng chỗ đó code C++ chạy lệnh cout (solver.js); log chỉ in các dòng này,
+   nên trùng từng ký tự với chương trình C++ thật (test.js biên dịch bằng g++ và so). Bước không in gì
+   thì log không thêm dòng. Lời giải thích đầy đủ nằm ở title và ở chú thích nổi.
    Chỉ giữ TL.MAX dòng gần nhất; tới/lùi 1 bước thì thêm/bớt dòng, nhảy xa thì dựng lại. */
 const TL = { list: $('#tlList'), from: 0, to: -1, MAX: 300 };
-const fmtArr = (a, max = 16) => a.length <= max ? a.join(', ') : a.slice(0, max).join(', ') + ', …';
-function logText(s) {
-  const sw = c => `<span class="sw" style="--c:${palHex(c)}"></span>${c}`, G = st.algo === 'greedy';
-  if (!G) switch (s.type) {                               // quay lui: kiểu log của file Tuần 6 (CHỌN / LOẠI / gọi đệ quy / quay lui)
-    case 'init': return `thuTu = [${fmtArr(s.order)}] · soMauMin = ${s.kmin}`;
-    case 'select': return `↳ i=<b>${s.depth + 1}</b> · xét v = ${s.v} · soMau = ${s.used}`;
-    case 'conflict': return `màu ${sw(s.c)} trùng v${s.u} → LOẠI`;
-    case 'sym': return `màu ${s.c} > soMau → bỏ (đối xứng)`;
-    case 'prune': return `✂ màu ${s.c}: cần ${Math.max(s.used, s.c + 1)} ≥ soMauMin = ${s.kmin} → CẮT`;
-    case 'assign': return `màu ${sw(s.c)} → CHỌN`;
-    case 'backtrack': return `↰ quay lui: gỡ màu ${s.c} của v${s.v}`;
-    case 'fail': return `✗ v${s.v} hết lựa chọn → về bước trước`;
-    case 'found': return `★ LG mới: soMauMin = ${s.k}`;
-    case 'done': return `χ(G) = soMauMin = ${s.k} · ${s.backtracks} lần quay lui`;
-  }
-  switch (s.type) {
-    case 'init': return `bac = [${fmtArr(Array.from(s.degs))}] · soMau = 0`;
-    case 'select': return `v = ${s.v} · bac[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '');
-    case 'try': return s.c == null ? 'soMau = 0 → chưa có màu cũ' : `c = ${s.c}`;
-    case 'conflict': return `mau[${s.u}] == ${s.c} → c = c + 1`;
-    case 'ok': return `c = ${s.c} không trùng → dùng lại`;
-    case 'newcolor': return `soMau = ${s.c + 1} · màu mới ${sw(s.c)}`;
-    case 'assign': return `mau[${s.v}] = ${sw(s.c)} → ngăn ${s.c + 1}`;
-    case 'mark': return `bac[${s.v}] = −1`;
-    case 'dec': {
-      if (!s.us.length) return 'không còn đỉnh kề chưa tô';
-      const parts = s.us.slice(0, 8).map(u => `bac[${u}] ${s.degs[u] + 1}→${s.degs[u]}`);
-      return parts.join(', ') + (s.us.length > 8 ? `, … (+${s.us.length - 8})` : '');
-    }
-    case 'done': return `xuất soMau = ${s.used}, mau`;
-  }
-  return esc(s.title || s.type);
-}
 function logLine(i) {
   const s = st.steps[i], t = s.type;
+  if (s.out == null) return '';
   const G = st.algo === 'greedy';
   const cls = [t === 'select' && G ? 'grp' : '',
     t === 'select' && G ? 'k-sel' : t === 'conflict' || t === 'prune' ? 'k-bad' : t === 'assign' && !G ? 'k-ok'
       : t === 'backtrack' || t === 'fail' ? 'k-back' : t === 'found' ? 'k-gold' : t === 'done' ? 'k-end' : '']
     .filter(Boolean).join(' ');
-  const ind = !G && s.depth != null ? ` style="--d:${s.depth}"` : '';   // quay lui: thụt lề theo độ sâu
-  return `<li${cls ? ` class="${cls}"` : ''} data-i="${i}" title="${esc(s.note || '')}"><span class="n">${i + 1}</span><span class="x"${ind}>${logText(s)}</span></li>`;
+  return `<li${cls ? ` class="${cls}"` : ''} data-i="${i}" title="Bước ${i + 1}: ${esc(s.note || '')}"><span class="n">${i + 1}</span><span class="x">${esc(s.out)}</span></li>`;
 }
 function updateLog(i) {
   const L = TL.list;
   if (TL.to >= 0 && i >= TL.from && i <= TL.to) {          // lùi trong cửa sổ đang hiện: bỏ các dòng sau i
-    while (TL.to > i) { L.lastElementChild.remove(); TL.to--; }
-  } else if (TL.to >= 0 && i === TL.to + 1) {              // tới 1 bước: thêm 1 dòng, quá MAX thì bỏ dòng đầu
+    while (L.lastElementChild && +L.lastElementChild.dataset.i > i) L.lastElementChild.remove();
+    TL.to = i;
+  } else if (TL.to >= 0 && i === TL.to + 1) {              // tới 1 bước: thêm dòng (nếu bước này có in), quá MAX thì bỏ dòng đầu
     L.insertAdjacentHTML('beforeend', logLine(i)); TL.to = i;
-    if (TL.to - TL.from + 1 > TL.MAX) { L.firstElementChild.remove(); TL.from++; }
-  } else {                                                 // nhảy xa: dựng lại
-    TL.from = Math.max(0, i - TL.MAX + 1); TL.to = i;
+    while (L.children.length > TL.MAX) { L.firstElementChild.remove(); TL.from = +L.firstElementChild.dataset.i; }
+  } else {                                                 // nhảy xa: dựng lại từ TL.MAX dòng in gần nhất
+    let j = i, cnt = 0;
+    for (; j >= 0 && cnt < TL.MAX; j--) if (st.steps[j].out != null) cnt++;
+    TL.from = j + 1; TL.to = i;
     let h = '';
-    for (let j = TL.from; j <= i; j++) h += logLine(j);
+    for (let k = TL.from; k <= i; k++) h += logLine(k);
     L.innerHTML = h;
   }
   const more = $('#tlMore');
   more.hidden = TL.from === 0;
-  more.textContent = `… ${TL.from} bước trước không hiện`;
+  more.textContent = `… phần in từ ${TL.from} bước trước không hiện`;
   L.querySelector('.cur')?.classList.remove('cur');
-  L.lastElementChild.classList.add('cur');
+  const last = L.lastElementChild;
+  last?.classList.add('cur');
+  if (last) {                                              // đệ quy sâu → dòng thụt nhiều: cuộn ngang để thấy dòng mới nhất
+    const lead = st.steps[+last.dataset.i].out.match(/^ */)[0].length;
+    TL.cw = TL.cw || (() => { const c = document.createElement('canvas').getContext('2d'); c.font = getComputedStyle(L).font; return c.measureText('0').width; })();
+    L.scrollLeft = Math.max(0, lead * TL.cw - 24);
+  }
   L.scrollTop = L.scrollHeight;
   $('#tlMeta').textContent = `bước ${i + 1} / ${st.steps.length}`;
 }

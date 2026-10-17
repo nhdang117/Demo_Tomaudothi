@@ -113,6 +113,16 @@ const Solver = (() => {
     '}',
   ];
 
+  /** Phần cuối stdout của cả 2 chương trình C++: số màu + màu từng đỉnh. */
+  function outKetQua(k, colors) {
+    return [`So mau: ${k}`, ...Array.from(colors, (c, v) => `Dinh ${v}: mau ${c}`)].join('\n');
+  }
+
+  /** Ghép các dòng out của trace thành đúng stdout của chương trình C++. */
+  function stdoutOf(steps) {
+    return steps.filter(st => st.out != null).map(st => st.out).join('\n') + '\n';
+  }
+
   function fmtList(arr, max = 8) {
     return arr.length <= max ? arr.join(', ') : arr.slice(0, max).join(', ') + ` … (${arr.length} đỉnh)`;
   }
@@ -134,7 +144,7 @@ const Solver = (() => {
         if (R) {
           const ties = [];
           for (let x = 0; x < n; x++) if (deg[x] === d) ties.push(x);
-          R({ line: 13, type: 'select', v, deg: d, ties, title: 'Chọn đỉnh',
+          R({ line: 13, type: 'select', out: `Lan ${step + 1}: v=${v} bac=${d}`, v, deg: d, ties, title: 'Chọn đỉnh',
             note: ties.length > 1
               ? `Bậc cao nhất là ${d}, có ${ties.length} đỉnh cùng bậc: ${fmtList(ties)} → lấy chỉ số nhỏ nhất: đỉnh ${v}.`
               : `Đỉnh ${v} có bậc cao nhất trong bảng (${d}).` });
@@ -146,7 +156,7 @@ const Solver = (() => {
           let clash = -1;
           for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
           if (clash < 0) break;
-          R && R({ line: 16, type: 'conflict', v, u: clash, c, deg: d, title: 'Trùng màu',
+          R && R({ line: 16, type: 'conflict', out: `  c=${c} trung`, v, u: clash, c, deg: d, title: 'Trùng màu',
             note: `Đỉnh kề ${clash} đã tô màu ${c} → không dùng được màu ${c}.` });
           c++;
           if (c < used) R && R({ line: 17, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
@@ -156,11 +166,11 @@ const Solver = (() => {
             note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
         } else {
           used++;
-          R && R({ line: 19, type: 'newcolor', v, c, deg: d, title: 'Sinh màu mới',
+          R && R({ line: 19, type: 'newcolor', out: `  mau moi ${c}`, v, c, deg: d, title: 'Sinh màu mới',
             note: c === 0 ? 'Chưa có màu nào → sinh màu 0.' : `Cả ${c} màu cũ đều trùng với đỉnh kề → sinh màu mới ${c}.` });
         }
         color[v] = c;
-        R && R({ line: 20, type: 'assign', v, c, deg: d, title: 'Tô màu',
+        R && R({ line: 20, type: 'assign', out: `  mau[${v}]=${c}`, v, c, deg: d, title: 'Tô màu',
           note: `Tô đỉnh ${v} màu ${c} → xếp vào ngăn ${c + 1}.` });
         deg[v] = -1;
         R && R({ line: 21, type: 'mark', v, c, deg: d, title: 'Đánh dấu đã tô',
@@ -172,7 +182,7 @@ const Solver = (() => {
             ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
             : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
       }
-      R && R({ line: 31, type: 'done', title: 'Hoàn tất',
+      R && R({ line: 31, type: 'done', out: outKetQua(used, color), title: 'Hoàn tất',
         note: `Đã tô ${n} đỉnh, dùng ${used} màu.` });
     } catch (e) { if (e !== TRUNC) throw e; }
     return { colors: color, k: usedCount(color) };
@@ -247,8 +257,8 @@ const Solver = (() => {
     // i: bước giải (0-based trong code, hiển thị i + 1 cho khớp mã giả)
     function quayLui(i, used) {
       if (++calls > budget) throw ABORT;
-      const v = order[i];
-      R && R({ line: 8, type: 'select', v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
+      const v = order[i], ind = '  '.repeat(i);          // ind: thutLe(i) của C++
+      R && R({ line: 8, type: 'select', out: `${ind}B${i + 1}: v=${v} soMau=${used}`, v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
         note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
@@ -257,31 +267,31 @@ const Solver = (() => {
           break;
         }
         if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
-          R && R({ line: 15, type: 'prune', v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
+          R && R({ line: 15, type: 'prune', out: `${ind}  c=${c} cat tia`, v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
             note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ soMauMin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
           break;
         }
         let clash = -1;
         for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
         if (clash >= 0) {
-          R && R({ line: 16, type: 'conflict', v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
+          R && R({ line: 16, type: 'conflict', out: `${ind}  c=${c} trung`, v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
             note: `Đỉnh kề ${clash} đang mang màu ${c} → loại màu ${c}.` });
           continue;
         }
         color[v] = c;
-        R && R({ line: 18, type: 'assign', v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
+        R && R({ line: 18, type: 'assign', out: `${ind}  mau[${v}]=${c}`, v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
           note: `Màu ${c} hợp lệ → S_${i + 1} = ${c}, tô đỉnh ${v}.` });
         if (i === n - 1) {
           kmin = Math.max(used, c + 1);
           smin.set(color);
-          R && R({ line: 21, type: 'found', k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
+          R && R({ line: 21, type: 'found', out: `${ind}  LG moi: soMauMin=${kmin}`, k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
             note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật soMauMin = ${kmin}, lưu Smin.` });
         } else {
           quayLui(i + 1, Math.max(used, c + 1));
         }
         color[v] = -1;
         bts++;
-        R && R({ line: 26, type: 'backtrack', v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
+        R && R({ line: 26, type: 'backtrack', out: `${ind}  go mau[${v}]`, v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
           note: `Gỡ màu ${c} của đỉnh ${v} (quay lui lần ${bts}) rồi thử màu kế tiếp.` });
       }
       R && R({ line: 11, type: 'fail', v, depth: i, deg: deg[v], title: 'Hết lựa chọn',
@@ -289,10 +299,10 @@ const Solver = (() => {
     }
 
     try {
-      R && R({ line: 34, type: 'init', order, title: 'Khởi tạo',
+      R && R({ line: 34, type: 'init', out: 'thuTu:' + order.map(x => ' ' + x).join(''), order, title: 'Khởi tạo',
         note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, soMauMin = n + 1 = ${n + 1} (chưa có lời giải).` });
       quayLui(0, 0);
-      R && R({ line: 37, type: 'done', k: kmin, title: 'Hoàn tất',
+      R && R({ line: 37, type: 'done', out: outKetQua(kmin, smin), k: kmin, title: 'Hoàn tất',
         note: `Vét hết cây tìm kiếm: sắc số χ(G) = soMauMin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
     } catch (e) {
       if (e === ABORT) aborted = true;
@@ -303,6 +313,10 @@ const Solver = (() => {
 
   /* =================================================================
    * 3) CODE C++ THẬT của 2 thuật toán — panel code bật công tắc "C++" thì hiện.
+   *    Code có các dòng cout in log; mỗi bước trace mang chuỗi `out` = ĐÚNG
+   *    dòng C++ in ra ở bước đó (bước không in gì thì không có out). Panel
+   *    Log chỉ hiện các chuỗi này, nên log trên web = stdout của chương trình
+   *    C++; test.js chạy g++ và so từng ký tự (stdoutOf).
    *    Chỉ dùng <iostream> + mảng tĩnh, ma trận kề như GV dạy. Cấu trúc bám
    *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó mỗi dòng "u v".
    *    test.js tự biên dịch bằng g++ (nếu có) và so kết quả với solver.
@@ -338,11 +352,18 @@ const Solver = (() => {
     '        int v = 0;                   // SELECT: bac lớn nhất,',
     '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
     '            if (bac[x] > bac[v]) v = x;',
+    '        cout << "Lan " << i << ": v=" << v << " bac=" << bac[v] << "\\n";',
     '        int c = 0;                   // thử các màu đã dùng',
-    '        while (c < soMau && trungMau(v, c))',
+    '        while (c < soMau && trungMau(v, c)) {',
+    '            cout << "  c=" << c << " trung\\n";',
     '            c++;                     // trùng màu → màu sau',
-    '        if (c == soMau) soMau++;     // hết màu cũ → màu mới',
+    '        }',
+    '        if (c == soMau) {            // hết màu cũ → màu mới',
+    '            soMau++;',
+    '            cout << "  mau moi " << c << "\\n";',
+    '        }',
     '        mau[v] = c;                  // S_i = v, tô màu c',
+    '        cout << "  mau[" << v << "]=" << c << "\\n";',
     '        bac[v] = -1;                 // P = P - {v}',
     '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
     '            if (a[v][u] == 1 && bac[u] >= 0) bac[u]--;',
@@ -362,7 +383,7 @@ const Solver = (() => {
   ];
   const GREEDY_CPP_AT = {
     9: 'bac[v] += a[v][u]', 13: '// SELECT', 15: 'int c = 0;', 16: 'while (c < soMau',
-    17: 'c++;', 19: 'if (c == soMau)', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
+    17: 'c++;', 19: 'soMau++;', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
     22: '// hạ bậc', 31: 'cout << "So mau',
   };
 
@@ -386,21 +407,35 @@ const Solver = (() => {
     '    return false;',
     '}',
     '',
+    '// lùi đầu dòng log theo độ sâu đệ quy',
+    'void thutLe(int i) {',
+    '    for (int t = 1; t < i; t++) cout << "  ";',
+    '}',
+    '',
     'void quayLui(int i, int soMau) {  // bước i: màu S_i cho thuTu[i]',
     '    int v = thuTu[i];',
+    '    thutLe(i); cout << "B" << i << ": v=" << v << " soMau=" << soMau << "\\n";',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
     '        int soMauMoi = (c + 1 > soMau) ? c + 1 : soMau;  // max(soMau, c + 1)',
-    '        if (c <= soMau               // phá đối xứng',
-    '            && soMauMoi < soMauMin   // cắt tỉa',
-    '            && !trungMau(v, c)) {    // khác màu kề',
-    '            mau[v] = c;              // ghi nhận S_i = c',
-    '            if (i == n) {            // đủ n đỉnh: LG hoàn chỉnh',
-    '                soMauMin = soMauMoi;',
-    '                for (int x = 0; x < n; x++) Smin[x] = mau[x];',
-    '            } else',
-    '                quayLui(i + 1, soMauMoi);',
-    '            mau[v] = -1;             // trả lại trạng thái cũ',
+    '        if (c > soMau) break;        // phá đối xứng (màu sau cũng vậy)',
+    '        if (soMauMoi >= soMauMin) {  // cắt tỉa (màu sau cũng vậy)',
+    '            thutLe(i); cout << "  c=" << c << " cat tia\\n";',
+    '            break;',
     '        }',
+    '        if (trungMau(v, c)) {        // trùng màu đỉnh kề → loại',
+    '            thutLe(i); cout << "  c=" << c << " trung\\n";',
+    '            continue;',
+    '        }',
+    '        mau[v] = c;                  // ghi nhận S_i = c',
+    '        thutLe(i); cout << "  mau[" << v << "]=" << c << "\\n";',
+    '        if (i == n) {                // đủ n đỉnh: LG hoàn chỉnh',
+    '            soMauMin = soMauMoi;',
+    '            for (int x = 0; x < n; x++) Smin[x] = mau[x];',
+    '            thutLe(i); cout << "  LG moi: soMauMin=" << soMauMin << "\\n";',
+    '        } else',
+    '            quayLui(i + 1, soMauMoi);',
+    '        mau[v] = -1;                 // trả lại trạng thái cũ',
+    '        thutLe(i); cout << "  go mau[" << v << "]\\n";',
     '    }',
     '}',
     '',
@@ -416,6 +451,9 @@ const Solver = (() => {
     '    for (int d = n - 1; d >= 0; d--) // cùng bậc: chỉ số nhỏ trước',
     '        for (int v = 0; v < n; v++)',
     '            if (bac[v] == d) thuTu[++k] = v;',
+    '    cout << "thuTu:";',
+    '    for (int i = 1; i <= n; i++) cout << " " << thuTu[i];',
+    '    cout << "\\n";',
     '    for (int v = 0; v < n; v++) mau[v] = -1;',
     '    soMauMin = n + 1;',
     '    quayLui(1, 0);',
@@ -426,9 +464,9 @@ const Solver = (() => {
     '}',
   ];
   const BT_CPP_AT = {
-    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c <= soMau',
-    15: '&& soMauMoi < soMauMin', 16: '&& !trungMau', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
-    26: '// trả lại trạng thái cũ', 34: 'int k = 0;', 37: 'cout << "So mau',
+    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) break;',
+    15: 'if (soMauMoi >= soMauMin)', 16: 'if (trungMau(v, c))', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
+    26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
   };
 
   /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
@@ -638,7 +676,7 @@ const Solver = (() => {
 
   return {
     Recorder, makeGraph, usedCount, setStr, isProper, isPartialProper,
-    greedy, backtrack, ALGOS, trace,
+    greedy, backtrack, ALGOS, trace, stdoutOf,
     PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toEdgeListText, MAX_N, mulberry32,
   };
 })();
