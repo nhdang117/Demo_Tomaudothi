@@ -88,7 +88,8 @@ body{background:
 .pens .tag{border-radius:6px}
 
 /* demo */
-.code li.on{background:linear-gradient(90deg,rgba(91,91,240,.14),rgba(154,77,255,.05) 70%,transparent)}
+.code li.on{background:linear-gradient(90deg,rgba(91,91,240,.2),rgba(154,77,255,.1) 70%,rgba(154,77,255,.04));color:var(--ink)}
+.code li.on::after{background-image:linear-gradient(90deg,transparent,rgba(124,92,255,.16),transparent)}
 .code li.on .ln{color:var(--holo)}
 .code li.on::before{background:var(--grad)}
 .code li.was{background:rgba(91,91,240,.05)}
