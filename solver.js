@@ -81,27 +81,27 @@ const Solver = (() => {
     '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
     '// trungMau(v, c): có đỉnh kề v mang màu c?',
     '// S_i = đỉnh thứ i được chọn để tô',
-    '// deg[v]: số đỉnh kề chưa tô; -1 = đã tô',
-    '// color[v]: màu của v; -1 = chưa tô',
-    '// used: số màu đã dùng (màu 0..used-1)',
+    '// bac[v]: số đỉnh kề chưa tô; -1 = đã tô',
+    '// mau[v]: màu của v; -1 = chưa tô',
+    '// soMau: số màu đã dùng (màu 0..soMau-1)',
     '',
     'thamLam()',
     '{',
-    '  deg[v] = số đỉnh kề của v, với mọi v',
-    '  color[v] = -1 với mọi v;  used = 0',
+    '  bac[v] = số đỉnh kề của v, với mọi v',
+    '  mau[v] = -1 với mọi v;  soMau = 0',
     '  for (i = 1 -> n)  // mỗi vòng tô đúng 1 đỉnh',
     '  {',
-    '    v = đỉnh có deg lớn nhất  // SELECT',
+    '    v = đỉnh có bac lớn nhất  // SELECT',
     '    // (hòa bậc → lấy chỉ số nhỏ nhất)',
     '    c = 0  // thử lần lượt các màu đã dùng',
-    '    while (c < used and trungMau(v, c))',
+    '    while (c < soMau and trungMau(v, c))',
     '      c = c + 1  // trùng màu → thử màu sau',
-    '    if (c == used)  // hết màu cũ',
-    '      used = used + 1  // → sinh màu mới',
-    '    color[v] = c  // S_i = v, tô màu c',
-    '    deg[v] = -1  // P = P − {v}: không chọn lại',
+    '    if (c == soMau)  // hết màu cũ',
+    '      soMau = soMau + 1  // → sinh màu mới',
+    '    mau[v] = c  // S_i = v, tô màu c',
+    '    bac[v] = -1  // P = P − {v}: không chọn lại',
     '    for (u kề v)  // hạ bậc đỉnh kề chưa tô',
-    '      if (deg[u] >= 0) deg[u] = deg[u] - 1',
+    '      if (bac[u] >= 0) bac[u] = bac[u] - 1',
     '  }',
     '}',
     '',
@@ -109,7 +109,7 @@ const Solver = (() => {
     '{',
     '  đọc G: n đỉnh, ma trận kề a',
     '  thamLam()',
-    '  xuất used, color',
+    '  xuất soMau, mau',
     '}',
   ];
 
@@ -181,11 +181,11 @@ const Solver = (() => {
   /* =================================================================
    * 2) QUAY LUI tìm sắc số χ(G) — theo mô hình try(i) của GV (Buổi 6–7),
    *    kiểu bài tối ưu "cây khung tối tiểu": vét cạn, giữ LG tốt nhất
-   *    hiện hành (kmin, Smin), gặp LG hoàn chỉnh thì cập nhật.
-   *    Bước i tô đỉnh ord[i] (đỉnh xếp theo bậc giảm dần), for chạy tối đa
+   *    hiện hành (soMauMin, Smin), gặp LG hoàn chỉnh thì cập nhật.
+   *    Bước i tô đỉnh thuTu[i] (đỉnh xếp theo bậc giảm dần), for chạy tối đa
    *    n màu, loại bằng if:
-   *      - c <= used               : phá đối xứng (chỉ mở màu mới kế tiếp)
-   *      - max(used, c + 1) < kmin : cắt tỉa (không thể ít màu hơn kmin)
+   *      - c <= soMau              : phá đối xứng (chỉ mở màu mới kế tiếp)
+   *      - soMauMoi < soMauMin     : cắt tỉa, soMauMoi = max(soMau, c + 1)
    *      - not trungMau(v, c)      : ràng buộc của bài toán
    *    Hai điều kiện đầu đơn điệu theo c: sai ở c thì sai với mọi c lớn
    *    hơn, nên bản cài đặt dừng vòng for ngay (kết quả như for chạy hết).
@@ -196,31 +196,31 @@ const Solver = (() => {
   const BT_CODE = () => [
     '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
     '// trungMau(v, c): có đỉnh kề v mang màu c?',
-    '// S_i = màu của đỉnh ord[i]',
-    '// ord[1..n]: các đỉnh theo bậc giảm dần',
-    '// color[v]: màu của v; -1 = chưa tô',
-    '// used: số màu đã dùng (màu 0..used-1)',
-    '// kmin, Smin: LG tốt nhất hiện hành',
+    '// S_i = màu của đỉnh thuTu[i]',
+    '// thuTu[1..n]: các đỉnh theo bậc giảm dần',
+    '// mau[v]: màu của v; -1 = chưa tô',
+    '// soMau: số màu đã dùng (màu 0..soMau-1)',
+    '// soMauMin, Smin: LG tốt nhất hiện hành',
     '',
-    'quayLui(i, used)  // bước i: màu S_i cho ord[i]',
+    'quayLui(i, soMau)  // bước i: màu S_i cho thuTu[i]',
     '{',
-    '  v = ord[i]',
+    '  v = thuTu[i]',
     '  for (c = 0 -> n-1)  // tối đa n lựa chọn',
     '  {',
-    '    moi = max(used, c + 1)  // số màu nếu tô c',
-    '    if (c <= used  // phá đối xứng',
-    '        and moi < kmin  // cắt tỉa',
+    '    soMauMoi = max(soMau, c + 1)  // số màu nếu tô c',
+    '    if (c <= soMau  // phá đối xứng',
+    '        and soMauMoi < soMauMin  // cắt tỉa',
     '        and not trungMau(v, c))  // khác màu kề',
     '    {',
-    '      color[v] = c  // ghi nhận S_i = c',
+    '      mau[v] = c  // ghi nhận S_i = c',
     '      if (i == n)  // đủ n đỉnh: LG hoàn chỉnh',
     '      {',
-    '        kmin = moi',
-    '        Smin = color  // lưu bản sao',
+    '        soMauMin = soMauMoi',
+    '        Smin = mau  // lưu bản sao',
     '      }',
     '      else',
-    '        quayLui(i + 1, moi)',
-    '      color[v] = -1  // trả lại trạng thái cũ',
+    '        quayLui(i + 1, soMauMoi)',
+    '      mau[v] = -1  // trả lại trạng thái cũ',
     '    }',
     '  }',
     '}',
@@ -228,10 +228,10 @@ const Solver = (() => {
     'main()',
     '{',
     '  đọc G: n đỉnh, ma trận kề a',
-    '  ord[1..n] = các đỉnh theo bậc giảm dần',
-    '  color[v] = -1 với mọi v;  kmin = n + 1',
+    '  thuTu[1..n] = các đỉnh theo bậc giảm dần',
+    '  mau[v] = -1 với mọi v;  soMauMin = n + 1',
     '  quayLui(1, 0)',
-    '  xuất kmin, Smin',
+    '  xuất soMauMin, Smin',
     '}',
   ];
 
@@ -249,16 +249,16 @@ const Solver = (() => {
       if (++calls > budget) throw ABORT;
       const v = order[i];
       R && R({ line: 8, type: 'select', v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
-        note: `Tìm màu cho đỉnh ord[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, kmin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
+        note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
       for (let c = 0; c < n; c++) {
         if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
           R && R({ line: 14, type: 'sym', v, c, depth: i, deg: deg[v], title: 'Phá đối xứng',
-            note: `Màu ${c} > used = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
+            note: `Màu ${c} > soMau = ${used}: mở màu mới thứ hai chỉ là đổi tên màu → bỏ màu ${c}..${n - 1}.` });
           break;
         }
         if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
           R && R({ line: 15, type: 'prune', v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
-            note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ kmin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
+            note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ soMauMin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
           break;
         }
         let clash = -1;
@@ -275,7 +275,7 @@ const Solver = (() => {
           kmin = Math.max(used, c + 1);
           smin.set(color);
           R && R({ line: 21, type: 'found', k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
-            note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật kmin = ${kmin}, lưu Smin.` });
+            note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật soMauMin = ${kmin}, lưu Smin.` });
         } else {
           quayLui(i + 1, Math.max(used, c + 1));
         }
@@ -290,10 +290,10 @@ const Solver = (() => {
 
     try {
       R && R({ line: 34, type: 'init', order, title: 'Khởi tạo',
-        note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, kmin = n + 1 = ${n + 1} (chưa có lời giải).` });
+        note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, soMauMin = n + 1 = ${n + 1} (chưa có lời giải).` });
       quayLui(0, 0);
       R && R({ line: 37, type: 'done', k: kmin, title: 'Hoàn tất',
-        note: `Vét hết cây tìm kiếm: sắc số χ(G) = kmin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
+        note: `Vét hết cây tìm kiếm: sắc số χ(G) = soMauMin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
     } catch (e) {
       if (e === ABORT) aborted = true;
       else if (e !== TRUNC) throw e;
@@ -316,36 +316,36 @@ const Solver = (() => {
     'const int MAXN = 125;',
     'int n;               // số đỉnh',
     'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
-    'int deg[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
-    'int color[MAXN];     // màu của v; -1 = chưa tô',
-    'int used;            // số màu đã dùng (màu 0..used-1)',
+    'int bac[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
+    'int mau[MAXN];       // màu của v; -1 = chưa tô',
+    'int soMau;           // số màu đã dùng (màu 0..soMau-1)',
     '',
     '// có đỉnh kề v mang màu c?',
     'bool trungMau(int v, int c) {',
     '    for (int u = 0; u < n; u++)',
-    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '        if (a[v][u] == 1 && mau[u] == c) return true;',
     '    return false;',
     '}',
     '',
     'void thamLam() {',
-    '    for (int v = 0; v < n; v++) {    // deg[v] = số đỉnh kề của v',
-    '        deg[v] = 0;',
-    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
-    '        color[v] = -1;',
+    '    for (int v = 0; v < n; v++) {    // bac[v] = số đỉnh kề của v',
+    '        bac[v] = 0;',
+    '        for (int u = 0; u < n; u++) bac[v] += a[v][u];',
+    '        mau[v] = -1;',
     '    }',
-    '    used = 0;',
+    '    soMau = 0;',
     '    for (int i = 1; i <= n; i++) {   // mỗi vòng tô đúng 1 đỉnh',
-    '        int v = 0;                   // SELECT: deg lớn nhất,',
+    '        int v = 0;                   // SELECT: bac lớn nhất,',
     '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
-    '            if (deg[x] > deg[v]) v = x;',
+    '            if (bac[x] > bac[v]) v = x;',
     '        int c = 0;                   // thử các màu đã dùng',
-    '        while (c < used && trungMau(v, c))',
+    '        while (c < soMau && trungMau(v, c))',
     '            c++;                     // trùng màu → màu sau',
-    '        if (c == used) used++;       // hết màu cũ → màu mới',
-    '        color[v] = c;                // S_i = v, tô màu c',
-    '        deg[v] = -1;                 // P = P - {v}',
+    '        if (c == soMau) soMau++;     // hết màu cũ → màu mới',
+    '        mau[v] = c;                  // S_i = v, tô màu c',
+    '        bac[v] = -1;                 // P = P - {v}',
     '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
-    '            if (a[v][u] == 1 && deg[u] >= 0) deg[u]--;',
+    '            if (a[v][u] == 1 && bac[u] >= 0) bac[u]--;',
     '    }',
     '}',
     '',
@@ -354,15 +354,15 @@ const Solver = (() => {
     '    int x, y;',
     '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
     '    thamLam();',
-    '    cout << "So mau: " << used << "\\n";',
+    '    cout << "So mau: " << soMau << "\\n";',
     '    for (int v = 0; v < n; v++)',
-    '        cout << "Dinh " << v << ": mau " << color[v] << "\\n";',
+    '        cout << "Dinh " << v << ": mau " << mau[v] << "\\n";',
     '    return 0;',
     '}',
   ];
   const GREEDY_CPP_AT = {
-    9: 'deg[v] += a[v][u]', 13: '// SELECT', 15: 'int c = 0;', 16: 'while (c < used',
-    17: 'c++;', 19: 'if (c == used)', 20: 'color[v] = c;', 21: 'deg[v] = -1;',
+    9: 'bac[v] += a[v][u]', 13: '// SELECT', 15: 'int c = 0;', 16: 'while (c < soMau',
+    17: 'c++;', 19: 'if (c == soMau)', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
     22: '// hạ bậc', 31: 'cout << "So mau',
   };
 
@@ -373,33 +373,33 @@ const Solver = (() => {
     'const int MAXN = 125;',
     'int n;               // số đỉnh',
     'int a[MAXN][MAXN];   // ma trận kề: a[u][v] = 1 <=> u kề v',
-    'int deg[MAXN];       // số đỉnh kề của v (để sắp ord)',
-    'int ord[MAXN];       // ord[1..n]: đỉnh theo bậc giảm dần',
-    'int color[MAXN];     // màu của v; -1 = chưa tô',
-    'int kmin;            // số màu của LG tốt nhất',
-    'int Smin[MAXN];      // LG tốt nhất (bản sao color)',
+    'int bac[MAXN];       // số đỉnh kề của v (để sắp thuTu)',
+    'int thuTu[MAXN];     // thuTu[1..n]: đỉnh theo bậc giảm dần',
+    'int mau[MAXN];       // màu của v; -1 = chưa tô',
+    'int soMauMin;        // số màu của LG tốt nhất',
+    'int Smin[MAXN];      // LG tốt nhất (bản sao mau)',
     '',
     '// có đỉnh kề v mang màu c?',
     'bool trungMau(int v, int c) {',
     '    for (int u = 0; u < n; u++)',
-    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '        if (a[v][u] == 1 && mau[u] == c) return true;',
     '    return false;',
     '}',
     '',
-    'void quayLui(int i, int used) {  // bước i: màu S_i cho ord[i]',
-    '    int v = ord[i];',
+    'void quayLui(int i, int soMau) {  // bước i: màu S_i cho thuTu[i]',
+    '    int v = thuTu[i];',
     '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
-    '        int moi = (c + 1 > used) ? c + 1 : used;  // max(used, c + 1)',
-    '        if (c <= used                // phá đối xứng',
-    '            && moi < kmin            // cắt tỉa',
+    '        int soMauMoi = (c + 1 > soMau) ? c + 1 : soMau;  // max(soMau, c + 1)',
+    '        if (c <= soMau               // phá đối xứng',
+    '            && soMauMoi < soMauMin   // cắt tỉa',
     '            && !trungMau(v, c)) {    // khác màu kề',
-    '            color[v] = c;            // ghi nhận S_i = c',
+    '            mau[v] = c;              // ghi nhận S_i = c',
     '            if (i == n) {            // đủ n đỉnh: LG hoàn chỉnh',
-    '                kmin = moi;',
-    '                for (int x = 0; x < n; x++) Smin[x] = color[x];',
+    '                soMauMin = soMauMoi;',
+    '                for (int x = 0; x < n; x++) Smin[x] = mau[x];',
     '            } else',
-    '                quayLui(i + 1, moi);',
-    '            color[v] = -1;           // trả lại trạng thái cũ',
+    '                quayLui(i + 1, soMauMoi);',
+    '            mau[v] = -1;             // trả lại trạng thái cũ',
     '        }',
     '    }',
     '}',
@@ -408,26 +408,26 @@ const Solver = (() => {
     '    cin >> n;                        // đọc G: n, ma trận kề a',
     '    int x, y;',
     '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
-    '    for (int v = 0; v < n; v++) {    // deg[v] = số đỉnh kề của v',
-    '        deg[v] = 0;',
-    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
+    '    for (int v = 0; v < n; v++) {    // bac[v] = số đỉnh kề của v',
+    '        bac[v] = 0;',
+    '        for (int u = 0; u < n; u++) bac[v] += a[v][u];',
     '    }',
-    '    int k = 0;                       // ord: bậc giảm dần,',
+    '    int k = 0;                       // thuTu: bậc giảm dần,',
     '    for (int d = n - 1; d >= 0; d--) // cùng bậc: chỉ số nhỏ trước',
     '        for (int v = 0; v < n; v++)',
-    '            if (deg[v] == d) ord[++k] = v;',
-    '    for (int v = 0; v < n; v++) color[v] = -1;',
-    '    kmin = n + 1;',
+    '            if (bac[v] == d) thuTu[++k] = v;',
+    '    for (int v = 0; v < n; v++) mau[v] = -1;',
+    '    soMauMin = n + 1;',
     '    quayLui(1, 0);',
-    '    cout << "So mau: " << kmin << "\\n";',
+    '    cout << "So mau: " << soMauMin << "\\n";',
     '    for (int v = 0; v < n; v++)',
     '        cout << "Dinh " << v << ": mau " << Smin[v] << "\\n";',
     '    return 0;',
     '}',
   ];
   const BT_CPP_AT = {
-    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int moi', 14: 'if (c <= used',
-    15: '&& moi < kmin', 16: '&& !trungMau', 18: 'color[v] = c;', 21: 'kmin = moi;',
+    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c <= soMau',
+    15: '&& soMauMoi < soMauMin', 16: '&& !trungMau', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
     26: '// trả lại trạng thái cũ', 34: 'int k = 0;', 37: 'cout << "So mau',
   };
 

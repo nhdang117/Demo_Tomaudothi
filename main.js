@@ -718,32 +718,32 @@ const fmtArr = (a, max = 16) => a.length <= max ? a.join(', ') : a.slice(0, max)
 function logText(s) {
   const sw = c => `<span class="sw" style="--c:${palHex(c)}"></span>${c}`, G = st.algo === 'greedy';
   if (!G) switch (s.type) {                               // quay lui: kiểu log của file Tuần 6 (CHỌN / LOẠI / gọi đệ quy / quay lui)
-    case 'init': return `order = [${fmtArr(s.order)}] · kmin = ${s.kmin}`;
-    case 'select': return `↳ i=<b>${s.depth + 1}</b> · xét v = ${s.v} · used = ${s.used}`;
+    case 'init': return `thuTu = [${fmtArr(s.order)}] · soMauMin = ${s.kmin}`;
+    case 'select': return `↳ i=<b>${s.depth + 1}</b> · xét v = ${s.v} · soMau = ${s.used}`;
     case 'conflict': return `màu ${sw(s.c)} trùng v${s.u} → LOẠI`;
-    case 'sym': return `màu ${s.c} > used → bỏ (đối xứng)`;
-    case 'prune': return `✂ màu ${s.c}: cần ${Math.max(s.used, s.c + 1)} ≥ kmin = ${s.kmin} → CẮT`;
+    case 'sym': return `màu ${s.c} > soMau → bỏ (đối xứng)`;
+    case 'prune': return `✂ màu ${s.c}: cần ${Math.max(s.used, s.c + 1)} ≥ soMauMin = ${s.kmin} → CẮT`;
     case 'assign': return `màu ${sw(s.c)} → CHỌN`;
     case 'backtrack': return `↰ quay lui: gỡ màu ${s.c} của v${s.v}`;
     case 'fail': return `✗ v${s.v} hết lựa chọn → về bước trước`;
-    case 'found': return `★ LG mới: kmin = ${s.k}`;
-    case 'done': return `χ(G) = kmin = ${s.k} · ${s.backtracks} lần quay lui`;
+    case 'found': return `★ LG mới: soMauMin = ${s.k}`;
+    case 'done': return `χ(G) = soMauMin = ${s.k} · ${s.backtracks} lần quay lui`;
   }
   switch (s.type) {
-    case 'init': return `deg = [${fmtArr(Array.from(s.degs))}] · used = 0`;
-    case 'select': return `v = ${s.v} · deg[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '');
-    case 'try': return s.c == null ? 'used = 0 → chưa có màu cũ' : `c = ${s.c}`;
-    case 'conflict': return `color[${s.u}] == ${s.c} → c = c + 1`;
+    case 'init': return `bac = [${fmtArr(Array.from(s.degs))}] · soMau = 0`;
+    case 'select': return `v = ${s.v} · bac[v] = ${s.deg}` + (s.ties.length > 1 ? ` · hòa ${s.ties.length} → chỉ số nhỏ` : '');
+    case 'try': return s.c == null ? 'soMau = 0 → chưa có màu cũ' : `c = ${s.c}`;
+    case 'conflict': return `mau[${s.u}] == ${s.c} → c = c + 1`;
     case 'ok': return `c = ${s.c} không trùng → dùng lại`;
-    case 'newcolor': return `used = ${s.c + 1} · màu mới ${sw(s.c)}`;
-    case 'assign': return `color[${s.v}] = ${sw(s.c)} → ngăn ${s.c + 1}`;
-    case 'mark': return `deg[${s.v}] = −1`;
+    case 'newcolor': return `soMau = ${s.c + 1} · màu mới ${sw(s.c)}`;
+    case 'assign': return `mau[${s.v}] = ${sw(s.c)} → ngăn ${s.c + 1}`;
+    case 'mark': return `bac[${s.v}] = −1`;
     case 'dec': {
       if (!s.us.length) return 'không còn đỉnh kề chưa tô';
-      const parts = s.us.slice(0, 8).map(u => `deg[${u}] ${s.degs[u] + 1}→${s.degs[u]}`);
+      const parts = s.us.slice(0, 8).map(u => `bac[${u}] ${s.degs[u] + 1}→${s.degs[u]}`);
       return parts.join(', ') + (s.us.length > 8 ? `, … (+${s.us.length - 8})` : '');
     }
-    case 'done': return `return color · ${s.used} màu`;
+    case 'done': return `xuất soMau = ${s.used}, mau`;
   }
   return esc(s.title || s.type);
 }
@@ -878,8 +878,8 @@ function annoChips(s) {
   if (s.type === 'newcolor') return s.c != null ? chip(s.c) + '<span class="chip">màu mới</span>' : '';
   if (s.type === 'conflict' || s.type === 'assign' || s.type === 'ok' || s.type === 'try') return s.c != null ? chip(s.c) : '';
   if (s.type === 'select' && s.ties && s.ties.length > 1) return `<span class="chip">bậc ${s.deg} · ${s.ties.length} đỉnh hòa → chỉ số nhỏ nhất</span>`;
-  if (s.type === 'prune') return `<span class="chip">kmin = ${s.kmin}</span><span class="chip over">cắt tỉa</span>`;
-  if (s.type === 'select' && s.deg != null) return `<span class="chip">bậc ${s.deg}</span>` + (s.kmin != null ? `<span class="chip">kmin = ${s.kmin}</span>` : '');
+  if (s.type === 'prune') return `<span class="chip">soMauMin = ${s.kmin}</span><span class="chip over">cắt tỉa</span>`;
+  if (s.type === 'select' && s.deg != null) return `<span class="chip">bậc ${s.deg}</span>` + (s.kmin != null ? `<span class="chip">soMauMin = ${s.kmin}</span>` : '');
   return '';
 }
 function updateAnnoContent(s, animate) {
@@ -1101,7 +1101,7 @@ function buildTree() {
   TR.W = LX + Math.max(1, leaf) * XU + 8; TR.H = top + NH + n * YU + 12;
 
   const body = $('#tbHtBody');
-  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh ord[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
+  body.innerHTML = '<p class="tb-key">Tầng i = màu thử cho đỉnh thuTu[i]. <b class="t-k ok">xanh</b> chọn · <b class="t-k bad">đỏ</b> loại (trùng màu) · ' +
     '<b class="t-k bad">✂</b> cắt tỉa · <b class="t-k gold">vàng</b> lời giải tốt nhất hiện hành · mờ = đã quay lui. Kéo, lăn chuột để phóng to.</p>' +
     '<div class="bt-stage" data-lenis-prevent data-wheel-own><svg class="bt-svg" aria-label="Cây quay lui"></svg>' +
     '<button type="button" class="bt-fit" title="Xem cả cây (hoặc nhấp đúp vào cây)">⤢ Vừa khung</button></div>';
@@ -1123,7 +1123,7 @@ function buildTree() {
     if (nd.c != null) svgEl('circle', { cx: x - w / 2 + 7, cy: y, r: 3.5, fill: palHex(nd.c), class: 't-dot' }, gg);
     svgEl('text', { x: nd.c != null ? x + 4 : x, y: y + 1, class: 't-label' }, gg).textContent = nd.label;
     svgEl('title', {}, gg).textContent = nd.kind === 'root' ? 'Tìm sắc số χ(G)'
-      : nd.cut != null ? `Đỉnh ${nd.v}, từ màu ${nd.cut}: không thể ít hơn kmin = ${nd.kmin} màu → cắt tỉa`
+      : nd.cut != null ? `Đỉnh ${nd.v}, từ màu ${nd.cut}: không thể ít hơn soMauMin = ${nd.kmin} màu → cắt tỉa`
       : nd.rej ? `Đỉnh ${nd.v}, màu ${nd.c}: trùng với đỉnh kề ${nd.u} → loại` : `Đỉnh ${nd.v} tô màu ${nd.c}`;
     nd.el = gg; nd.cx = x; nd.cy = y;
   }
@@ -1208,7 +1208,7 @@ function updateHandBT(i) {
   if (!TR.fresh) trFollow(TR.nodes[fid], true);
   const s = st.steps[i];
   $('#tbHtMeta').textContent = s.type === 'done' ? `χ = ${s.k} · quay lui ${s.backtracks}`
-    : `kmin = ${s.kmin}${s.kmin > st.g.n ? ' (n+1)' : ''} · quay lui ${s.backtracks}`;
+    : `soMauMin = ${s.kmin}${s.kmin > st.g.n ? ' (n+1)' : ''} · quay lui ${s.backtracks}`;
 }
 function tbScroll() {                                     // giữ dòng đang xét trong tầm nhìn của cả 2 bảng
   const s = st.steps[st.idx];
@@ -1917,7 +1917,7 @@ const pad2 = v => v == null ? '--' : String(v).padStart(2, '0');
 function lockText(s) {
   const L = st.g.labels;
   const head = s.v != null ? `MẪU_${pad2(s.v)}${L ? ' · ' + L[s.v].sym : ''}` : '';
-  const tel = st.algo === 'backtrack' ? `KMIN ${pad2(s.kmin)} / BƯỚC ${pad2(s.depth != null ? s.depth + 1 : null)}` : `BẬC ${pad2(s.deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
+  const tel = st.algo === 'backtrack' ? `MIN ${pad2(s.kmin)} / BƯỚC ${pad2(s.depth != null ? s.depth + 1 : null)}` : `BẬC ${pad2(s.deg)}${s.used != null ? ` / MÀU ${pad2(s.used)}` : ''}`;
   return head ? `${head}\n${tel}` : '';
 }
 function demoVisOf(sec) {
