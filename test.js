@@ -26,7 +26,7 @@ function checkTrace(name, algo, g) {
   const t = S.trace(algo, g, 200000);
   const steps = t.steps;
   check(`${name}/${algo}: trace không bị cắt`, !t.truncated);
-  check(`${name}/${algo}: bước đầu là init`, steps[0].type === 'init');
+  check(`${name}/${algo}: có đúng 1 bước init`, steps.filter(s => s.type === 'init').length === 1);
   const last = steps[steps.length - 1];
   check(`${name}/${algo}: bước cuối là done`, last.type === 'done');
   check(`${name}/${algo}: trạng thái cuối = kết quả`, S.isProper(g, last.colors));
@@ -201,8 +201,10 @@ console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so 
         const cols = [...out.matchAll(/Dinh \d+: mau (-?\d+)/g)].map(m => m[1]).join();
         const r = S.ALGOS[id].run(g, null);
         if (k !== r.k || cols !== Array.from(r.colors).join()) bad++;
-        const t = S.trace(id, g, 1e6);
-        if (t.truncated || S.stdoutOf(t.steps) !== out.replace(/\r\n/g, '\n')) badOut++;
+        for (const lang of ['pseudo', 'cpp']) {
+          const t = S.trace(id, g, 1e6, lang);
+          if (t.truncated || S.stdoutOf(t.steps) !== out.replace(/\r\n/g, '\n')) badOut++;
+        }
       }
       check(`C++ ${id}: số màu và cách tô trùng solver trên ${graphs.length} đồ thị`, bad === 0, `${bad} đồ thị lệch`);
       check(`C++ ${id}: log trên web trùng TỪNG KÝ TỰ stdout của C++ trên ${graphs.length} đồ thị`, badOut === 0, `${badOut} đồ thị lệch`);
@@ -211,21 +213,32 @@ console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so 
   }
 }
 
-console.log('9) Panel C++ tô sáng đúng dòng cout sinh ra dòng log của bước');
+console.log('9) Trace từng dòng: dòng tô sáng hợp lệ, 2 ngôn ngữ cùng các sự kiện');
 {
   const graphs = S.PRESETS.map(p => p.build());
   for (let seed = 1; seed <= 20; seed++) graphs.push(S.randomGraph(1 + seed % 12, [0.2, 0.4, 0.7][seed % 3], seed));
+  const semantic = steps => steps.filter(s => !['line', 'done', 'init'].includes(s.type)).map(s => `${s.type}:${s.v}:${s.c}`).join();
   for (const id of Object.keys(S.ALGOS)) {
-    const A = S.ALGOS[id], cpp = A.cpp();
-    let bad = 0, ex = '';
-    for (const g of graphs) for (const s of S.trace(id, g, 1e5).steps) {
-      const ln = A.cppLine(s);
-      if (ln < 0 || ln >= cpp.length) { bad++; ex = ex || `${s.type}: không có dòng C++`; continue; }
-      if (s.out == null) continue;
-      const head = s.out.split('\n')[0], words = head.match(/[A-Za-z]{2,}/g) || [];   // chữ của dòng log phải nằm trong lệnh cout được tô
-      if (!cpp[ln].includes('cout') || !words.every(w => cpp[ln].includes(w))) { bad++; ex = ex || `${s.type} "${head}" ↔ ${cpp[ln].trim()}`; }
+    const A = S.ALGOS[id], cpp = A.cpp(), code = A.code();
+    let bad = 0, ex = '', badLine = 0, badSem = 0, badSeq = 0;
+    for (const g of graphs) {
+      const tp = S.trace(id, g, 1e6, 'pseudo'), tc = S.trace(id, g, 1e6, 'cpp');
+      for (const [t, lines] of [[tp, code], [tc, cpp]]) {
+        if (t.steps.some(s => !(s.line >= 0 && s.line < lines.length && lines[s.line].trim()))) badLine++;   // dòng có thật, không phải dòng trống
+        if (t.steps.some((s, i) => i && s.seq <= t.steps[i - 1].seq)) badSeq++;
+        if (t.steps.filter(s => s.type === 'done').length !== 1 || t.steps[t.steps.length - 1].type !== 'done') badSem++;
+      }
+      if (semantic(tp.steps) !== semantic(tc.steps)) badSem++;
+      for (const s of tc.steps) {                       // bước có in → dòng C++ được tô là đúng lệnh cout in ra dòng đó
+        if (s.out == null) continue;
+        const head = s.out.split('\n')[0], words = head.match(/[A-Za-z]{2,}/g) || [], ln = cpp[s.line];
+        if (s.out.includes('\n') || !ln.includes('cout') || !words.every(w => ln.includes(w))) { bad++; ex = ex || `${s.type} "${head}" ↔ ${ln.trim()}`; }
+      }
     }
-    check(`${id}: mọi bước có in đều tô dòng cout tương ứng`, bad === 0, `${bad} bước lệch, vd ${ex}`);
+    check(`${id}: mọi bước tô 1 dòng code có thật (cả mã giả lẫn C++)`, badLine === 0, `${badLine} trace lệch`);
+    check(`${id}: seq tăng dần (đổi ngôn ngữ giữ được vị trí)`, badSeq === 0, `${badSeq} trace lệch`);
+    check(`${id}: mã giả và C++ cùng chuỗi sự kiện, đúng 1 bước kết thúc`, badSem === 0, `${badSem} đồ thị lệch`);
+    check(`${id}: C++ — mỗi bước có in là 1 lệnh cout in đúng 1 dòng đó`, bad === 0, `${bad} bước lệch, vd ${ex}`);
   }
 }
 

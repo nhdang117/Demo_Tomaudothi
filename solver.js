@@ -13,19 +13,84 @@ const Solver = (() => {
   const TRUNC = { reason: 'truncated' };
   const ABORT = { reason: 'budget' };
 
-  /* ---------------- Trace recorder ---------------- */
+  /* ---------------- Trace recorder ----------------
+   * Trace ghi theo TỪNG DÒNG CODE chạy qua. Thuật toán chạy đúng như code C++ và gọi
+   * at(cl, ps, color, ev) mỗi khi một dòng chạy xong: cl / ps = chữ nhận diện dòng C++ /
+   * dòng mã giả (null = ngôn ngữ đó không có dòng tương ứng). Recorder chỉ ghi các dòng
+   * của ngôn ngữ đang xem (lang); phần in (out) của dòng bị bỏ dồn sang bước kế tiếp
+   * được ghi, nên stdout ghép lại vẫn y hệt chương trình C++.
+   * seq = số thứ tự lời gọi at(), giống nhau ở cả 2 ngôn ngữ → đổi ngôn ngữ giữ được vị trí. */
   class Recorder {
-    constructor(limit = 6000) {
+    constructor(limit = 6000, lang = 'pseudo', code = null) {
       this.steps = [];
       this.limit = limit;
       this.truncated = false;
+      this.lang = lang;
+      this.code = code;
+      this.seq = 0;
+      this.pend = null;
+      this.extra = null;
+    }
+    at(cl, ps, color, ev) {
+      ev.seq = this.seq++;
+      const key = this.lang === 'cpp' ? cl : ps;
+      if (key == null) {
+        if (ev.out != null) this.pend = this.pend == null ? ev.out : this.pend + '\n' + ev.out;
+        return;
+      }
+      ev.line = lineOf(this.code[this.lang], key);
+      if (!ev.type) ev.type = 'line';
+      if (this.pend != null) { ev.out = ev.out == null ? this.pend : this.pend + '\n' + ev.out; this.pend = null; }
+      this.push(color, ev);
+    }
+    finish() {
+      const last = this.steps[this.steps.length - 1];
+      if (this.pend != null && last) last.out = last.out == null ? this.pend : last.out + '\n' + this.pend;
+      this.pend = null;
     }
     push(color, ev) {
       if (this.steps.length >= this.limit) { this.truncated = true; throw TRUNC; }
       ev.colors = Int16Array.from(color);
       ev.used = usedCount(color);
+      if (this.extra) this.extra(ev);
       this.steps.push(ev);
     }
+  }
+
+  /** Chỉ số dòng trong code: ưu tiên dòng trùng khớp nguyên văn, không có thì dòng chứa key. Phải khớp đúng 1 dòng. */
+  const LINE_CACHE = new WeakMap();
+  function lineOf(lines, key) {
+    let m = LINE_CACHE.get(lines);
+    if (!m) LINE_CACHE.set(lines, m = new Map());
+    let j = m.get(key);
+    if (j == null) {
+      const exact = lines.includes(key), hits = [];
+      lines.forEach((t, i) => { if (exact ? t === key : t.includes(key)) hits.push(i); });
+      if (hits.length !== 1) throw new Error(`lineOf: "${key}" khớp ${hits.length} dòng`);
+      m.set(key, j = hits[0]);
+    }
+    return j;
+  }
+
+  function adjMatrix(g) {
+    const A = new Uint8Array(g.n * g.n);
+    for (const [u, v] of g.edges) A[u * g.n + v] = A[v * g.n + u] = 1;
+    return A;
+  }
+
+  /** trungMau(v, c) của C++, chạy từng dòng: duyệt mọi u, trả về đỉnh kề đầu tiên mang màu c (−1 nếu không có). */
+  function trungMauLines(E, A, n, mau, v, c, base) {
+    for (let u = 0; u < n; u++) {
+      E('    for (int u = 0; u < n; u++)', null, { ...base, c, title: `trungMau(${v}, ${c})`, note: `Xét u = ${u}.` });
+      const ke = A[v * n + u] === 1, hit = ke && mau[u] === c;
+      E('if (a[v][u] == 1 && mau[u] == c) return true;', null, { ...base, c, cu: u, u: ke ? u : undefined, title: `trungMau(${v}, ${c})`,
+        note: !ke ? `a[${v}][${u}] = 0: đỉnh ${u} không kề ${v}.`
+          : hit ? `a[${v}][${u}] = 1 và mau[${u}] = ${c} → return true.`
+          : `a[${v}][${u}] = 1 nhưng mau[${u}] = ${mau[u]}${mau[u] < 0 ? ' (chưa tô)' : ''} ≠ ${c}.` });
+      if (hit) return u;
+    }
+    E('return false;', null, { ...base, c, title: `trungMau(${v}, ${c})`, note: `Không đỉnh kề nào của ${v} mang màu ${c} → return false.` });
+    return -1;
   }
 
   /* ---------------- Graph helpers ---------------- */
@@ -128,64 +193,127 @@ const Solver = (() => {
   }
 
   function greedy(g, rec) {
+    if (rec) return greedyLines(g, rec);
     const { n, adj } = g;
     const deg = Int16Array.from(adj, a => a.length);
     const color = new Int16Array(n).fill(-1);
     let used = 0;
+    for (let step = 0; step < n; step++) {
+      let v = -1;
+      for (let x = 0; x < n; x++) if (deg[x] >= 0 && (v < 0 || deg[x] > deg[v])) v = x;
+      let c = 0;
+      while (c < used && adj[v].some(u => color[u] === c)) c++;
+      if (c === used) used++;
+      color[v] = c;
+      deg[v] = -1;
+      for (const u of adj[v]) if (deg[u] >= 0) deg[u]--;
+    }
+    return { colors: color, k: usedCount(color) };
+  }
+
+  /** Tham lam chạy đúng từng dòng của GREEDY_CPP (kèm dòng mã giả tương ứng) để ghi trace. */
+  function greedyLines(g, rec) {
+    const { n, adj } = g, A = adjMatrix(g);
+    const bac = new Int16Array(n), mau = new Int16Array(n).fill(-1);
+    let soMau = 0;
     // mỗi bước lưu kèm ảnh chụp bảng bậc để giao diện hiện giống bảng cô chạy tay
-    const R = rec ? ev => { ev.degs = Int16Array.from(deg); rec.push(color, ev); } : null;
+    rec.extra = ev => { ev.degs = Int16Array.from(bac); };
+    const E = (cl, ps, ev) => rec.at(cl, ps, mau, ev);
     try {
-      R && R({ line: 9, type: 'init', title: 'Lập bảng bậc',
-        note: `Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.` });
-      for (let step = 0; step < n; step++) {
-        let v = -1;
-        for (let x = 0; x < n; x++) if (deg[x] >= 0 && (v < 0 || deg[x] > deg[v])) v = x;
-        const d = deg[v];
-        if (R) {
-          const ties = [];
-          for (let x = 0; x < n; x++) if (deg[x] === d) ties.push(x);
-          R({ line: 13, type: 'select', out: `Lan ${step + 1}: v=${v} bac=${d}`, v, deg: d, ties, title: 'Chọn đỉnh',
-            note: ties.length > 1
-              ? `Bậc cao nhất là ${d}, có ${ties.length} đỉnh cùng bậc: ${fmtList(ties)} → lấy chỉ số nhỏ nhất: đỉnh ${v}.`
-              : `Đỉnh ${v} có bậc cao nhất trong bảng (${d}).` });
+      E('cin >> n;', null, { title: 'Đọc dữ liệu', note: `Đọc số đỉnh n = ${n}.` });
+      E('while (cin >> x >> y)', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
+        note: `Đọc ${g.edges.length} cạnh vào ma trận kề: mỗi cạnh (x, y) gán a[x][y] = a[y][x] = 1.` });
+      E('thamLam();', '  thamLam()', { title: 'Gọi thamLam()', note: 'Gọi hàm tham lam.' });
+      for (let v = 0; v < n; v++) {
+        E('// bac[v] = số đỉnh kề của v', null, { v, title: 'Lập bảng bậc', note: `Xét đỉnh v = ${v}.` });
+        E('bac[v] = 0;', null, { v, title: 'Lập bảng bậc', note: `bac[${v}] = 0.` });
+        bac[v] = adj[v].length;
+        E('bac[v] += a[v][u]', null, { v, title: 'Lập bảng bậc', note: `Cộng dòng ${v} của ma trận kề: bac[${v}] = ${bac[v]}.` });
+        E('mau[v] = -1;', null, { v, title: 'Lập bảng bậc', note: `mau[${v}] = -1: đỉnh ${v} chưa tô.` });
+      }
+      E(null, 'bac[v] = số đỉnh kề của v', { type: 'init', title: 'Lập bảng bậc',
+        note: 'Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.' });
+      E('soMau = 0;', 'mau[v] = -1 với mọi v', { title: 'Khởi tạo', note: 'Mọi đỉnh chưa tô (mau = -1), chưa dùng màu nào: soMau = 0.' });
+      for (let i = 1; i <= n; i++) {
+        E('for (int i = 1; i <= n; i++)', 'for (i = 1 -> n)', { title: `Vòng ${i}`, note: `Vòng i = ${i}: tô thêm đúng 1 đỉnh.` });
+        let v = 0;
+        E('// SELECT', null, { v, deg: bac[v], title: 'Chọn đỉnh', note: `Tạm lấy v = 0 (bac[0] = ${bac[0]}), rồi so với các đỉnh sau.` });
+        for (let x = 1; x < n; x++) {
+          E('for (int x = 1; x < n; x++)', null, { v, deg: bac[v], title: 'Chọn đỉnh', note: `Xét x = ${x}.` });
+          const win = bac[x] > bac[v], was = v;
+          if (win) v = x;
+          E('if (bac[x] > bac[v]) v = x;', null, { v, deg: bac[v], cu: x, title: 'Chọn đỉnh',
+            note: `bac[${x}] = ${bac[x]} ${win ? '>' : '≤'} bac[${was}] = ${bac[was]} → ${win ? `v = ${x}` : `giữ v = ${was}`}.` });
         }
+        const d = bac[v], ties = [];
+        for (let x = 0; x < n; x++) if (bac[x] === d) ties.push(x);
+        E('cout << "Lan "', 'v = đỉnh có bac lớn nhất', { type: 'select', out: `Lan ${i}: v=${v} bac=${d}`, v, deg: d, ties, title: 'Chọn đỉnh',
+          note: ties.length > 1
+            ? `Bậc cao nhất là ${d}, có ${ties.length} đỉnh cùng bậc: ${fmtList(ties)} → lấy chỉ số nhỏ nhất: đỉnh ${v}.`
+            : `Đỉnh ${v} có bậc cao nhất trong bảng (${d}).` });
+        const base = { v, deg: d };
         let c = 0;
-        R && R({ line: 15, type: 'try', v, c: used ? 0 : null, deg: d, title: used ? 'Thử màu đã dùng' : 'Chưa có màu',
-          note: used ? `Đã dùng ${used} màu (0..${used - 1}). Thử lần lượt từ màu 0.` : 'Chưa dùng màu nào nên không có màu cũ để thử.' });
-        while (c < used) {
-          let clash = -1;
-          for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
-          if (clash < 0) break;
-          R && R({ line: 16, type: 'conflict', out: `  c=${c} trung`, v, u: clash, c, deg: d, title: 'Trùng màu',
-            note: `Đỉnh kề ${clash} đã tô màu ${c} → không dùng được màu ${c}.` });
-          c++;
-          if (c < used) R && R({ line: 15, type: 'try', v, c, deg: d, title: 'Thử màu kế tiếp', note: `Thử màu ${c}.` });
+        for (;; c++) {
+          const more = c < soMau;
+          E('for (c = 0; c < soMau; c++)', 'for (c = 0 -> soMau - 1)', { type: 'try', ...base, c: more ? c : null,
+            title: more ? (c ? 'Thử màu kế tiếp' : 'Thử màu đã dùng') : soMau ? 'Hết màu cũ' : 'Chưa có màu',
+            note: more ? `c = ${c} < soMau = ${soMau} → thử màu ${c}.`
+              : soMau ? `c = ${c} = soMau → đã thử hết ${soMau} màu cũ, thoát for.` : 'soMau = 0: chưa dùng màu nào, for không chạy lần nào.' });
+          if (!more) break;
+          E('if (!trungMau(v, c)) {', null, { ...base, c, title: 'Gọi trungMau', note: `Gọi trungMau(${v}, ${c}): có đỉnh kề ${v} mang màu ${c} không?` });
+          const u = trungMauLines(E, A, n, mau, v, c, base);
+          if (u >= 0) {
+            E('" trung', 'if (not trungMau(v, c))', { type: 'conflict', out: `  c=${c} trung`, ...base, u, c, title: 'Trùng màu',
+              note: `Đỉnh kề ${u} đã tô màu ${c} → không dùng được màu ${c}, thử màu sau.` });
+          } else {
+            E('" khong trung', 'if (not trungMau(v, c))', { type: 'ok', out: `  c=${c} khong trung`, ...base, c, title: 'Dùng lại màu cũ',
+              note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
+            E('break;', 'break  // → dùng màu c', { ...base, c, title: 'Dùng lại màu cũ', note: `Thoát for, giữ c = ${c}.` });
+            break;
+          }
         }
-        if (c < used) {
-          R && R({ line: 17, type: 'ok', out: `  c=${c} khong trung`, v, c, deg: d, title: 'Dùng lại màu cũ',
-            note: `Không đỉnh kề nào mang màu ${c} → dùng lại màu ${c}.` });
-        } else {
-          used++;
-          R && R({ line: 19, type: 'newcolor', out: `  mau moi ${c}`, v, c, deg: d, title: 'Sinh màu mới',
+        const isNew = c === soMau;
+        E('if (c == soMau) {', 'if (c == soMau)', { ...base, c, title: isNew ? 'Cần màu mới' : 'Dùng lại màu cũ',
+          note: isNew ? `c = soMau = ${soMau}: không màu cũ nào dùng được → mở màu mới.` : `c = ${c} < soMau = ${soMau}: không cần màu mới.` });
+        if (isNew) {
+          soMau++;
+          E('soMau++;', null, { ...base, c, title: 'Sinh màu mới', note: `soMau = ${soMau}.` });
+          E('"  mau moi "', 'soMau = soMau + 1', { type: 'newcolor', out: `  mau moi ${c}`, ...base, c, title: 'Sinh màu mới',
             note: c === 0 ? 'Chưa có màu nào → sinh màu 0.' : `Cả ${c} màu cũ đều trùng với đỉnh kề → sinh màu mới ${c}.` });
         }
-        color[v] = c;
-        R && R({ line: 20, type: 'assign', out: `  mau[${v}]=${c}`, v, c, deg: d, title: 'Tô màu',
+        mau[v] = c;
+        E('mau[v] = c;', null, { ...base, c, title: 'Tô màu', note: `mau[${v}] = ${c}.` });
+        E('cout << "  mau["', 'mau[v] = c', { type: 'assign', out: `  mau[${v}]=${c}`, ...base, c, title: 'Tô màu',
           note: `Tô đỉnh ${v} màu ${c} → xếp vào ngăn ${c + 1}.` });
-        deg[v] = -1;
-        R && R({ line: 21, type: 'mark', out: `  dinh ${v} da to: bac=-1`, v, c, deg: d, title: 'Đánh dấu đã tô',
+        bac[v] = -1;
+        E('bac[v] = -1;', null, { ...base, c, title: 'Đánh dấu đã tô', note: `bac[${v}] = -1.` });
+        E('" da to: bac=-1', 'bac[v] = -1', { type: 'mark', out: `  dinh ${v} da to: bac=-1`, ...base, c, title: 'Đánh dấu đã tô',
           note: `Gán bậc của đỉnh ${v} = −1 để không bị chọn lại.` });
-        const dec = [];
-        for (const u of adj[v]) if (deg[u] >= 0) { deg[u]--; dec.push(u); }
-        R && R({ line: 22, type: 'dec', out: dec.length ? dec.map(u => `  bac[${u}]: ${deg[u] + 1}->${deg[u]}`).join('\n') : undefined, v, c, deg: d, us: dec, title: 'Hạ bậc đỉnh kề',
-          note: dec.length
-            ? `Giảm 1 bậc cho ${dec.length} đỉnh kề chưa tô: ${fmtList(dec.map(u => `${u} (${deg[u] + 1}→${deg[u]})`))}.`
-            : `Mọi đỉnh kề của ${v} đều đã tô → bảng bậc không đổi.` });
+        for (let u = 0; u < n; u++) {
+          E('// hạ bậc', null, { ...base, c, title: 'Hạ bậc đỉnh kề', note: `Xét u = ${u}.` });
+          const ke = A[v * n + u] === 1, ok = ke && bac[u] >= 0;
+          E('if (a[v][u] == 1 && bac[u] >= 0) {', ke ? 'for (u kề v)' : null, { ...base, c, cu: u, title: 'Hạ bậc đỉnh kề',
+            note: !ke ? `a[${v}][${u}] = 0: đỉnh ${u} không kề ${v}.`
+              : ok ? `Đỉnh ${u} kề ${v} và chưa tô (bac[${u}] = ${bac[u]}) → hạ bậc.` : `Đỉnh ${u} kề ${v} nhưng đã tô (bac[${u}] = −1) → bỏ qua.` });
+          if (ok) {
+            bac[u]--;
+            E('bac[u]--;', null, { ...base, c, cu: u, title: 'Hạ bậc đỉnh kề', note: `bac[${u}]: ${bac[u] + 1} → ${bac[u]}.` });
+            E('cout << "  bac["', 'if (bac[u] >= 0)', { type: 'dec', out: `  bac[${u}]: ${bac[u] + 1}->${bac[u]}`, ...base, c, us: [u], title: 'Hạ bậc đỉnh kề',
+              note: `Đỉnh kề ${u} chưa tô → giảm bậc ${bac[u] + 1} → ${bac[u]}.` });
+          } else if (ke) E(null, 'if (bac[u] >= 0)', { ...base, c, cu: u, title: 'Hạ bậc đỉnh kề', note: `Đỉnh kề ${u} đã tô (bac = −1) → bỏ qua.` });
+        }
       }
-      R && R({ line: 31, type: 'done', out: outKetQua(used, color), title: 'Hoàn tất',
-        note: `Đã tô ${n} đỉnh, dùng ${used} màu.` });
+      E('cout << "So mau', null, { out: `So mau: ${soMau}`, title: 'Xuất kết quả', note: `In số màu đã dùng: ${soMau}.` });
+      for (let v = 0; v < n; v++) {
+        E('    for (int v = 0; v < n; v++)', null, { v, title: 'Xuất kết quả', note: `Xét v = ${v}.` });
+        E('cout << "Dinh "', null, { v, out: `Dinh ${v}: mau ${mau[v]}`, title: 'Xuất kết quả', note: `In màu của đỉnh ${v}: ${mau[v]} (ngăn ${mau[v] + 1}).` });
+      }
+      const fin = { type: 'done', title: 'Hoàn tất', note: `Đã tô ${n} đỉnh, dùng ${soMau} màu.` };
+      E(null, 'xuất soMau, mau', { ...fin });
+      E('return 0;', null, { ...fin });
+      rec.finish();
     } catch (e) { if (e !== TRUNC) throw e; }
-    return { colors: color, k: usedCount(color) };
+    return { colors: mau, k: usedCount(mau) };
   }
 
   /* =================================================================
@@ -246,69 +374,163 @@ const Solver = (() => {
   ];
 
   function backtrack(g, rec, opts = {}) {
+    if (rec) return backtrackLines(g, rec);
     const { n, adj } = g;
     const deg = adj.map(a => a.length);
     const order = [...Array(n).keys()].sort((a, b) => deg[b] - deg[a] || a - b);
     const color = new Int16Array(n).fill(-1), smin = new Int16Array(n).fill(-1);
     const budget = opts.budget ?? 5e6;
     let calls = 0, bts = 0, aborted = false, kmin = n + 1;
-    const R = rec ? (ev, col = color) => { ev.kmin = kmin; ev.backtracks = bts; rec.push(col, ev); } : null;
 
     // i: bước giải (0-based trong code, hiển thị i + 1 cho khớp mã giả)
     function quayLui(i, used) {
       if (++calls > budget) throw ABORT;
-      const v = order[i], ind = '  '.repeat(i);          // ind: thutLe(i) của C++
-      R && R({ line: 8, type: 'select', out: `${ind}B${i + 1}: v=${v} soMau=${used}`, v, depth: i, deg: deg[v], title: `Bước ${i + 1}`,
-        note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
+      const v = order[i];
       for (let c = 0; c < n; c++) {
-        if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
-          R && R({ line: 14, type: 'sym', out: `${ind}  c=${c} vuot soMau`, v, c, depth: i, deg: deg[v], title: 'Vượt số màu',
-            note: `Màu ${c} > soMau = ${used}: vượt số màu. Màu mới chỉ cần thử 1 màu (màu ${used}, đã thử); màu ${c} trở đi chỉ là đổi tên màu đó → bỏ màu ${c}..${n - 1}.` });
-          break;
-        }
-        if (Math.max(used, c + 1) >= kmin) {              // cắt tỉa: tăng dần theo c
-          R && R({ line: 15, type: 'prune', out: `${ind}  c=${c} cat tia`, v, c, depth: i, deg: deg[v], title: 'Cắt tỉa',
-            note: `Dùng màu ${c} thì đã cần ${Math.max(used, c + 1)} màu ≥ soMauMin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
-          break;
-        }
-        let clash = -1;
-        for (const u of adj[v]) if (color[u] === c) { clash = u; break; }
-        if (clash >= 0) {
-          R && R({ line: 16, type: 'conflict', out: `${ind}  c=${c} trung`, v, u: clash, c, depth: i, deg: deg[v], title: 'Trùng màu',
-            note: `Đỉnh kề ${clash} đang mang màu ${c} → loại màu ${c}.` });
-          continue;
-        }
+        if (c > used) break;                              // c <= used sai → mọi c sau cũng sai
+        if (Math.max(used, c + 1) >= kmin) break;         // cắt tỉa: tăng dần theo c
+        if (adj[v].some(u => color[u] === c)) continue;
         color[v] = c;
-        R && R({ line: 18, type: 'assign', out: `${ind}  mau[${v}]=${c}`, v, c, depth: i, deg: deg[v], title: 'Ghi nhận',
-          note: `Màu ${c} hợp lệ → S_${i + 1} = ${c}, tô đỉnh ${v}.` });
         if (i === n - 1) {
           kmin = Math.max(used, c + 1);
           smin.set(color);
-          R && R({ line: 21, type: 'found', out: `${ind}  LG moi: soMauMin=${kmin}`, k: kmin, v, depth: i, title: 'Lời giải tốt hơn',
-            note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật soMauMin = ${kmin}, lưu Smin.` });
         } else {
           quayLui(i + 1, Math.max(used, c + 1));
         }
         color[v] = -1;
         bts++;
-        R && R({ line: 26, type: 'backtrack', out: `${ind}  go mau[${v}]`, v, c, depth: i, deg: deg[v], title: 'Trả lại trạng thái cũ',
+      }
+    }
+
+    try {
+      quayLui(0, 0);
+    } catch (e) {
+      if (e === ABORT) aborted = true;
+      else throw e;
+    }
+    return { colors: smin, k: aborted ? -1 : kmin, aborted, calls, backtracks: bts };
+  }
+
+  /** Quay lui chạy đúng từng dòng của BT_CPP (kèm dòng mã giả tương ứng) để ghi trace. */
+  function backtrackLines(g, rec) {
+    const { n, adj } = g, A = adjMatrix(g);
+    const deg = adj.map(a => a.length);
+    const mau = new Int16Array(n).fill(-1), smin = new Int16Array(n).fill(-1), thuTu = [];
+    let calls = 0, bts = 0, kmin = n + 1;
+    rec.extra = ev => { ev.kmin = kmin; ev.backtracks = bts; };
+    const E = (cl, ps, ev, col = mau) => rec.at(cl, ps, col, ev);
+
+    // i: bước giải (0-based trong code, hiển thị i + 1 cho khớp mã giả)
+    function quayLui(i, used) {
+      calls++;
+      const v = thuTu[i], ind = '  '.repeat(i), base = { v, depth: i, deg: deg[v] };   // ind: thutLe(i) của C++
+      const title = `Bước ${i + 1}`;
+      E('int v = thuTu[i];', null, { ...base, title, note: `v = thuTu[${i + 1}] = ${v}.` });
+      E('cout << "B"', 'quayLui(i, soMau)', { type: 'select', out: `${ind}B${i + 1}: v=${v} soMau=${used}`, ...base, title,
+        note: `Tìm màu cho đỉnh thuTu[${i + 1}] = ${v} (bậc ${deg[v]}). Đã dùng ${used} màu, soMauMin = ${kmin}${kmin > n ? ' (chưa có lời giải)' : ''}.` });
+      E(null, 'v = thuTu[i]', { ...base, title, note: `v = thuTu[${i + 1}] = ${v}.` });
+      for (let c = 0; ; c++) {
+        if (c >= n) {
+          E('for (int c = 0; c < n; c++)', null, { ...base, title: 'Hết lựa chọn', note: `c = n = ${n}: đã thử đủ n màu, thoát for.` });
+          break;
+        }
+        E('for (int c = 0; c < n; c++)', 'for (c = 0 -> n-1)', { type: 'try', ...base, c, title: 'Thử màu', note: `Thử màu c = ${c} cho đỉnh ${v}.` });
+        const moi = Math.max(used, c + 1);
+        E(null, 'soMauMoi = max(soMau, c + 1)', { ...base, c, title: 'Thử màu', note: `soMauMoi = max(${used}, ${c + 1}) = ${moi}: số màu nếu tô màu ${c}.` });
+        if (c > used) {                                   // c <= used sai → mọi c sau cũng sai
+          E('if (c > soMau) {', null, { ...base, c, title: 'Vượt số màu', note: `c = ${c} > soMau = ${used}.` });
+          E('" vuot soMau', 'if (c <= soMau', { type: 'sym', out: `${ind}  c=${c} vuot soMau`, ...base, c, title: 'Vượt số màu',
+            note: `Màu ${c} > soMau = ${used}: vượt số màu. Màu mới chỉ cần thử 1 màu (màu ${used}, đã thử); màu ${c} trở đi chỉ là đổi tên màu đó → bỏ màu ${c}..${n - 1}.` });
+          E('// → dừng', null, { ...base, c, title: 'Vượt số màu', note: 'break: các màu sau cũng vượt số màu.' });
+          break;
+        }
+        E('if (c > soMau) {', 'if (c <= soMau', { ...base, c, title: 'Thử màu', note: `c = ${c} ≤ soMau = ${used}: không vượt số màu.` });
+        E('int soMauMoi', null, { ...base, c, title: 'Thử màu', note: `soMauMoi = ${moi}${c === used ? ' (c = soMau: mở màu mới)' : ''}.` });
+        if (moi >= kmin) {                                // cắt tỉa: tăng dần theo c
+          E('if (soMauMoi >= soMauMin) {', null, { ...base, c, title: 'Cắt tỉa', note: `soMauMoi = ${moi} ≥ soMauMin = ${kmin}.` });
+          E('" cat tia', 'and soMauMoi < soMauMin', { type: 'prune', out: `${ind}  c=${c} cat tia`, ...base, c, title: 'Cắt tỉa',
+            note: `Dùng màu ${c} thì đã cần ${moi} màu ≥ soMauMin = ${kmin} → không thể tốt hơn lời giải đang có, bỏ màu ${c}..${n - 1}.` });
+          E('            break;', null, { ...base, c, title: 'Cắt tỉa', note: 'break: màu sau càng cần nhiều màu hơn.' });
+          break;
+        }
+        E('if (soMauMoi >= soMauMin) {', 'and soMauMoi < soMauMin', { ...base, c, title: 'Thử màu', note: `soMauMoi = ${moi} < soMauMin = ${kmin}: còn có thể tốt hơn.` });
+        E('if (trungMau(v, c)) {', null, { ...base, c, title: 'Gọi trungMau', note: `Gọi trungMau(${v}, ${c}): có đỉnh kề ${v} mang màu ${c} không?` });
+        const u = trungMauLines(E, A, n, mau, v, c, base);
+        if (u >= 0) {
+          E('" trung', 'and not trungMau(v, c))', { type: 'conflict', out: `${ind}  c=${c} trung`, ...base, u, c, title: 'Trùng màu',
+            note: `Đỉnh kề ${u} đang mang màu ${c} → loại màu ${c}.` });
+          E('continue;', null, { ...base, c, title: 'Trùng màu', note: 'continue: thử màu kế tiếp.' });
+          continue;
+        }
+        E(null, 'and not trungMau(v, c))', { ...base, c, title: 'Thử màu', note: `Không đỉnh kề nào mang màu ${c}.` });
+        mau[v] = c;
+        E('mau[v] = c;', null, { ...base, c, title: 'Ghi nhận', note: `mau[${v}] = ${c}.` });
+        E('cout << "  mau["', 'mau[v] = c', { type: 'assign', out: `${ind}  mau[${v}]=${c}`, ...base, c, title: 'Ghi nhận',
+          note: `Màu ${c} hợp lệ → S_${i + 1} = ${c}, tô đỉnh ${v}.` });
+        if (i === n - 1) {
+          E('if (i == n) {', 'if (i == n)', { ...base, c, title: 'Lời giải tốt hơn', note: `i = n = ${n}: đủ n đỉnh, có lời giải hoàn chỉnh.` });
+          kmin = moi;
+          E('soMauMin = soMauMoi;', 'soMauMin = soMauMoi', { ...base, c, title: 'Lời giải tốt hơn', note: `soMauMin = ${kmin}.` });
+          smin.set(mau);
+          E('Smin[x] = mau[x]', null, { ...base, c, title: 'Lời giải tốt hơn', note: 'Lưu bản sao mau vào Smin.' });
+          E('"  LG moi', 'Smin = mau', { type: 'found', out: `${ind}  LG moi: soMauMin=${kmin}`, k: kmin, ...base, title: 'Lời giải tốt hơn',
+            note: `Đủ ${n} đỉnh → lời giải hoàn chỉnh dùng ${kmin} màu, ít hơn lời giải cũ → cập nhật soMauMin = ${kmin}, lưu Smin.` });
+        } else {
+          E('if (i == n) {', 'if (i == n)', { ...base, c, title: 'Sang bước sau', note: `i = ${i + 1} < n = ${n}: chưa đủ đỉnh.` });
+          E('quayLui(i + 1, soMauMoi);', 'quayLui(i + 1, soMauMoi)', { ...base, c, title: 'Sang bước sau', note: `Gọi quayLui(${i + 2}, ${moi}).` });
+          quayLui(i + 1, moi);
+        }
+        mau[v] = -1;
+        bts++;
+        E('// trả lại trạng thái cũ', null, { ...base, c, title: 'Trả lại trạng thái cũ', note: `mau[${v}] = -1.` });
+        E('"  go mau[', 'mau[v] = -1  // trả lại', { type: 'backtrack', out: `${ind}  go mau[${v}]`, ...base, c, title: 'Trả lại trạng thái cũ',
           note: `Gỡ màu ${c} của đỉnh ${v} (quay lui lần ${bts}) rồi thử màu kế tiếp.` });
       }
-      R && R({ line: 11, type: 'fail', v, depth: i, deg: deg[v], title: 'Hết lựa chọn',
+      E('// hết màu để thử', 'for (c = 0 -> n-1)', { type: 'fail', ...base, title: 'Hết lựa chọn',
         note: i ? `Đã xét hết màu cho đỉnh ${v} → quay về bước ${i}.` : `Đã xét hết màu cho đỉnh đầu tiên → vét xong cây tìm kiếm.` });
     }
 
     try {
-      R && R({ line: 34, type: 'init', out: 'thuTu:' + order.map(x => ' ' + x).join(''), order, title: 'Khởi tạo',
-        note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(order)}. Chưa tô đỉnh nào, soMauMin = n + 1 = ${n + 1} (chưa có lời giải).` });
+      E('cin >> n;', null, { title: 'Đọc dữ liệu', note: `Đọc số đỉnh n = ${n}.` });
+      E('while (cin >> x >> y)', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
+        note: `Đọc ${g.edges.length} cạnh vào ma trận kề: mỗi cạnh (x, y) gán a[x][y] = a[y][x] = 1.` });
+      const bac = new Int16Array(n);
+      for (let v = 0; v < n; v++) {
+        E('// bac[v] = số đỉnh kề của v', null, { v, title: 'Tính bậc', note: `Xét đỉnh v = ${v}.` });
+        E('bac[v] = 0;', null, { v, title: 'Tính bậc', note: `bac[${v}] = 0.` });
+        bac[v] = deg[v];
+        E('bac[v] += a[v][u]', null, { v, title: 'Tính bậc', note: `Cộng dòng ${v} của ma trận kề: bac[${v}] = ${bac[v]}.` });
+      }
+      E('int k = 0;', null, { title: 'Xếp thứ tự', note: 'k = 0: thuTu đang rỗng.' });
+      for (let d = n - 1; d >= 0; d--) {
+        E('for (int d = n - 1', null, { title: 'Xếp thứ tự', note: `d = ${d}: tìm các đỉnh bậc ${d}.` });
+        for (let v = 0; v < n; v++) {
+          E('        for (int v = 0; v < n; v++)', null, { title: 'Xếp thứ tự', note: `Xét v = ${v}.` });
+          const hit = bac[v] === d;
+          if (hit) thuTu.push(v);
+          E('if (bac[v] == d) thuTu[++k] = v;', null, { v, title: 'Xếp thứ tự',
+            note: hit ? `bac[${v}] = ${d} → thuTu[${thuTu.length}] = ${v}.` : `bac[${v}] = ${bac[v]} ≠ ${d}.` });
+        }
+      }
+      E('cout << "thuTu:"', 'thuTu[1..n] = ', { type: 'init', out: 'thuTu:' + thuTu.map(x => ' ' + x).join(''), order: thuTu, title: 'Khởi tạo',
+        note: `Xếp đỉnh theo bậc giảm dần: ${fmtOrder(thuTu)}.` });
+      E('cout << " " << thuTu[i]', null, { title: 'Khởi tạo', note: 'In thứ tự xét đỉnh.' });
+      E('    cout << "\\n";', null, { title: 'Khởi tạo', note: 'Xuống dòng.' });
+      E('for (int v = 0; v < n; v++) mau[v] = -1;', null, { title: 'Khởi tạo', note: 'Mọi đỉnh chưa tô: mau[v] = -1.' });
+      E('soMauMin = n + 1;', 'soMauMin = n + 1', { title: 'Khởi tạo', note: `soMauMin = n + 1 = ${n + 1}: chưa có lời giải.` });
+      E('quayLui(1, 0);', '  quayLui(1, 0)', { title: 'Gọi quayLui(1, 0)', note: 'Bắt đầu từ bước 1, chưa dùng màu nào.' });
       quayLui(0, 0);
-      R && R({ line: 37, type: 'done', out: outKetQua(kmin, smin), k: kmin, title: 'Hoàn tất',
-        note: `Vét hết cây tìm kiếm: sắc số χ(G) = soMauMin = ${kmin}. Tổng số lần quay lui: ${bts}.` }, smin);
-    } catch (e) {
-      if (e === ABORT) aborted = true;
-      else if (e !== TRUNC) throw e;
-    }
-    return { colors: smin, k: aborted ? -1 : kmin, aborted, calls, backtracks: bts };
+      E('cout << "So mau', null, { out: `So mau: ${kmin}`, k: kmin, title: 'Xuất kết quả', note: `In sắc số χ(G) = soMauMin = ${kmin}.` }, smin);
+      for (let v = 0; v < n; v++) {
+        E('    for (int v = 0; v < n; v++)', null, { v, title: 'Xuất kết quả', note: `Xét v = ${v}.` }, smin);
+        E('cout << "Dinh "', null, { v, out: `Dinh ${v}: mau ${smin[v]}`, title: 'Xuất kết quả', note: `In màu của đỉnh ${v} trong Smin: ${smin[v]}.` }, smin);
+      }
+      const fin = { type: 'done', k: kmin, title: 'Hoàn tất', note: `Vét hết cây tìm kiếm: sắc số χ(G) = soMauMin = ${kmin}. Tổng số lần quay lui: ${bts}.` };
+      E(null, 'xuất soMauMin, Smin', { ...fin }, smin);
+      E('return 0;', null, { ...fin }, smin);
+      rec.finish();
+    } catch (e) { if (e !== TRUNC) throw e; }
+    return { colors: smin, k: kmin, aborted: false, calls, backtracks: bts };
   }
 
   /* =================================================================
@@ -320,8 +542,8 @@ const Solver = (() => {
    *    Chỉ dùng <iostream> + mảng tĩnh, ma trận kề như GV dạy. Cấu trúc bám
    *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó mỗi dòng "u v".
    *    test.js tự biên dịch bằng g++ (nếu có) và so kết quả với solver.
-   *    *_CPP_AT: dòng mã giả (0-based) → đoạn chữ nhận diện dòng C++ tương ứng,
-   *    để trace tô sáng đúng dòng khi đang xem C++.
+   *    Bộ ghi trace (greedyLines, backtrackLines) nhận diện dòng bằng chữ trong dòng
+   *    (lineOf), nên sửa code ở đây thì sửa luôn chữ nhận diện ở đó.
    * ================================================================= */
   const GREEDY_CPP = () => [
     '#include <iostream>',
@@ -388,16 +610,6 @@ const Solver = (() => {
     '    return 0;',
     '}',
   ];
-  const GREEDY_CPP_AT = {
-    9: 'bac[v] += a[v][u]', 13: '// SELECT', 15: 'for (c = 0; c < soMau', 16: 'if (!trungMau(v, c))',
-    17: 'break;', 19: 'soMau++;', 20: 'mau[v] = c;', 21: 'bac[v] = -1;',
-    22: '// hạ bậc', 31: 'cout << "So mau',
-  };
-  const GREEDY_CPP_OUT = {
-    select: 'cout << "Lan "', conflict: '" trung', ok: '" khong trung', newcolor: '"  mau moi "', assign: 'cout << "  mau["',
-    mark: '" da to: bac=-1', dec: 'cout << "  bac["', done: 'cout << "So mau',
-  };
-
   const BT_CPP = () => [
     '#include <iostream>',
     'using namespace std;',
@@ -451,7 +663,7 @@ const Solver = (() => {
     '        mau[v] = -1;                 // trả lại trạng thái cũ',
     '        thutLe(i); cout << "  go mau[" << v << "]\\n";',
     '    }',
-    '}',
+    '}                                    // hết màu để thử → về bước trước',
     '',
     'int main() {',
     '    cin >> n;                        // đọc G: n, ma trận kề a',
@@ -477,56 +689,21 @@ const Solver = (() => {
     '    return 0;',
     '}',
   ];
-  const BT_CPP_AT = {
-    8: 'void quayLui', 11: 'for (int c = 0; c < n; c++)', 13: 'int soMauMoi', 14: 'if (c > soMau) {',
-    15: 'if (soMauMoi >= soMauMin)', 16: 'if (trungMau(v, c))', 18: 'mau[v] = c;', 21: 'soMauMin = soMauMoi;',
-    26: '// trả lại trạng thái cũ', 34: 'cout << "thuTu:"', 37: 'cout << "So mau',
-  };
-  const BT_CPP_OUT = {
-    select: 'cout << "B"', sym: '" vuot soMau', prune: '" cat tia', conflict: '" trung', assign: 'cout << "  mau["',
-    found: '"  LG moi', backtrack: '"  go mau["', init: 'cout << "thuTu:"', done: 'cout << "So mau',
-  };
-
-  /** Loại bước → dòng C++ chứa lệnh cout in ra `out` của bước đó, dựng từ bảng *_CPP_OUT. */
-  function cppOutMap(cpp, at) {
-    const map = {};
-    for (const k in at) {
-      const j = cpp.findIndex(t => t.includes(at[k]));
-      if (j < 0) throw new Error('cppOutMap: không thấy "' + at[k] + '"');
-      map[k] = j;
-    }
-    return map;
-  }
-  /** Dòng C++ tô sáng của một bước: bước có in → đúng dòng cout sinh ra dòng log đó (để panel code và
-      Output C++ khớp nhau); bước không in → dòng C++ tương ứng với dòng mã giả. */
-  function cppLineOf(lineMap, outMap) {
-    return s => (s.out != null && outMap[s.type] != null ? outMap[s.type] : lineMap[s.line]) ?? -1;
-  }
-
-  /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
-  function cppLineMap(cpp, at) {
-    const map = [];
-    for (const k in at) {
-      const j = cpp.findIndex(t => t.includes(at[k]));
-      if (j < 0) throw new Error('cppLineMap: không thấy "' + at[k] + '"');
-      map[+k] = j;
-    }
-    return map;
-  }
-
   const ALGOS = {
     greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
-                cpp: () => GREEDY_CPP(), cppLine: cppLineOf(cppLineMap(GREEDY_CPP(), GREEDY_CPP_AT), cppOutMap(GREEDY_CPP(), GREEDY_CPP_OUT)),
+                cpp: () => GREEDY_CPP(),
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
                 exact: false, cx: 'O(n² + k·m)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), cpp: () => BT_CPP(), cppLine: cppLineOf(cppLineMap(BT_CPP(), BT_CPP_AT), cppOutMap(BT_CPP(), BT_CPP_OUT)), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
+                code: () => BT_CODE(), cpp: () => BT_CPP(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
   };
 
-  /** Chạy thuật toán có ghi trace. */
-  function trace(algoId, g, limit = 6000) {
-    const rec = new Recorder(limit);
-    const res = ALGOS[algoId].run(g, rec, { budget: 2e6 });
+  /** Chạy thuật toán có ghi trace từng dòng của ngôn ngữ lang ('pseudo' | 'cpp'). */
+  function trace(algoId, g, limit = 6000, lang = 'pseudo') {
+    const A = ALGOS[algoId];
+    A.lines = A.lines || { pseudo: A.code(), cpp: A.cpp() };   // giữ 1 bản để lineOf nhớ kết quả tra
+    const rec = new Recorder(limit, lang, A.lines);
+    const res = A.run(g, rec, { budget: 2e6 });
     return { steps: rec.steps, truncated: rec.truncated, result: res };
   }
 

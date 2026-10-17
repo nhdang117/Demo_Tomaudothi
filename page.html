@@ -229,9 +229,8 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .tl-meta{font:500 11px var(--mono);color:var(--ink-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tl-more{margin:0;padding:6px 14px 0;font:500 10.5px var(--mono);color:var(--ink-faint)}
 .tl-list{list-style:none;margin:0;padding:4px 0;flex:1 1 auto;min-height:0;overflow:auto;font:400 11.5px/1.45 var(--mono);font-variant-numeric:tabular-nums}
-.tl-list li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;padding:2px 12px 2px 8px;border-left:2px solid transparent;color:var(--ink-dim);cursor:pointer}
+.tl-list li{display:grid;grid-template-columns:minmax(0,1fr);padding:2px 12px 2px 12px;border-left:2px solid transparent;color:var(--ink-dim);cursor:pointer}
 .tl-list li:hover{background:var(--holo-soft)}
-.tl-list .n{text-align:right;font-size:10px;color:var(--ink-faint);padding-top:1px}
 .tl-list .x{white-space:pre}   /* như console: giữ khoảng trắng đầu dòng của cout, dòng dài thì cuộn ngang */
 .tl-list li{min-width:100%;width:max-content}
 .tl-list li.grp{margin-top:3px;padding-top:5px;border-top:1px solid var(--line)}   /* bắt đầu một vòng chọn đỉnh / một giá trị k */
@@ -243,7 +242,6 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .tl-list li.k-gold .x{color:var(--gold,#ffc83d);font-weight:700}
 .tl-list .x b{color:var(--holo);font-weight:700}
 .tl-list li.cur{background:var(--holo-soft);border-left-color:var(--holo)}
-.tl-list li.cur .n{color:var(--holo);font-weight:700}
 .tl-list li.cur .x{color:var(--ink)}
 .tl-list .sw{width:9px;height:9px;margin:0 3px 0 1px;vertical-align:0}
 .sw{display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--c);vertical-align:-1px;margin-right:4px;box-shadow:0 0 8px var(--c)}
@@ -281,7 +279,7 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .pbtn.play{width:46px;background:var(--holo);border-color:var(--holo);color:#03151a;box-shadow:0 0 18px rgba(124,244,255,.4)}
 .pbtn.play:hover{background:#a9f8ff}
 .pl-track{display:flex;flex-direction:column;gap:4px;min-width:0}
-.pl-meta{display:flex;justify-content:space-between;gap:10px;font:500 11.5px var(--mono);color:var(--ink-dim);font-variant-numeric:tabular-nums}
+.pl-meta{display:flex;justify-content:flex-end;gap:10px;font:500 11.5px var(--mono);color:var(--ink-dim);font-variant-numeric:tabular-nums}
 .pl-speed{display:flex;align-items:center;gap:8px;font:500 11px var(--mono);color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em}
 .pl-speed output{color:var(--ink);min-width:3.2em;font-variant-numeric:tabular-nums;letter-spacing:0}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:20px;cursor:pointer;margin:0}
@@ -330,6 +328,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .mx th.cur,.mx tr.cur > th:first-child{background:var(--holo);color:var(--on-holo)}
 .mx tr.cur td:not(.sum){background:var(--holo-soft);opacity:1}
 .mx tr.cur td.one{background:var(--holo);color:var(--on-holo)}
+.mx td.look{box-shadow:inset 0 0 0 1.5px var(--holo)}
 .mx td.dn{box-shadow:0 0 0 1.5px var(--plate-solid),0 0 0 3px var(--holo)}
 .mx td.bad,.mx tr.cur td.bad{background:var(--warn);color:#fff}
 .mx.tiny td{font-size:0}
@@ -517,7 +516,7 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
   <svg width="46" height="60" viewBox="0 0 46 60"><polyline points="0,58 18,58 46,2" fill="none" stroke="#7cf4ff" stroke-width="1" opacity=".8"/></svg>
   <span class="dot"></span>
   <div class="anno-box">
-    <p class="anno-k"><span id="aType">Khởi tạo</span><span class="s" id="aStep">#1</span></p>
+    <p class="anno-k"><span id="aType">Khởi tạo</span></p>
     <p class="anno-mat" id="aMat"></p>
     <p class="anno-note" id="aNote"></p>
     <div class="chips" id="aChips"></div>
@@ -636,7 +635,7 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
         </div>
         <!-- màn hẹp (≤ 820px): main.js chuyển khối này về cuối .lab-left, dưới khung code -->
         <div class="plate tlog">
-          <div class="tl-head"><p class="eyebrow" title="Đúng những gì chương trình C++ trên panel code in ra (cout)">Output C++</p><span class="tl-meta" id="tlMeta">—</span></div>
+          <div class="tl-head"><p class="eyebrow" title="Đúng những gì chương trình C++ trên panel code in ra (cout)">Output C++</p></div>
           <p class="tl-more" id="tlMore" hidden></p>
           <ol class="tl-list" id="tlList" data-lenis-prevent aria-label="Output của chương trình C++ (cout), bấm một dòng để về bước in ra dòng đó"></ol>
         </div>
@@ -665,7 +664,7 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
       </div>
 
       <div class="plate anno-dock" aria-live="polite">
-        <p class="anno-k"><span id="dType">Khởi tạo</span><span class="s" id="dStep">#1</span></p>
+        <p class="anno-k"><span id="dType">Khởi tạo</span></p>
         <p class="anno-mat" id="dMat"></p>
         <p class="anno-note" id="dNote"></p>
         <div class="chips" id="dChips"></div>
@@ -674,14 +673,14 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
       <div class="plate player" id="player">
         <div class="pl-btns">
           <button class="pbtn" id="pFirst" type="button" aria-label="Về bước đầu"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
-          <button class="pbtn" id="pPrev" type="button" aria-label="Lùi một bước"><svg viewBox="0 0 16 16"><path d="M12 2v12L4 8z"/></svg></button>
+          <button class="pbtn" id="pPrev" type="button" aria-label="Lùi một dòng"><svg viewBox="0 0 16 16"><path d="M12 2v12L4 8z"/></svg></button>
           <button class="pbtn play" id="pPlay" type="button" aria-label="Chạy"><svg viewBox="0 0 16 16" id="playIco"><path d="M4 2l10 6-10 6z"/></svg></button>
-          <button class="pbtn" id="pNext" type="button" aria-label="Tới một bước"><svg viewBox="0 0 16 16"><path d="M4 2v12l8-6z"/></svg></button>
+          <button class="pbtn" id="pNext" type="button" aria-label="Tới một dòng"><svg viewBox="0 0 16 16"><path d="M4 2v12l8-6z"/></svg></button>
           <button class="pbtn" id="pLast" type="button" aria-label="Tới bước cuối"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
         </div>
         <div class="pl-track">
           <input type="range" id="pScrub" min="0" max="0" value="0" step="1" aria-label="Bước thuật toán">
-          <div class="pl-meta"><span id="pCount">Bước 1 / 1</span><span id="pHint">Phím cách: chạy · ← →: từng bước</span></div>
+          <div class="pl-meta"><span id="pHint">Phím cách: chạy · ← →: từng dòng</span></div>
         </div>
         <label class="pl-speed" for="pSpeed"><span>Tốc độ</span><input type="range" id="pSpeed" min="0" max="5" step="1" value="2"><output id="pSpeedOut">1×</output></label>
       </div>

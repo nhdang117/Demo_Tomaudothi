@@ -650,16 +650,17 @@ algoSel.addEventListener('change', () => {
   st.algo = algoSel.value;
   computeTrace();
 });
-/* Công tắc Mã giả ⇄ C++: cùng một trace, khi xem C++ thì dòng mã giả của bước được đổi sang dòng C++ tương ứng */
+/* Công tắc Mã giả ⇄ C++: mỗi ngôn ngữ một trace chạy qua từng dòng của chính nó. Đổi ngôn ngữ thì dựng lại
+   trace và đứng ở dòng ứng với chỗ đang xem (cùng seq = cùng thời điểm chạy, xem Recorder trong solver.js) */
 const langSw = $('#langSw');
 st.lang = 'pseudo';
 try { if (localStorage.getItem('cc-lang') === 'cpp') st.lang = 'cpp'; } catch (e) { /* không có storage: giữ mã giả */ }
-const codeLine = s => st.lang === 'cpp' ? S.ALGOS[st.algo].cppLine(s) : s.line;
+const codeLine = s => s.line;
 langSw.addEventListener('click', () => {
+  const seq = st.steps.length ? st.steps[st.idx].seq : 0;
   st.lang = st.lang === 'cpp' ? 'pseudo' : 'cpp';
   try { localStorage.setItem('cc-lang', st.lang); } catch (e) { /* bỏ qua */ }
-  renderCode();
-  if (st.steps.length) setActiveLine(codeLine(st.steps[st.idx]), false);
+  computeTrace(seq);
 });
 function renderCode() {
   const A = S.ALGOS[st.algo];
@@ -724,7 +725,7 @@ function logLine(i) {
     t === 'select' && G ? 'k-sel' : t === 'conflict' || t === 'prune' ? 'k-bad' : t === 'assign' && !G ? 'k-ok'
       : t === 'backtrack' || t === 'fail' ? 'k-back' : t === 'found' ? 'k-gold' : t === 'done' ? 'k-end' : '']
     .filter(Boolean).join(' ');
-  return `<li${cls ? ` class="${cls}"` : ''} data-i="${i}" title="Bước ${i + 1}: ${esc(s.note || '')}"><span class="n">${i + 1}</span><span class="x">${esc(s.out)}</span></li>`;
+  return `<li${cls ? ` class="${cls}"` : ''} data-i="${i}" title="${esc(s.note || '')}"><span class="x">${esc(s.out)}</span></li>`;
 }
 function updateLog(i) {
   const L = TL.list;
@@ -744,7 +745,7 @@ function updateLog(i) {
   }
   const more = $('#tlMore');
   more.hidden = TL.from === 0;
-  more.textContent = `… phần in từ ${TL.from} bước trước không hiện`;
+  more.textContent = '… các dòng in trước đó không hiện';
   L.querySelector('.cur')?.classList.remove('cur');
   const last = L.lastElementChild;
   if (last && +last.dataset.i === i) last.classList.add('cur');   // chỉ sáng khi chính bước này in ra dòng đó
@@ -754,7 +755,6 @@ function updateLog(i) {
     L.scrollLeft = Math.max(0, lead * TL.cw - 24);
   }
   L.scrollTop = L.scrollHeight;
-  $('#tlMeta').textContent = `bước ${i + 1} / ${st.steps.length}`;
 }
 TL.list.addEventListener('click', e => {
   const li = e.target.closest('li[data-i]');
@@ -862,13 +862,11 @@ function annoChips(s) {
 }
 function updateAnnoContent(s, animate) {
   const label = s.title || '';
-  const num = `#${st.idx + 1}`;
   const L = st.g.labels;
   const mat = s.v != null && L ? `<b>${esc(L[s.v].sym)}</b>${esc(L[s.v].name)}${L[s.v].from ? ' · ' + esc(L[s.v].from) : ''}` : '';
-  for (const [t, n, c, k, mt] of [['#aType', '#aNote', '#aChips', '#aStep', '#aMat'], ['#dType', '#dNote', '#dChips', '#dStep', '#dMat']]) {
+  for (const [t, n, c, mt] of [['#aType', '#aNote', '#aChips', '#aMat'], ['#dType', '#dNote', '#dChips', '#dMat']]) {
     $(t).textContent = label;
     $(mt).innerHTML = mat;
-    $(k).textContent = num;
     setNote($(n), s.note || '', animate);
     $(c).innerHTML = annoChips(s);
   }
@@ -885,7 +883,7 @@ function updateHUD() {
   const w = $('#hudWarn');
   if (st.truncated) {
     w.hidden = false;
-    w.textContent = `Trace dài quá ${st.steps.length} bước nên đã dừng ghi. Kết quả đầy đủ xem ở phần So sánh.`;
+    w.textContent = `Trace dài quá ${st.steps.length} dòng lệnh nên đã dừng ghi. Kết quả đầy đủ xem ở phần So sánh.`;
   } else w.hidden = true;
 }
 function updateHudColors(s) {
@@ -981,6 +979,7 @@ function updateMatrix(s) {
   if (s.v == null || s.v < 0) return;
   const row = t.rows[s.v + 1];
   hot(row, 'cur'); hot(t.rows[0].cells[s.v + 1], 'cur');
+  if (s.cu != null) hot(row.cells[s.cu + 1], 'look');      // ô a[v][u] dòng code đang xét
   if (s.type === 'conflict') hot(row.cells[s.u + 1], 'bad');
   else if (s.type === 'dec') for (const u of s.us) hot(row.cells[u + 1], 'dn');
 }
@@ -997,7 +996,7 @@ function buildHand() {
      dòng hiện ra ngay ở bước hạ bậc trước đó để thấy bậc giảm */
   let lastDec = 0;
   st.steps.forEach((s, i) => {
-    if (s.type === 'dec') lastDec = i;
+    if (s.type === 'dec' || s.type === 'mark') lastDec = i;
     else if (s.type === 'select') TB.rows.push({ vis: TB.rows.length ? lastDec : 0, at: i, degs: s.degs, v: s.v, ties: new Set(s.ties), c: -1, cAt: Infinity });
     else if (s.type === 'assign' && TB.rows.length) Object.assign(TB.rows[TB.rows.length - 1], { c: s.c, cAt: i });
   });
@@ -1047,7 +1046,7 @@ function svgEl(tag, attrs, parent) {
   return e;
 }
 function buildTree() {
-  const steps = st.steps, n = st.g.n, order = steps[0].order, nodes = [], focus = new Int32Array(steps.length);
+  const steps = st.steps, n = st.g.n, order = steps.find(s => s.order).order, nodes = [], focus = new Int32Array(steps.length);
   const mk = (level, label, parent, at, extra) => {
     const nd = Object.assign({ id: nodes.length, level, label: String(label), parent, at, kids: [], st: '' }, extra);
     nodes.push(nd); if (parent) parent.kids.push(nd);
@@ -1236,8 +1235,8 @@ function updateTables(i) {
 const scrub = $('#pScrub'), speed = $('#pSpeed');
 const setFill = el => { const mx = +el.max || 1; el.style.setProperty('--fill', ((+el.value - +el.min) / (mx - +el.min || 1) * 100) + '%'); };
 
-function computeTrace() {
-  const t = S.trace(st.algo, st.g, 6000);
+function computeTrace(seq = 0) {
+  const t = S.trace(st.algo, st.g, 30000, st.lang);
   st.steps = t.steps; st.truncated = t.truncated;
   st.playing = false; st.acc = 0;
   if (st.layers) toggleLayers(false);
@@ -1246,7 +1245,9 @@ function computeTrace() {
   TL.to = -1;                                             // trace mới → log dựng lại từ đầu
   scrub.max = Math.max(0, st.steps.length - 1);
   updateHUD();
-  setStep(0, false);
+  let i = 0;
+  while (i + 1 < st.steps.length && st.steps[i + 1].seq <= seq) i++;
+  setStep(i, false);
   setPlayIcon();
 }
 
@@ -1260,7 +1261,6 @@ function setStep(i, animate) {
   updateHudColors(s);
   updateTables(i);
   scrub.value = i; setFill(scrub);
-  $('#pCount').textContent = `Bước ${i + 1} / ${st.steps.length}`;
   if (lockT) lockT.textContent = lockText(s);
   const atEnd = s.type === 'done';
   const lb = $('#tLayers');
@@ -1750,7 +1750,7 @@ const curBox = { x: 0, y: 0, s: 300, init: false };
 const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpC = new THREE.Color(), tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3();
 const ident = new THREE.Quaternion(), tgtQ = new THREE.Quaternion(), euler = new THREE.Euler(0, 0, 'YXZ');
 const raycaster = new THREE.Raycaster();
-const FOCUS_TYPES = new Set(['select', 'try', 'ok', 'newcolor', 'assign', 'mark', 'dec', 'conflict', 'sym', 'prune', 'backtrack', 'fail']);
+const FOCUS_TYPES = new Set(['line', 'select', 'try', 'ok', 'newcolor', 'assign', 'mark', 'dec', 'conflict', 'sym', 'prune', 'backtrack', 'fail']);
 const tip = $('#tip');
 let labelSz = [], labelA = [];
 /* Frost, phần bài toán: cạnh trắng lần lượt mọc từ đỉnh này sang đỉnh kia (lan theo BFS), giữ, mờ, lặp lại */
