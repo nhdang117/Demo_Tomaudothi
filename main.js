@@ -1024,7 +1024,19 @@ function buildHand() {
   TB.rowHtml = TB.trs.map(tr => tr.innerHTML);
 }
 const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+/* chữ "−1" nổi lên rồi bay nhẹ lên trên ô vừa bị hạ bậc; đặt fixed trên body để không bị mờ theo dòng .pend
+   và không bị khung bảng cắt */
+function flyMinus(td, ms) {
+  const r = td.getBoundingClientRect();
+  if (!r.width) return;
+  const el = document.createElement('span');
+  el.className = 'ht-fly'; el.textContent = '−1';
+  el.style.left = `${r.left + r.width / 2}px`; el.style.top = `${r.top}px`; el.style.setProperty('--fd', ms + 'ms');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms + 50);
+}
 function updateHandGreedy(i, animate) {
+  if (TB.flyT) { clearTimeout(TB.flyT); TB.flyT = 0; TB.flyFn(); }   // bước trước còn chờ đổi số → đổi ngay
   const s = st.steps[i];
   let cur = -1, live = -1;
   TB.rows.forEach((r, k) => {
@@ -1045,12 +1057,23 @@ function updateHandGreedy(i, animate) {
   if (live >= 0) {                                        // số chạy = bậc hiện tại; ô vừa đổi giá trị thì nháy
     const tr = TB.trs[live], prev = live ? TB.rows[live - 1].degs : null, old = TB.liveVals;
     tr.classList.add('live');
+    const later = [];
     for (let j = 0; j < st.g.n; j++) {
       const d = s.degs[j], td = tr.cells[j + 1];
       if (old && old[j] === d) continue;
-      td.textContent = d < 0 ? '−1' : d;
-      td.className = d < 0 ? 'x' : prev && d < prev[j] ? 'dn' : '';
-      if (old && animate) restart(td, 'chg');
+      const set = () => {
+        td.textContent = d < 0 ? '−1' : d;
+        td.className = d < 0 ? 'x' : prev && d < prev[j] ? 'dn' : '';
+        if (old && animate) restart(td, 'chg');
+      };
+      if (old && animate && !REDUCED && d >= 0 && old[j] - d === 1) {   // hạ bậc 1: "−1" bay lên trước, số đổi sau
+        flyMinus(td, Math.min(900, stepMs() * 0.9));
+        later.push(set);
+      } else set();
+    }
+    if (later.length) {
+      TB.flyFn = () => { for (const f of later) f(); };
+      TB.flyT = setTimeout(() => { TB.flyT = 0; TB.flyFn(); }, Math.min(420, stepMs() * 0.45));
     }
     TB.liveVals = Int16Array.from(s.degs);
   }
