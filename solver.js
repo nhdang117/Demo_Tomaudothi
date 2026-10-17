@@ -235,7 +235,7 @@ const Solver = (() => {
         note: 'Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.' });
       E('soMau = 0;', 'mau[v] = -1 với mọi v', { title: 'Khởi tạo', note: 'Mọi đỉnh chưa tô (mau = -1), chưa dùng màu nào: soMau = 0.' });
       for (let i = 1; i <= n; i++) {
-        E('for (int i = 1; i <= n; i++)', 'for (i = 1 -> n)', { title: `Vòng ${i}`, note: `Vòng i = ${i}: tô thêm đúng 1 đỉnh.` });
+        E('for (int i = 1; i <= n; i++)', 'for (i = 1 -> n)', { type: 'round', title: `Vòng ${i}`, note: `Vòng i = ${i}: tô thêm đúng 1 đỉnh.` });
         let v = 0;
         E('// SELECT', null, { v, deg: bac[v], title: 'Chọn đỉnh', note: `Tạm lấy v = 0 (bac[0] = ${bac[0]}), rồi so với các đỉnh sau.` });
         for (let x = 1; x < n; x++) {

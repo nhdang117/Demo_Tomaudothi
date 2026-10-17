@@ -351,6 +351,13 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ht tr:not(.picked) td.hv > span,.ht tr:not(.colored) td.hc > span{display:none}
 .ht tr:not(.picked) td.hv::before,.ht tr:not(.colored) td.hc::before{content:"?";color:var(--ink-faint)}
 .ht.tiny td,.ht.tiny th{font-size:8px}
+/* dòng đang chạy số (chưa tới lúc chọn đỉnh): viền mảnh; trượt xuống từ dòng trên khi hiện ra, ô đổi giá trị thì nháy */
+.ht tr.live:not(.cur) td:not(.hv):not(.hc){background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.ht tr.slide > *{animation:htSlide .5s cubic-bezier(.2,.8,.2,1)}
+.ht td.chg{animation:htChg .6s ease-out}
+@keyframes htSlide{from{transform:translateY(calc(-100% - 2px));opacity:.3}}
+@keyframes htChg{from{background:var(--warn);color:#fff;transform:scale(1.3)}}
+@media (prefers-reduced-motion:reduce){.ht tr.slide > *,.ht td.chg{animation:none}}
 
 /* cây quay lui (thay bảng tính tay khi chạy quay lui) */
 .bt-stage{position:relative;height:clamp(260px,44vh,560px);margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;
@@ -1382,7 +1389,7 @@ const Solver = (() => {
         note: 'Bảng bậc ban đầu = số đỉnh kề của mỗi đỉnh. Chưa tô đỉnh nào, chưa dùng màu nào.' });
       E('soMau = 0;', 'mau[v] = -1 với mọi v', { title: 'Khởi tạo', note: 'Mọi đỉnh chưa tô (mau = -1), chưa dùng màu nào: soMau = 0.' });
       for (let i = 1; i <= n; i++) {
-        E('for (int i = 1; i <= n; i++)', 'for (i = 1 -> n)', { title: `Vòng ${i}`, note: `Vòng i = ${i}: tô thêm đúng 1 đỉnh.` });
+        E('for (int i = 1; i <= n; i++)', 'for (i = 1 -> n)', { type: 'round', title: `Vòng ${i}`, note: `Vòng i = ${i}: tô thêm đúng 1 đỉnh.` });
         let v = 0;
         E('// SELECT', null, { v, deg: bac[v], title: 'Chọn đỉnh', note: `Tạm lấy v = 0 (bac[0] = ${bac[0]}), rồi so với các đỉnh sau.` });
         for (let x = 1; x < n; x++) {
@@ -3044,14 +3051,19 @@ function buildHand() {
   tbSec.ht.classList.toggle('tree-mode', !G);
   if (!G) { buildTree(); return; }
   if (TR.ro) { TR.ro.disconnect(); TR.ro = null; }
-  /* mỗi dòng = một lần chọn đỉnh, chụp bảng bậc lúc chọn (giống bảng cô chạy tay ở slide 18);
-     dòng hiện ra ngay ở bước hạ bậc trước đó để thấy bậc giảm */
-  let lastDec = 0;
+  /* mỗi dòng = một lần chọn đỉnh, chụp bảng bậc lúc chọn (giống bảng cô chạy tay ở slide 18).
+     Vòng đời một dòng: hiện ra (vis) — trượt xuống từ dòng trên khi vòng hạ bậc của lần trước bắt đầu, số chạy
+     theo bậc hiện tại của từng dòng code (dòng đầu: theo lúc lập bảng bậc); sáng lên (enter) ở dòng for (i …)
+     của lần đó = vào vòng lặp mới; đóng băng (at) từ lúc chọn đỉnh, giữ đúng bảng bậc lúc chọn. */
+  let lastMark = -1;
   st.steps.forEach((s, i) => {
-    if (s.type === 'dec' || s.type === 'mark') lastDec = i;
-    else if (s.type === 'select') TB.rows.push({ vis: TB.rows.length ? lastDec : 0, at: i, degs: s.degs, v: s.v, ties: new Set(s.ties), c: -1, cAt: Infinity });
-    else if (s.type === 'assign' && TB.rows.length) Object.assign(TB.rows[TB.rows.length - 1], { c: s.c, cAt: i });
+    const r = TB.rows[TB.rows.length - 1];
+    if (s.type === 'mark') lastMark = i;
+    else if (s.type === 'round') TB.rows.push({ vis: TB.rows.length ? lastMark + 1 : 0, enter: i, at: Infinity, degs: null, v: -1, ties: new Set(), c: -1, cAt: Infinity });
+    else if (s.type === 'select' && r) Object.assign(r, { at: i, degs: s.degs, v: s.v, ties: new Set(s.ties) });
+    else if (s.type === 'assign' && r) Object.assign(r, { c: s.c, cAt: i });
   });
+  TB.live = -1; TB.liveVals = null;
   let h = `<table class="ht${n > 30 ? ' tiny' : ''}" style="--tc:${cs}px"><tr><th class="hn">Lần</th>`;
   for (let j = 0; j < n; j++) h += `<th>${j}</th>`;
   h += '<th class="hv">Chọn</th><th class="hc">Màu</th></tr>';
@@ -3059,28 +3071,48 @@ function buildHand() {
     const prev = k ? TB.rows[k - 1].degs : null;
     h += `<tr><th class="hn">${k + 1}</th>`;
     for (let j = 0; j < n; j++) {
-      const d = r.degs[j];
+      const d = r.degs ? r.degs[j] : 0;                  // trace bị cắt trước lúc chọn: dòng chỉ có số chạy
       const cls = (d < 0 ? 'x' : prev && d < prev[j] ? 'dn' : '') + (j === r.v ? ' sel' : r.ties.size > 1 && r.ties.has(j) ? ' tie' : '');
       h += `<td${cls.trim() ? ` class="${cls.trim()}"` : ''}>${d < 0 ? '−1' : d}</td>`;
     }
     h += `<td class="hv"><span>${r.v}</span></td><td class="hc"><span>${r.c >= 0 ? swatch(r.c) + r.c : ''}</span></td></tr>`;
   });
   body.innerHTML = '<p class="tb-key">Mỗi dòng là bảng bậc lúc chọn đỉnh. Ô đậm = bậc cao nhất được chọn, khung = hòa bậc ' +
-    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô.</p>' + h + '</table>';
+    '(lấy chỉ số nhỏ nhất), đỏ = vừa bị hạ bậc, −1 = đã tô. Dòng viền mảnh = bậc đang hạ theo từng dòng code; dòng sáng = lần đang chạy.</p>' + h + '</table>';
   TB.trs = [...body.querySelectorAll('tr')].slice(1);
+  TB.rowHtml = TB.trs.map(tr => tr.innerHTML);
 }
-function updateHandGreedy(i) {
-  let cur = -1;
+const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+function updateHandGreedy(i, animate) {
+  const s = st.steps[i];
+  let cur = -1, live = -1;
   TB.rows.forEach((r, k) => {
     const tr = TB.trs[k], vis = i >= r.vis;
     tr.hidden = !vis;
     if (!vis) return;
-    cur = k;
+    if (i >= r.enter) cur = k;
+    if (i < r.at) live = k;
     tr.classList.toggle('picked', i >= r.at);
     tr.classList.toggle('colored', i >= r.cAt);
   });
+  if (live !== TB.live) {                                 // dòng chạy số đổi → dòng cũ về bảng bậc lúc chọn
+    if (TB.live >= 0) { TB.trs[TB.live].innerHTML = TB.rowHtml[TB.live]; TB.trs[TB.live].classList.remove('live', 'slide'); }
+    TB.live = live; TB.liveVals = null;
+    if (live > 0 && animate && i === TB.rows[live].vis) restart(TB.trs[live], 'slide');   // trượt xuống từ dòng trên
+  }
+  if (live >= 0) {                                        // số chạy = bậc hiện tại; ô vừa đổi giá trị thì nháy
+    const tr = TB.trs[live], prev = live ? TB.rows[live - 1].degs : null, old = TB.liveVals;
+    tr.classList.add('live');
+    for (let j = 0; j < st.g.n; j++) {
+      const d = s.degs[j], td = tr.cells[j + 1];
+      if (old && old[j] === d) continue;
+      td.textContent = d < 0 ? '−1' : d;
+      td.className = d < 0 ? 'x' : prev && d < prev[j] ? 'dn' : '';
+      if (old && animate) restart(td, 'chg');
+    }
+    TB.liveVals = Int16Array.from(s.degs);
+  }
   TB.trs.forEach((tr, k) => tr.classList.toggle('cur', k === cur));
-  const s = st.steps[i];
   $('#tbHtMeta').textContent = s.type === 'done' ? `xong · ${s.used} màu` : cur < 0 ? 'bảng bậc' : `lần ${cur + 1} / ${TB.rows.length}`;
 }
 /* ---------------- Cây quay lui (thay bảng tính tay khi chạy quay lui) ----------------
@@ -3273,11 +3305,11 @@ function updateHandBT(i) {
 function tbScroll() {                                     // giữ dòng đang xét trong tầm nhìn của cả 2 bảng
   const s = st.steps[st.idx];
   if (TB.open.mx && TB.mx && s.v != null && s.v >= 0) keepVisible($('#tbMxBody'), TB.mx.rows[s.v + 1]);
-  if (TB.open.ht) keepVisible($('#tbHtBody'), TB.trs.find(tr => tr.classList.contains('cur')));
+  if (TB.open.ht) keepVisible($('#tbHtBody'), TB.trs[TB.live] || TB.trs.find(tr => tr.classList.contains('cur')));
 }
-function updateTables(i) {
+function updateTables(i, animate) {
   updateMatrix(st.steps[i]);
-  if (st.algo === 'greedy') updateHandGreedy(i); else updateHandBT(i);
+  if (st.algo === 'greedy') updateHandGreedy(i, animate); else updateHandBT(i);
   tbScroll();
 }
 
@@ -3311,7 +3343,7 @@ function setStep(i, animate) {
   updateLog(i);
   updateAnnoContent(s, animate);
   updateHudColors(s);
-  updateTables(i);
+  updateTables(i, animate);
   scrub.value = i; setFill(scrub);
   if (lockT) lockT.textContent = lockText(s);
   const atEnd = s.type === 'done';

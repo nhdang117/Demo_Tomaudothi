@@ -351,6 +351,13 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ht tr:not(.picked) td.hv > span,.ht tr:not(.colored) td.hc > span{display:none}
 .ht tr:not(.picked) td.hv::before,.ht tr:not(.colored) td.hc::before{content:"?";color:var(--ink-faint)}
 .ht.tiny td,.ht.tiny th{font-size:8px}
+/* dòng đang chạy số (chưa tới lúc chọn đỉnh): viền mảnh; trượt xuống từ dòng trên khi hiện ra, ô đổi giá trị thì nháy */
+.ht tr.live:not(.cur) td:not(.hv):not(.hc){background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.ht tr.slide > *{animation:htSlide .5s cubic-bezier(.2,.8,.2,1)}
+.ht td.chg{animation:htChg .6s ease-out}
+@keyframes htSlide{from{transform:translateY(calc(-100% - 2px));opacity:.3}}
+@keyframes htChg{from{background:var(--warn);color:#fff;transform:scale(1.3)}}
+@media (prefers-reduced-motion:reduce){.ht tr.slide > *,.ht td.chg{animation:none}}
 
 /* cây quay lui (thay bảng tính tay khi chạy quay lui) */
 .bt-stage{position:relative;height:clamp(260px,44vh,560px);margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;
