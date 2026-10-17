@@ -92,6 +92,7 @@ body{background:
 .code li.on .ln{color:var(--holo)}
 .code li.on::before{background:var(--grad)}
 .code li.was{background:rgba(91,91,240,.05)}
+.lang-sw[aria-checked="true"] i{background:var(--grad)}
 .tbtn{border-radius:999px;background:rgba(255,255,255,.7);border-color:#fff}
 .tbtn:hover{background:#fff}
 .tbtn[aria-pressed="true"]{color:var(--holo);background:#fff;border-color:var(--holo)}

@@ -293,12 +293,154 @@ const Solver = (() => {
     return { colors: smin, k: aborted ? -1 : kmin, aborted, calls, backtracks: bts };
   }
 
+  /* =================================================================
+   * 3) CODE C++ THẬT của 2 thuật toán — panel code bật công tắc "C++" thì hiện.
+   *    Chỉ dùng <iostream> + mảng tĩnh, ma trận kề như GV dạy. Cấu trúc bám
+   *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó mỗi dòng "u v".
+   *    test.js tự biên dịch bằng g++ (nếu có) và so kết quả với solver.
+   *    *_CPP_AT: dòng mã giả (0-based) → đoạn chữ nhận diện dòng C++ tương ứng,
+   *    để trace tô sáng đúng dòng khi đang xem C++.
+   * ================================================================= */
+  const GREEDY_CPP = () => [
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'const int MAXN = 125;',
+    'int n;               // số đỉnh',
+    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
+    'int deg[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
+    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
+    'int used;            // số màu đã dùng',
+    '',
+    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    'bool trungMau(int v, int c) {',
+    '    for (int u = 0; u < n; u++)',
+    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '    return false;',
+    '}',
+    '',
+    'void thamLam() {',
+    '    for (int v = 0; v < n; v++) {',
+    '        deg[v] = 0;',
+    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
+    '        color[v] = -1;',
+    '    }',
+    '    used = 0;',
+    '    for (int i = 1; i <= n; i++) {   // mỗi vòng tô 1 đỉnh',
+    '        int v = 0;                   // SELECT: bậc lớn nhất,',
+    '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
+    '            if (deg[x] > deg[v]) v = x;',
+    '        int c = 0;                   // thử các màu đã dùng',
+    '        while (c < used && trungMau(v, c))',
+    '            c++;                     // trùng màu → màu sau',
+    '        if (c == used) used++;       // hết màu cũ → màu mới',
+    '        color[v] = c;                // S_i = v, tô màu c',
+    '        deg[v] = -1;                 // P = P - {v}',
+    '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
+    '            if (a[v][u] == 1 && deg[u] >= 0) deg[u]--;',
+    '    }',
+    '}',
+    '',
+    'int main() {',
+    '    cin >> n;                        // đọc G',
+    '    int x, y;',
+    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    thamLam();',
+    '    cout << "So mau: " << used << "\\n";',
+    '    for (int v = 0; v < n; v++)',
+    '        cout << "Dinh " << v << ": mau " << color[v] << "\\n";',
+    '    return 0;',
+    '}',
+  ];
+  const GREEDY_CPP_AT = {
+    6: 'deg[v] += a[v][u]', 10: '// SELECT', 12: 'int c = 0;', 14: 'while (c < used',
+    15: 'c++;', 17: 'if (c == used)', 18: 'color[v] = c;', 19: 'deg[v] = -1;',
+    20: 'for (int u = 0; u < n; u++)  // hạ bậc', 30: 'cout << "So mau',
+  };
+
+  const BT_CPP = () => [
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'const int MAXN = 125;',
+    'int n;               // số đỉnh',
+    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
+    'int ord[MAXN];       // ord[i] = v_i (bậc giảm dần)',
+    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
+    'int kmin;            // số màu của LG tốt nhất',
+    'int Smin[MAXN];      // LG tốt nhất (bản sao color)',
+    '',
+    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    'bool trungMau(int v, int c) {',
+    '    for (int u = 0; u < n; u++)',
+    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '    return false;',
+    '}',
+    '',
+    'void toMau(int i, int used) {    // bước i: màu cho v_i',
+    '    int v = ord[i];',
+    '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
+    '        int moi = (c + 1 > used) ? c + 1 : used;  // max',
+    '        if (c <= used                // phá đối xứng',
+    '            && moi < kmin            // cắt tỉa',
+    '            && !trungMau(v, c)) {    // khác màu đỉnh kề',
+    '            color[v] = c;            // ghi nhận S_i = c',
+    '            if (i == n) {            // đủ n đỉnh: LG mới',
+    '                kmin = moi;',
+    '                for (int x = 0; x < n; x++) Smin[x] = color[x];',
+    '            } else',
+    '                toMau(i + 1, moi);',
+    '            color[v] = -1;           // trả lại trạng thái cũ',
+    '        }',
+    '    }',
+    '}',
+    '',
+    'int main() {',
+    '    cin >> n;                        // đọc G',
+    '    int x, y;',
+    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    int deg[MAXN];',
+    '    for (int v = 0; v < n; v++) {',
+    '        deg[v] = 0;',
+    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
+    '    }',
+    '    int k = 0;                       // v_1..v_n: bậc giảm dần,',
+    '    for (int d = n - 1; d >= 0; d--) // cùng bậc: chỉ số nhỏ trước',
+    '        for (int v = 0; v < n; v++)',
+    '            if (deg[v] == d) ord[++k] = v;',
+    '    for (int v = 0; v < n; v++) color[v] = -1;',
+    '    kmin = n + 1;',
+    '    toMau(1, 0);',
+    '    cout << "So mau it nhat: " << kmin << "\\n";',
+    '    for (int v = 0; v < n; v++)',
+    '        cout << "Dinh " << v << ": mau " << Smin[v] << "\\n";',
+    '    return 0;',
+    '}',
+  ];
+  const BT_CPP_AT = {
+    5: 'void toMau', 7: 'for (int c = 0; c < n; c++)', 8: 'if (c <= used', 9: '&& moi < kmin',
+    10: '&& !trungMau', 12: 'color[v] = c;', 15: 'kmin = moi;', 20: '// trả lại trạng thái cũ',
+    27: 'int k = 0;', 30: 'cout << "So mau',
+  };
+
+  /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
+  function cppLineMap(cpp, at) {
+    const map = [];
+    for (const k in at) {
+      const j = cpp.findIndex(t => t.includes(at[k]));
+      if (j < 0) throw new Error('cppLineMap: không thấy "' + at[k] + '"');
+      map[+k] = j;
+    }
+    return map;
+  }
+
   const ALGOS = {
     greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
+                cpp: () => GREEDY_CPP(), cppLine: cppLineMap(GREEDY_CPP(), GREEDY_CPP_AT),
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
                 exact: false, cx: 'O(n² + k·m)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
+                code: () => BT_CODE(), cpp: () => BT_CPP(), cppLine: cppLineMap(BT_CPP(), BT_CPP_AT), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
   };
 
   /** Chạy thuật toán có ghi trace. */

@@ -199,6 +199,17 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .algo-h select:focus-visible{outline:2px solid var(--holo);outline-offset:1px}
 .algo-h option{background:var(--plate-solid);color:var(--ink);font:500 14px var(--body);text-transform:none}
 .panel-head .cx{font:500 11px var(--mono);color:var(--ink-faint)}
+.ph-r{display:flex;align-items:center;gap:10px;min-width:0}
+/* công tắc Mã giả ⇄ C++ trên header panel code */
+.lang-sw{display:inline-flex;align-items:center;gap:6px;padding:3px 4px;border:0;background:none;cursor:pointer;
+  font:500 11px var(--mono);color:var(--ink-faint);white-space:nowrap;border-radius:6px}
+.lang-sw i{position:relative;width:28px;height:16px;border-radius:999px;background:var(--line-strong);transition:background .25s}
+.lang-sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--plate-solid);
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .25s}
+.lang-sw[aria-checked="true"] i{background:var(--holo)}
+.lang-sw[aria-checked="true"] i::after{transform:translateX(12px)}
+.lang-sw[aria-checked="false"] .ls-a,.lang-sw[aria-checked="true"] .ls-b{color:var(--ink)}
+.lang-sw:focus-visible{outline:2px solid var(--holo);outline-offset:1px}
 .code{list-style:none;margin:0;padding:8px 0;flex:1;overflow:auto;position:relative;font:400 12px/1.8 var(--mono)}
 .code li{position:relative;display:grid;grid-template-columns:34px auto;white-space:pre;min-width:100%;width:max-content;padding-right:14px;color:#a9c4ca;transition:background .35s,color .35s}
 .code .ln{color:var(--ink-faint);text-align:right;padding-right:12px;user-select:none;font-size:11px}
@@ -797,6 +808,7 @@ body{background:
 .code li.on .ln{color:var(--holo)}
 .code li.on::before{background:var(--grad)}
 .code li.was{background:rgba(91,91,240,.05)}
+.lang-sw[aria-checked="true"] i{background:var(--grad)}
 .tbtn{border-radius:999px;background:rgba(255,255,255,.7);border-color:#fff}
 .tbtn:hover{background:#fff}
 .tbtn[aria-pressed="true"]{color:var(--holo);background:#fff;border-color:var(--holo)}
@@ -975,7 +987,7 @@ html::-webkit-scrollbar{width:8px}
     <div class="lab">
       <div class="lab-left">
         <div class="plate code-panel">
-          <div class="panel-head"><h2 class="algo-h"><select id="algoSel" aria-label="Chọn thuật toán"><option value="greedy">Tham lam</option><option value="backtrack">Quay lui</option></select></h2><span class="cx" id="algoCx">O(n² + k·m)</span></div>
+          <div class="panel-head"><h2 class="algo-h"><select id="algoSel" aria-label="Chọn thuật toán"><option value="greedy">Tham lam</option><option value="backtrack">Quay lui</option></select></h2><div class="ph-r"><button type="button" class="lang-sw" id="langSw" role="switch" aria-checked="false" title="Chuyển giữa mã giả và code C++ chạy được"><span class="ls-a">Mã giả</span><i aria-hidden="true"></i><span class="ls-b">C++</span></button><span class="cx" id="algoCx">O(n² + k·m)</span></div></div>
           <ol class="code" id="code" data-lenis-prevent aria-label="Mã giả của thuật toán"></ol>
           <p class="nogl-note">Trình duyệt không hỗ trợ WebGL nên đồ thị 3D bị tắt. Các bước thuật toán vẫn chạy ở bảng bên dưới.</p>
         </div>
@@ -1416,12 +1428,154 @@ const Solver = (() => {
     return { colors: smin, k: aborted ? -1 : kmin, aborted, calls, backtracks: bts };
   }
 
+  /* =================================================================
+   * 3) CODE C++ THẬT của 2 thuật toán — panel code bật công tắc "C++" thì hiện.
+   *    Chỉ dùng <iostream> + mảng tĩnh, ma trận kề như GV dạy. Cấu trúc bám
+   *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó mỗi dòng "u v".
+   *    test.js tự biên dịch bằng g++ (nếu có) và so kết quả với solver.
+   *    *_CPP_AT: dòng mã giả (0-based) → đoạn chữ nhận diện dòng C++ tương ứng,
+   *    để trace tô sáng đúng dòng khi đang xem C++.
+   * ================================================================= */
+  const GREEDY_CPP = () => [
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'const int MAXN = 125;',
+    'int n;               // số đỉnh',
+    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
+    'int deg[MAXN];       // số đỉnh kề chưa tô; -1 = đã tô',
+    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
+    'int used;            // số màu đã dùng',
+    '',
+    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    'bool trungMau(int v, int c) {',
+    '    for (int u = 0; u < n; u++)',
+    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '    return false;',
+    '}',
+    '',
+    'void thamLam() {',
+    '    for (int v = 0; v < n; v++) {',
+    '        deg[v] = 0;',
+    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
+    '        color[v] = -1;',
+    '    }',
+    '    used = 0;',
+    '    for (int i = 1; i <= n; i++) {   // mỗi vòng tô 1 đỉnh',
+    '        int v = 0;                   // SELECT: bậc lớn nhất,',
+    '        for (int x = 1; x < n; x++)  // hòa → chỉ số nhỏ nhất',
+    '            if (deg[x] > deg[v]) v = x;',
+    '        int c = 0;                   // thử các màu đã dùng',
+    '        while (c < used && trungMau(v, c))',
+    '            c++;                     // trùng màu → màu sau',
+    '        if (c == used) used++;       // hết màu cũ → màu mới',
+    '        color[v] = c;                // S_i = v, tô màu c',
+    '        deg[v] = -1;                 // P = P - {v}',
+    '        for (int u = 0; u < n; u++)  // hạ bậc đỉnh kề chưa tô',
+    '            if (a[v][u] == 1 && deg[u] >= 0) deg[u]--;',
+    '    }',
+    '}',
+    '',
+    'int main() {',
+    '    cin >> n;                        // đọc G',
+    '    int x, y;',
+    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    thamLam();',
+    '    cout << "So mau: " << used << "\\n";',
+    '    for (int v = 0; v < n; v++)',
+    '        cout << "Dinh " << v << ": mau " << color[v] << "\\n";',
+    '    return 0;',
+    '}',
+  ];
+  const GREEDY_CPP_AT = {
+    6: 'deg[v] += a[v][u]', 10: '// SELECT', 12: 'int c = 0;', 14: 'while (c < used',
+    15: 'c++;', 17: 'if (c == used)', 18: 'color[v] = c;', 19: 'deg[v] = -1;',
+    20: 'for (int u = 0; u < n; u++)  // hạ bậc', 30: 'cout << "So mau',
+  };
+
+  const BT_CPP = () => [
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'const int MAXN = 125;',
+    'int n;               // số đỉnh',
+    'int a[MAXN][MAXN];   // ma trận kề: 1 = kề nhau',
+    'int ord[MAXN];       // ord[i] = v_i (bậc giảm dần)',
+    'int color[MAXN];     // màu của đỉnh; -1 = chưa tô',
+    'int kmin;            // số màu của LG tốt nhất',
+    'int Smin[MAXN];      // LG tốt nhất (bản sao color)',
+    '',
+    '// đỉnh v có đỉnh kề nào đang mang màu c?',
+    'bool trungMau(int v, int c) {',
+    '    for (int u = 0; u < n; u++)',
+    '        if (a[v][u] == 1 && color[u] == c) return true;',
+    '    return false;',
+    '}',
+    '',
+    'void toMau(int i, int used) {    // bước i: màu cho v_i',
+    '    int v = ord[i];',
+    '    for (int c = 0; c < n; c++) {   // tối đa n lựa chọn',
+    '        int moi = (c + 1 > used) ? c + 1 : used;  // max',
+    '        if (c <= used                // phá đối xứng',
+    '            && moi < kmin            // cắt tỉa',
+    '            && !trungMau(v, c)) {    // khác màu đỉnh kề',
+    '            color[v] = c;            // ghi nhận S_i = c',
+    '            if (i == n) {            // đủ n đỉnh: LG mới',
+    '                kmin = moi;',
+    '                for (int x = 0; x < n; x++) Smin[x] = color[x];',
+    '            } else',
+    '                toMau(i + 1, moi);',
+    '            color[v] = -1;           // trả lại trạng thái cũ',
+    '        }',
+    '    }',
+    '}',
+    '',
+    'int main() {',
+    '    cin >> n;                        // đọc G',
+    '    int x, y;',
+    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    int deg[MAXN];',
+    '    for (int v = 0; v < n; v++) {',
+    '        deg[v] = 0;',
+    '        for (int u = 0; u < n; u++) deg[v] += a[v][u];',
+    '    }',
+    '    int k = 0;                       // v_1..v_n: bậc giảm dần,',
+    '    for (int d = n - 1; d >= 0; d--) // cùng bậc: chỉ số nhỏ trước',
+    '        for (int v = 0; v < n; v++)',
+    '            if (deg[v] == d) ord[++k] = v;',
+    '    for (int v = 0; v < n; v++) color[v] = -1;',
+    '    kmin = n + 1;',
+    '    toMau(1, 0);',
+    '    cout << "So mau it nhat: " << kmin << "\\n";',
+    '    for (int v = 0; v < n; v++)',
+    '        cout << "Dinh " << v << ": mau " << Smin[v] << "\\n";',
+    '    return 0;',
+    '}',
+  ];
+  const BT_CPP_AT = {
+    5: 'void toMau', 7: 'for (int c = 0; c < n; c++)', 8: 'if (c <= used', 9: '&& moi < kmin',
+    10: '&& !trungMau', 12: 'color[v] = c;', 15: 'kmin = moi;', 20: '// trả lại trạng thái cũ',
+    27: 'int k = 0;', 30: 'cout << "So mau',
+  };
+
+  /** Dòng mã giả → dòng C++ (mảng chỉ số), dựng từ bảng *_CPP_AT. */
+  function cppLineMap(cpp, at) {
+    const map = [];
+    for (const k in at) {
+      const j = cpp.findIndex(t => t.includes(at[k]));
+      if (j < 0) throw new Error('cppLineMap: không thấy "' + at[k] + '"');
+      map[+k] = j;
+    }
+    return map;
+  }
+
   const ALGOS = {
     greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
+                cpp: () => GREEDY_CPP(), cppLine: cppLineMap(GREEDY_CPP(), GREEDY_CPP_AT),
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
                 exact: false, cx: 'O(n² + k·m)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
+                code: () => BT_CODE(), cpp: () => BT_CPP(), cppLine: cppLineMap(BT_CPP(), BT_CPP_AT), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
   };
 
   /** Chạy thuật toán có ghi trace. */
@@ -2263,11 +2417,12 @@ function buildLabels(n) {
 
 const codeEl = $('#code');
 let curLine = -1;
-const KW = /\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|main)\b|\b(\d+)\b/g;
+const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|thamlam|main|cin|cout|trungMau|thamLam|toMau)\b|\b(\d+)\b/g;
 function hl(line) {
-  const hi = line.search(/#|\/\//);                     // chú thích: # (Python) hoặc // (mã giả kiểu GV)
+  const hi = line.search(/\/\//);                        // chú thích //
   const code = hi >= 0 ? line.slice(0, hi) : line, cm = hi >= 0 ? line.slice(hi) : '';
-  const c = esc(code).replace(KW, (m, kw, fn, nu) => kw ? `<span class="kw">${kw}</span>` : fn ? `<span class="fn">${fn}</span>` : `<span class="nu">${nu}</span>`);
+  const c = esc(code).replace(KW, (m, str, kw, fn, nu) => str ? `<span class="nu">${str}</span>` : kw ? `<span class="kw">${kw}</span>`
+    : fn ? `<span class="fn">${fn}</span>` : `<span class="nu">${nu}</span>`);
   return c + (cm ? `<span class="cm">${esc(cm)}</span>` : '');
 }
 /* Tiêu đề panel code là ô chọn thuật toán (tên ngắn; tên đầy đủ hiện khi rê chuột) */
@@ -2278,9 +2433,22 @@ algoSel.addEventListener('change', () => {
   st.algo = algoSel.value;
   computeTrace();
 });
+/* Công tắc Mã giả ⇄ C++: cùng một trace, khi xem C++ thì dòng mã giả của bước được đổi sang dòng C++ tương ứng */
+const langSw = $('#langSw');
+st.lang = 'pseudo';
+try { if (localStorage.getItem('cc-lang') === 'cpp') st.lang = 'cpp'; } catch (e) { /* không có storage: giữ mã giả */ }
+const codeLine = s => st.lang === 'cpp' ? (S.ALGOS[st.algo].cppLine[s.line] ?? -1) : s.line;
+langSw.addEventListener('click', () => {
+  st.lang = st.lang === 'cpp' ? 'pseudo' : 'cpp';
+  try { localStorage.setItem('cc-lang', st.lang); } catch (e) { /* bỏ qua */ }
+  renderCode();
+  if (st.steps.length) setActiveLine(codeLine(st.steps[st.idx]), false);
+});
 function renderCode() {
   const A = S.ALGOS[st.algo];
-  codeEl.innerHTML = A.code().map((t, i) =>
+  langSw.setAttribute('aria-checked', st.lang === 'cpp' ? 'true' : 'false');
+  codeEl.setAttribute('aria-label', st.lang === 'cpp' ? 'Code C++ của thuật toán' : 'Mã giả của thuật toán');
+  codeEl.innerHTML = (st.lang === 'cpp' ? A.cpp() : A.code()).map((t, i) =>
     `<li data-i="${i}"><span class="ln">${i + 1}</span><span class="tx">${hl(t) || ' '}</span></li>`).join('');
   $$('.tx', codeEl).forEach(tx => { tx.dataset.html = tx.innerHTML; });
   curLine = -1;
@@ -2860,7 +3028,7 @@ function setStep(i, animate) {
   i = clamp(i, 0, st.steps.length - 1);
   st.idx = i;
   const s = st.steps[i];
-  setActiveLine(s.line, animate);
+  setActiveLine(codeLine(s), animate);
   updateLog(i);
   updateAnnoContent(s, animate);
   updateHudColors(s);

@@ -199,6 +199,17 @@ main a,main button,main input,main select,main textarea,main label,.plate,.hero-
 .algo-h select:focus-visible{outline:2px solid var(--holo);outline-offset:1px}
 .algo-h option{background:var(--plate-solid);color:var(--ink);font:500 14px var(--body);text-transform:none}
 .panel-head .cx{font:500 11px var(--mono);color:var(--ink-faint)}
+.ph-r{display:flex;align-items:center;gap:10px;min-width:0}
+/* công tắc Mã giả ⇄ C++ trên header panel code */
+.lang-sw{display:inline-flex;align-items:center;gap:6px;padding:3px 4px;border:0;background:none;cursor:pointer;
+  font:500 11px var(--mono);color:var(--ink-faint);white-space:nowrap;border-radius:6px}
+.lang-sw i{position:relative;width:28px;height:16px;border-radius:999px;background:var(--line-strong);transition:background .25s}
+.lang-sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--plate-solid);
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .25s}
+.lang-sw[aria-checked="true"] i{background:var(--holo)}
+.lang-sw[aria-checked="true"] i::after{transform:translateX(12px)}
+.lang-sw[aria-checked="false"] .ls-a,.lang-sw[aria-checked="true"] .ls-b{color:var(--ink)}
+.lang-sw:focus-visible{outline:2px solid var(--holo);outline-offset:1px}
 .code{list-style:none;margin:0;padding:8px 0;flex:1;overflow:auto;position:relative;font:400 12px/1.8 var(--mono)}
 .code li{position:relative;display:grid;grid-template-columns:34px auto;white-space:pre;min-width:100%;width:max-content;padding-right:14px;color:#a9c4ca;transition:background .35s,color .35s}
 .code .ln{color:var(--ink-faint);text-align:right;padding-right:12px;user-select:none;font-size:11px}
@@ -596,7 +607,7 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
     <div class="lab">
       <div class="lab-left">
         <div class="plate code-panel">
-          <div class="panel-head"><h2 class="algo-h"><select id="algoSel" aria-label="Chọn thuật toán"><option value="greedy">Tham lam</option><option value="backtrack">Quay lui</option></select></h2><span class="cx" id="algoCx">O(n² + k·m)</span></div>
+          <div class="panel-head"><h2 class="algo-h"><select id="algoSel" aria-label="Chọn thuật toán"><option value="greedy">Tham lam</option><option value="backtrack">Quay lui</option></select></h2><div class="ph-r"><button type="button" class="lang-sw" id="langSw" role="switch" aria-checked="false" title="Chuyển giữa mã giả và code C++ chạy được"><span class="ls-a">Mã giả</span><i aria-hidden="true"></i><span class="ls-b">C++</span></button><span class="cx" id="algoCx">O(n² + k·m)</span></div></div>
           <ol class="code" id="code" data-lenis-prevent aria-label="Mã giả của thuật toán"></ol>
           <p class="nogl-note">Trình duyệt không hỗ trợ WebGL nên đồ thị 3D bị tắt. Các bước thuật toán vẫn chạy ở bảng bên dưới.</p>
         </div>

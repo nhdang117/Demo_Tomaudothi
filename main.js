@@ -634,11 +634,12 @@ function buildLabels(n) {
 
 const codeEl = $('#code');
 let curLine = -1;
-const KW = /\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|main)\b|\b(\d+)\b/g;
+const KW = /("[^"]*")|\b(def|for|in|if|else|while|return|not|is|None|True|False|lambda|and|or|int|bool|void|const|using|namespace|include|true|false)\b|\b(all|any|max|min|argmax|range|set|sorted|len|tomau|thamlam|main|cin|cout|trungMau|thamLam|toMau)\b|\b(\d+)\b/g;
 function hl(line) {
-  const hi = line.search(/#|\/\//);                     // chú thích: # (Python) hoặc // (mã giả kiểu GV)
+  const hi = line.search(/\/\//);                        // chú thích //
   const code = hi >= 0 ? line.slice(0, hi) : line, cm = hi >= 0 ? line.slice(hi) : '';
-  const c = esc(code).replace(KW, (m, kw, fn, nu) => kw ? `<span class="kw">${kw}</span>` : fn ? `<span class="fn">${fn}</span>` : `<span class="nu">${nu}</span>`);
+  const c = esc(code).replace(KW, (m, str, kw, fn, nu) => str ? `<span class="nu">${str}</span>` : kw ? `<span class="kw">${kw}</span>`
+    : fn ? `<span class="fn">${fn}</span>` : `<span class="nu">${nu}</span>`);
   return c + (cm ? `<span class="cm">${esc(cm)}</span>` : '');
 }
 /* Tiêu đề panel code là ô chọn thuật toán (tên ngắn; tên đầy đủ hiện khi rê chuột) */
@@ -649,9 +650,22 @@ algoSel.addEventListener('change', () => {
   st.algo = algoSel.value;
   computeTrace();
 });
+/* Công tắc Mã giả ⇄ C++: cùng một trace, khi xem C++ thì dòng mã giả của bước được đổi sang dòng C++ tương ứng */
+const langSw = $('#langSw');
+st.lang = 'pseudo';
+try { if (localStorage.getItem('cc-lang') === 'cpp') st.lang = 'cpp'; } catch (e) { /* không có storage: giữ mã giả */ }
+const codeLine = s => st.lang === 'cpp' ? (S.ALGOS[st.algo].cppLine[s.line] ?? -1) : s.line;
+langSw.addEventListener('click', () => {
+  st.lang = st.lang === 'cpp' ? 'pseudo' : 'cpp';
+  try { localStorage.setItem('cc-lang', st.lang); } catch (e) { /* bỏ qua */ }
+  renderCode();
+  if (st.steps.length) setActiveLine(codeLine(st.steps[st.idx]), false);
+});
 function renderCode() {
   const A = S.ALGOS[st.algo];
-  codeEl.innerHTML = A.code().map((t, i) =>
+  langSw.setAttribute('aria-checked', st.lang === 'cpp' ? 'true' : 'false');
+  codeEl.setAttribute('aria-label', st.lang === 'cpp' ? 'Code C++ của thuật toán' : 'Mã giả của thuật toán');
+  codeEl.innerHTML = (st.lang === 'cpp' ? A.cpp() : A.code()).map((t, i) =>
     `<li data-i="${i}"><span class="ln">${i + 1}</span><span class="tx">${hl(t) || ' '}</span></li>`).join('');
   $$('.tx', codeEl).forEach(tx => { tx.dataset.html = tx.innerHTML; });
   curLine = -1;
@@ -1231,7 +1245,7 @@ function setStep(i, animate) {
   i = clamp(i, 0, st.steps.length - 1);
   st.idx = i;
   const s = st.steps[i];
-  setActiveLine(s.line, animate);
+  setActiveLine(codeLine(s), animate);
   updateLog(i);
   updateAnnoContent(s, animate);
   updateHudColors(s);

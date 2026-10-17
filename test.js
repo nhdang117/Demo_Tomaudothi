@@ -179,5 +179,34 @@ console.log('7) Đọc input & dữ liệu không hợp lệ');
   check('xuất rồi đọc lại danh sách cạnh', r.errors.length === 0 && r.warnings.length === 0 && r.graph.n === g0.n && r.graph.edges.length === g0.edges.length);
 }
 
+console.log('8) Code C++ trên panel — biên dịch bằng g++, chạy và so với solver');
+{
+  const { spawnSync } = require('child_process'), fs = require('fs'), os = require('os'), path = require('path');
+  if (spawnSync('g++', ['--version']).status !== 0) console.log('   (bỏ qua: máy không có g++)');
+  else {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-cpp-'));
+    const graphs = S.PRESETS.map(p => p.build());
+    for (let seed = 1; seed <= 40; seed++) graphs.push(S.randomGraph(1 + seed % 14, [0.2, 0.4, 0.7][seed % 3], seed));
+    for (const id of Object.keys(S.ALGOS)) {
+      const src = path.join(dir, id + '.cpp'), exe = path.join(dir, id + '.exe');
+      fs.writeFileSync(src, S.ALGOS[id].cpp().join('\n') + '\n');
+      const c = spawnSync('g++', ['-O2', '-Wall', '-Wextra', '-o', exe, src], { encoding: 'utf8' });
+      check(`C++ ${id}: biên dịch được, không cảnh báo`, c.status === 0 && !c.stderr.trim(), c.stderr);
+      if (c.status !== 0) continue;
+      let bad = 0;
+      for (const g of graphs) {
+        const input = `${g.n}\n` + g.edges.map(e => e.join(' ')).join('\n') + '\n';
+        const out = spawnSync(exe, [], { input, encoding: 'utf8' }).stdout;
+        const k = +(out.match(/: (\d+)/) || [])[1];
+        const cols = [...out.matchAll(/mau (-?\d+)/g)].map(m => m[1]).join();
+        const r = S.ALGOS[id].run(g, null);
+        if (k !== r.k || cols !== Array.from(r.colors).join()) bad++;
+      }
+      check(`C++ ${id}: số màu và cách tô trùng solver trên ${graphs.length} đồ thị`, bad === 0, `${bad} đồ thị lệch`);
+    }
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 console.log(`\nKết quả: ${pass} đạt, ${fail} không đạt`);
 process.exit(fail ? 1 : 0);
