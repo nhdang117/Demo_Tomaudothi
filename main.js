@@ -22,7 +22,7 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const damp = (dt, rate) => 1 - Math.exp(-rate * dt);
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /* ---------------- Bảng màu của đỉnh (dữ liệu, tách khỏi màu giao diện) ---------------- */
 const BASE_PAL = FROST
@@ -1496,7 +1496,7 @@ function computeCompare() {
   const p = S.PRESETS.find(x => x.id === 'cargo'), g = p.build();
   const r = S.backtrack(g, null);
   const L = g.labels;
-  $('#sampleIn').textContent = S.toEdgeListText(g);
+  $('#sampleIn').textContent = S.toMatrixText(g);
   $('#sampleK').textContent = r.k;
   $('#sampleFit').textContent = 'chương trình tự chia, ít ngăn nhất';
   $('#samplePens').innerHTML = Array.from({ length: r.k }, (_, c) => {
@@ -1511,8 +1511,8 @@ function computeCompare() {
 })();
 
 /* =====================================================================
- * Kiểm thử — kết quả bộ testcase chạy trên máy (testcases/run_tests.js: bộ giải JS + code C++),
- * build.py nhúng results.json. Trang chỉ hiển thị; testcase nào nạp nhẹ (run_tests.js đo) thì cho xem demo.
+ * Kiểm thử — kết quả bộ testcase chạy trên máy bằng code C++ (testcases/run_tests.js: kiem_tra.cpp,
+ * tham_lam.cpp, quay_lui.cpp), build.py nhúng results.json. Trang chỉ hiển thị; testcase hợp lệ có n nhỏ thì cho xem demo.
  * ===================================================================== */
 const TSD = window.TESTSUITE_DATA || null;
 const ts = { group: 'all', sel: null };
@@ -1522,17 +1522,15 @@ const tsMs = ms => ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(1)} 
 const tsPill = st => st === 'Đạt' ? '<span class="pill ok">Đạt</span>' : '<span class="pill bad">Không đạt</span>';
 function tsExpect(r) {
   if (r.expErr) return `lỗi “${esc(r.expErr)}”`;
-  const w = r.expWarn ? ` + cảnh báo` : '';
-  return r.chi != null ? `χ = ${r.chi}${w}` : `${r.lb} ≤ k ≤ ${r.ub}`;
+  return r.chi != null ? `χ = ${r.chi}` : `${r.lb} ≤ k ≤ ${r.ub}`;
 }
 function tsGreedy(r) {
   if (r.greedyK == null) return '—';
   return r.chi != null && r.greedyK > r.chi ? `<span class="over">${r.greedyK} (+${r.greedyK - r.chi})</span>` : `${r.greedyK}`;
 }
-function tsBt(r) {                                        // quay lui: C++ chạy mọi n; JS chỉ khi n ≤ 90
-  if (r.cppBtStatus === 'xong') return `${r.cppBtK}`;
-  if (r.cppBtStatus === 'quá thời gian') return `<span class="pill na" title="C++ chưa xong sau ${TSD.meta.cpp ? TSD.meta.cpp.timeoutS : '?'} s">quá giờ</span>`;
+function tsBt(r) {                                        // quay lui C++ chạy cho mọi n, dừng sau timeoutS giây
   if (r.btStatus === 'xong') return `${r.btK}`;
+  if (r.btStatus === 'quá thời gian') return `<span class="pill na" title="C++ chưa xong sau ${TSD.meta.cpp.timeoutS} s">quá giờ</span>`;
   return r.btStatus ? `<span class="pill na">${esc(r.btStatus)}</span>` : '—';
 }
 function tsDemoTag(r) {
@@ -1546,7 +1544,7 @@ function tsRowHtml(r) {
     `<td colspan="3" class="msg">✕ ${esc(r.msg)}</td><td class="res">${res}</td></tr>`;
   return `<tr data-ts="${r.id}" tabindex="0" class="${cls}">${head}<td class="num">${r.n} · ${r.m}</td><td>${tsExpect(r)}</td>` +
     `<td class="num">${tsGreedy(r)}</td><td class="num">${tsBt(r)}</td>` +
-    `<td class="num">${r.cppGreedyMs != null ? `${tsMs(r.cppGreedyMs)} / ${tsMs(r.cppBtMs)}` : '<span title="input dạng thô, không chạy C++">JS</span>'}</td>` +
+    `<td class="num">${tsMs(r.greedyMs)} / ${tsMs(r.btMs)}</td>` +
     `<td class="res">${res}</td></tr>`;
 }
 function tsRender() {
@@ -1575,7 +1573,7 @@ async function tsInput(r) {
 function tsDetail(r, text, loaded) {
   const dd = (k, v) => v == null || v === '' ? '' : `<dt>${k}</dt><dd>${v}</dd>`;
   $('#tsDetail').innerHTML = `<h3>${esc(r.id)} ${tsPill(r.status)}</h3><p>${esc(r.desc)}</p><dl>` +
-    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.norm ? 'đúng định dạng chuẩn' : r.expErr ? 'input sai định dạng' : 'hợp lệ, có khoảng trắng / dòng trống thừa'}`) +
+    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.norm ? 'ma trận kề chuẩn hoá' : r.expErr ? 'input sai định dạng' : 'ma trận kề hợp lệ, có khoảng trắng / dòng trống thừa'}`) +
     dd('Mong đợi', tsExpect(r) + (r.src && !r.expErr ? ` <small>(${TS_SRC[r.src] || esc(r.src)})</small>` : '')) +
     dd('Ghi chú', r.notes.length ? esc(r.notes.join(' · ')) : null) +
     (r.fails.length ? dd('Lỗi', `<span class="fails">${esc(r.fails.join(' · '))}</span>`) : '') + '</dl>' +
@@ -1604,11 +1602,11 @@ async function tsSelect(id) {
   const M = TSD.meta, C = M.cpp;
   $('#tsTitle').textContent = `${M.pass}/${M.total} testcase đạt`;
   $('#tsSub').textContent = `${M.total} testcase, ${TSD.summary.length} nhóm, bấm dòng có "▶ xem demo" để nạp đồ thị.`;
-  $('#tsNote').innerHTML = C
-    ? `<b>Khi chạy testcase, code C++ chỉ in kết quả cuối cùng, không in log từng bước</b> (cpp/tham_lam.cpp, cpp/quay_lui.cpp — cùng thuật toán với code trên panel). ` +
-      `Quay lui C++ chạy cho mọi n, dừng sau ${C.timeoutS} s; thời gian C++ đo từ ngoài tiến trình, đã gồm ≈ ${C.startMs} ms khởi động và đọc input. ` +
-      `Trang chỉ chạy quay lui khi n ≤ ${M.btMaxN}. Testcase nạp quá ${M.webMaxMs} ms tính toán thì chỉ xem kết quả, tránh làm trang đứng.`
-    : 'Máy chạy testcase không có g++ nên chưa có kết quả C++.';
+  $('#tsNote').innerHTML =
+    `<b>Mọi testcase chạy bằng code C++</b>: cpp/kiem_tra.cpp kiểm tra input ma trận kề (cùng thông báo lỗi với ô nhập), ` +
+    `rồi cpp/tham_lam.cpp và cpp/quay_lui.cpp — cùng thuật toán với code trên panel, <b>chỉ in kết quả cuối cùng, không in log từng bước</b>. ` +
+    `Quay lui chạy cho mọi n, dừng sau ${C.timeoutS} s; thời gian đo từ ngoài tiến trình, đã gồm ≈ ${C.startMs} ms khởi động và đọc input. ` +
+    `Testcase hợp lệ có n ≤ ${M.demoMaxN} thì bấm để nạp vào demo (trang chỉ chạy quay lui khi n ≤ ${M.btMaxN}).`;
   tsTiles(); tsRender();
   $('#tsTiles').addEventListener('click', e => { const b = e.target.closest('.ts-tile'); if (b) { ts.group = b.dataset.g; tsRender(); } });
   const pick = e => { const tr = e.target.closest('tr[data-ts]'); if (tr) tsSelect(tr.dataset.ts); };
@@ -1850,9 +1848,14 @@ function updatePending(msgs = []) {
   $$('#presetCards .card').forEach(c => c.setAttribute('aria-pressed', String(!!m.id && c.dataset.pick === m.id)));
   $$('#algoCards .card').forEach(c => c.setAttribute('aria-checked', String(c.dataset.algo === pending.algo)));
 }
-function fillText(g) { $('#edgeText').value = S.toEdgeListText(g); pending.dirty = false; $('#parseMsgs').innerHTML = ''; }
+function fillText(g) {                                 // ma trận n² số: đồ thị lớn không đổ vào ô nhập (n = 1000 ≈ 2 MB chữ)
+  const big = g.n > S.UI.TEXT_MAX_N, ta = $('#matText');
+  ta.value = big ? '' : S.toMatrixText(g);
+  ta.placeholder = big ? `Đồ thị đang chọn có n = ${g.n} > ${S.UI.TEXT_MAX_N}: ma trận ${g.n}×${g.n} quá lớn để hiện ở đây, đồ thị vẫn dùng được. Nhập ma trận mới vào ô này nếu muốn thay.` : '';
+  pending.dirty = false; $('#parseMsgs').innerHTML = '';
+}
 function parseText() {
-  const r = S.parseInput($('#edgeText').value);
+  const r = S.parseInput($('#matText').value);
   const box = $('#parseMsgs');
   if (r.errors.length) {
     box.innerHTML = r.errors.slice(0, 6).map(t => `<span class="e">✕ ${esc(t)}</span>`).join('') +
@@ -1914,17 +1917,17 @@ $('#rGo').addEventListener('click', () => {
   pending.meta = { id: null, name: `Ngẫu nhiên G(${n}, ${p.toFixed(2)}) · seed ${seed}`, chi: null };
   fillText(pending.g); updatePending([['ok', `Đã sinh ${pending.g.edges.length} cạnh.`]]);
 });
-$('#edgeText').addEventListener('input', () => { pending.dirty = true; parseText(); });
+$('#matText').addEventListener('input', () => { pending.dirty = true; parseText(); });
 function useText() {
   const g = parseText();
-  if (!g) { updatePending([['e', 'Danh sách cạnh còn lỗi, chưa thể dùng.']]); return false; }
+  if (!g) { updatePending([['e', 'Ma trận kề còn lỗi, chưa thể dùng.']]); return false; }
   pending.g = g; pending.meta = { id: null, name: 'Đồ thị tự nhập', chi: null }; pending.dirty = false;
-  updatePending([['ok', 'Đã nhận đồ thị từ danh sách cạnh.']]);
+  updatePending([['ok', 'Đã nhận đồ thị từ ma trận kề.']]);
   return true;
 }
 $('#useText').addEventListener('click', useText);
 $('#optsApply').addEventListener('click', () => {
-  if (pending.dirty && !useText()) { $('#edgeText').focus(); return; }
+  if (pending.dirty && !useText()) { $('#matText').focus(); return; }
   const graphChanged = pending.g !== st.g;
   const algoChanged = pending.algo !== st.algo;
   st.algo = pending.algo;

@@ -221,8 +221,8 @@ const Solver = (() => {
     const E = (cl, ps, ev) => rec.at(cl, ps, mau, ev);
     try {
       E('cin >> n;', null, { title: 'Đọc dữ liệu', note: `Đọc số đỉnh n = ${n}.` });
-      E('while (cin >> x >> y)', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
-        note: `Đọc ${g.edges.length} cạnh vào ma trận kề: mỗi cạnh (x, y) gán a[x][y] = a[y][x] = 1.` });
+      E('cin >> x; a[u][v]', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
+        note: `Đọc ma trận kề ${n}×${n}: hàng u, cột v là a[u][v] (1 = u kề v, 0 = không) → đồ thị có ${g.edges.length} cạnh.` });
       E('thamLam();', '  thamLam()', { title: 'Gọi thamLam()', note: 'Gọi hàm tham lam.' });
       for (let v = 0; v < n; v++) {
         E('// bac[v] = số đỉnh kề của v', null, { v, title: 'Lập bảng bậc', note: `Xét đỉnh v = ${v}.` });
@@ -492,8 +492,8 @@ const Solver = (() => {
 
     try {
       E('cin >> n;', null, { title: 'Đọc dữ liệu', note: `Đọc số đỉnh n = ${n}.` });
-      E('while (cin >> x >> y)', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
-        note: `Đọc ${g.edges.length} cạnh vào ma trận kề: mỗi cạnh (x, y) gán a[x][y] = a[y][x] = 1.` });
+      E('cin >> x; a[u][v]', 'đọc G: n đỉnh', { title: 'Đọc dữ liệu',
+        note: `Đọc ma trận kề ${n}×${n}: hàng u, cột v là a[u][v] (1 = u kề v, 0 = không) → đồ thị có ${g.edges.length} cạnh.` });
       const bac = new Int16Array(n);
       for (let v = 0; v < n; v++) {
         E('// bac[v] = số đỉnh kề của v', null, { v, title: 'Tính bậc', note: `Xét đỉnh v = ${v}.` });
@@ -540,7 +540,7 @@ const Solver = (() => {
    *    Log chỉ hiện các chuỗi này, nên log trên web = stdout của chương trình
    *    C++; test.js chạy g++ và so từng ký tự (stdoutOf).
    *    Chỉ dùng <iostream> + mảng tĩnh, ma trận kề như GV dạy. Cấu trúc bám
-   *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó mỗi dòng "u v".
+   *    sát mã giả để đọc song song. Input: dòng đầu n, sau đó ma trận kề n hàng × n số 0/1.
    *    test.js tự biên dịch bằng g++ (nếu có) và so kết quả với solver.
    *    Bộ ghi trace (greedyLines, backtrackLines) nhận diện dòng bằng chữ trong dòng
    *    (lineOf), nên sửa code ở đây thì sửa luôn chữ nhận diện ở đó.
@@ -600,9 +600,11 @@ const Solver = (() => {
     '}',
     '',
     'int main() {',
+    '    ios::sync_with_stdio(false);     // đọc nhanh: n = 5000 là 25 triệu số',
     '    cin >> n;                        // đọc G: n, ma trận kề a',
-    '    int x, y;',
-    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    char x;                          // mỗi phần tử là 1 ký tự 0/1',
+    '    for (int u = 0; u < n; u++)      // n hàng, mỗi hàng n số',
+    '        for (int v = 0; v < n; v++) { cin >> x; a[u][v] = (x == \'1\'); }',
     '    thamLam();',
     '    cout << "So mau: " << soMau << "\\n";',
     '    for (int v = 0; v < n; v++)',
@@ -666,9 +668,11 @@ const Solver = (() => {
     '}                                    // hết màu để thử → về bước trước',
     '',
     'int main() {',
+    '    ios::sync_with_stdio(false);     // đọc nhanh: n = 5000 là 25 triệu số',
     '    cin >> n;                        // đọc G: n, ma trận kề a',
-    '    int x, y;',
-    '    while (cin >> x >> y) a[x][y] = a[y][x] = 1;',
+    '    char x;                          // mỗi phần tử là 1 ký tự 0/1',
+    '    for (int u = 0; u < n; u++)      // n hàng, mỗi hàng n số',
+    '        for (int v = 0; v < n; v++) { cin >> x; a[u][v] = (x == \'1\'); }',
     '    for (int v = 0; v < n; v++) {    // bac[v] = số đỉnh kề của v',
     '        bac[v] = 0;',
     '        for (int u = 0; u < n; u++) bac[v] += a[v][u];',
@@ -826,10 +830,11 @@ const Solver = (() => {
   }
 
   /* ---------------- Đọc input văn bản ----------------
-   * Chỉ một định dạng (trùng input của code C++ và file testcase):
-   *   dòng đầu "n" (1 ≤ n ≤ MAX_N), mỗi dòng sau "u v" (0 ≤ u, v ≤ n − 1, u ≠ v), mỗi cặp một lần.
+   * Chỉ một định dạng — MA TRẬN KỀ như GV dạy (trùng input của code C++ và file testcase):
+   *   dòng đầu "n" (1 ≤ n ≤ MAX_N), sau đó n hàng, hàng u gồm n số 0/1: số thứ v là a[u][v]
+   *   (1 = mẫu u phản ứng với mẫu v). Ma trận phải đối xứng, đường chéo toàn 0.
    * Khoảng trắng / tab thừa, xuống dòng Windows và dòng trống được bỏ qua (cin của C++ cũng vậy);
-   * chú thích "#", DIMACS, dòng đầu "n K" kiểu cũ, cặp lặp đều là lỗi.
+   * chú thích "#", danh sách cạnh "u v", danh sách kề, DIMACS đều là lỗi.
    * opts.maxN: giới hạn n (mặc định MAX_N)
    */
   const MAX_N = 5000;          // = MAXN − 5 của code C++ (mảng tĩnh)
@@ -840,52 +845,94 @@ const Solver = (() => {
     BT_LOAD_BUDGET: 4e5,         // loadGraph: tìm χ để tô màu lúc xem / tách ngăn
     BT_CMP_BUDGET: 1e6,          // bảng so sánh
     TABLE_MAX_N: 120,            // ma trận kề, bảng trạng thái: n² ô DOM (n ≤ 120: giữ nguyên như bản cũ)
+    TEXT_MAX_N: 300,             // ô nhập: hiện ma trận kề của đồ thị đang chọn khi n ≤ 300 (≈ 180 KB chữ)
     STRESS_MAX_N: 120,           // bố cục stress O(n²) mỗi vòng; lớn hơn dùng xoắn ốc trên mặt cầu O(n + m)
     traceLimit: n => Math.max(1500, Math.min(30000, Math.floor(8e6 / Math.max(1, n)))),   // mỗi bước chép mảng màu n phần tử
   };
+
+  const MAX_ERR = 50;          // quá số lỗi này thì dừng kiểm tra (ma trận n = 5000 sai đối xứng có thể ra hàng triệu lỗi)
+
+  /** Hàng u của ma trận vào A; trả về chuỗi lỗi hoặc null. Hàng viết chuẩn "0 1 0 …" đi đường nhanh, không tách chuỗi. */
+  function readRow(line, n, A, u) {
+    const off = u * n;
+    if (line.length === 2 * n - 1) {
+      let ok = true;
+      for (let v = 0, i = 0; v < n; v++, i += 2) {
+        const ch = line.charCodeAt(i);
+        if ((ch !== 48 && ch !== 49) || (v + 1 < n && line.charCodeAt(i + 1) !== 32)) { ok = false; break; }
+        A[off + v] = ch - 48;
+      }
+      if (ok) return null;
+    }
+    const tok = line.split(/\s+/);
+    if (tok.length !== n)
+      return `có ${tok.length} số, cần đúng ${n} số` +
+        (tok.length < n ? ' (mỗi hàng của ma trận kề có đủ n số 0/1, không nhập danh sách cạnh "u v" hay danh sách kề)' : '');
+    for (let v = 0; v < n; v++) {
+      if (tok[v] !== '0' && tok[v] !== '1') return `cột ${v} là "${tok[v]}" — ma trận kề chỉ gồm 0 và 1`;
+      A[off + v] = tok[v] === '1' ? 1 : 0;
+    }
+    return null;
+  }
 
   function parseInput(text, opts = {}) {
     const maxN = opts.maxN ?? MAX_N;
     const errors = [], warnings = [];
     const lines = text.split(/\r?\n/);
-    let n = null;
-    const edges = [], seen = new Map();          // cặp → dòng xuất hiện đầu tiên
-    for (let li = 0; li < lines.length; li++) {
-      const raw = lines[li], line = raw.trim(), ln = li + 1;
+    let n = null, A = null, r = 0;               // r: số hàng ma trận đã đọc
+    const rowLine = [];                          // hàng u nằm ở dòng nào (để báo lỗi đối xứng)
+    for (let li = 0; li < lines.length && errors.length < MAX_ERR; li++) {
+      const line = lines[li].trim(), ln = li + 1;
       if (!line) continue;
-      if (line.includes('#')) { errors.push(`Dòng ${ln}: không dùng chú thích "#", mỗi dòng chỉ gồm các số nguyên.`); if (n === null) break; continue; }
-      const tok = line.split(/\s+/);
-      if (n === null) {
-        if (tok.length !== 1 || !/^\d+$/.test(tok[0])) { errors.push(`Dòng ${ln}: dòng đầu phải là số mẫu "n" (đúng một số nguyên).`); break; }
-        n = +tok[0];
+      if (n !== null && r >= n) { errors.push(`Dòng ${ln}: thừa hàng — ma trận kề ${n}×${n} chỉ có ${n} hàng.`); break; }
+      if (line.includes('#')) {
+        errors.push(`Dòng ${ln}: không dùng chú thích "#", mỗi dòng chỉ gồm các số.`);
+        if (n === null) break;
+        rowLine[r++] = ln;
         continue;
       }
-      if (tok.length !== 2 || !/^-?\d+$/.test(tok[0]) || !/^-?\d+$/.test(tok[1])) { errors.push(`Dòng ${ln}: "${line}" phải gồm đúng 2 số nguyên "u v".`); continue; }
-      const a = +tok[0], b = +tok[1];
-      if (a < 0 || b < 0 || a >= n || b >= n) { errors.push(`Dòng ${ln}: đỉnh ${a < 0 || a >= n ? a : b} nằm ngoài phạm vi 0..${n - 1}.`); continue; }
-      if (a === b) { errors.push(`Dòng ${ln}: khuyên ${a}–${a} không hợp lệ (một mẫu không thể phản ứng với chính nó).`); continue; }
-      const key = a < b ? a * n + b : b * n + a;
-      if (seen.has(key)) { errors.push(`Dòng ${ln}: cặp ${a}–${b} bị lặp (đã có ở dòng ${seen.get(key)}).`); continue; }
-      seen.set(key, ln);
-      edges.push([a, b]);
+      if (n === null) {
+        if (!/^\d+$/.test(line)) { errors.push(`Dòng ${ln}: dòng đầu phải là số mẫu "n" (đúng một số nguyên).`); break; }
+        n = +line;
+        if (n < 1) { errors.push('Số đỉnh n phải ≥ 1.'); break; }
+        if (n > maxN) { errors.push(`n = ${n} quá lớn (tối đa ${maxN}, giới hạn mảng MAXN của code C++).`); break; }
+        A = new Uint8Array(n * n);
+        continue;
+      }
+      const err = readRow(line, n, A, r);
+      if (err) errors.push(`Dòng ${ln} (hàng ${r}): ${err}.`);
+      rowLine[r++] = ln;
     }
     if (n === null && errors.length === 0) errors.push('Chưa có dữ liệu: dòng đầu là số đỉnh n.');
-    if (n !== null && n < 1) errors.push('Số đỉnh n phải ≥ 1.');
-    if (n !== null && n > maxN) errors.push(`n = ${n} quá lớn (tối đa ${maxN}, giới hạn mảng MAXN của code C++).`);
+    if (A && r < n && errors.length < MAX_ERR) errors.push(`Thiếu hàng: ma trận kề ${n}×${n} cần ${n} hàng, mới có ${r} hàng.`);
+    const edges = [];
+    if (!errors.length) {                        // đủ n hàng đúng dạng → kiểm tra đường chéo và đối xứng
+      for (let u = 0; u < n && errors.length < MAX_ERR; u++) {
+        if (A[u * n + u]) errors.push(`Dòng ${rowLine[u]}: a[${u}][${u}] = 1 là khuyên — một mẫu không thể phản ứng với chính nó (đường chéo phải toàn 0).`);
+        for (let v = u + 1; v < n && errors.length < MAX_ERR; v++) {
+          const x = A[u * n + v], y = A[v * n + u];
+          if (x !== y) errors.push(`Dòng ${rowLine[u]}: a[${u}][${v}] = ${x} nhưng a[${v}][${u}] = ${y} (dòng ${rowLine[v]}) — ma trận kề phải đối xứng.`);
+          else if (x) edges.push([u, v]);
+        }
+      }
+    }
+    if (errors.length >= MAX_ERR) errors.push(`Quá ${MAX_ERR} lỗi, dừng kiểm tra.`);
     if (errors.length) return { errors, warnings, graph: null };
     if (n > 40) warnings.push('Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.');
     if (n > UI.TABLE_MAX_N) warnings.push(`n > ${UI.TABLE_MAX_N}: không vẽ ma trận kề và bảng trạng thái; n > ${UI.BT_MAX_N}: không chạy quay lui.`);
     return { errors, warnings, graph: makeGraph(n, edges) };
   }
 
-  /** Đồ thị → đúng định dạng input (không chú thích), đọc lại được bằng parseInput và code C++. */
-  function toEdgeListText(g) {
-    return [`${g.n}`, ...g.edges.map(([a, b]) => `${a} ${b}`)].join('\n');
+  /** Đồ thị → đúng định dạng input (ma trận kề), đọc lại được bằng parseInput và code C++. */
+  function toMatrixText(g) {
+    const n = g.n, A = adjMatrix(g), rows = [`${n}`];
+    for (let u = 0; u < n; u++) rows.push(A.subarray(u * n, (u + 1) * n).join(' '));
+    return rows.join('\n');
   }
   return {
     Recorder, makeGraph, usedCount, setStr, isProper, isPartialProper,
     greedy, backtrack, ALGOS, trace, stdoutOf,
-    PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toEdgeListText, MAX_N, UI, mulberry32,
+    PRESETS, randomGraph, mycielski, cycleEdges, parseInput, toMatrixText, MAX_N, UI, mulberry32,
   };
 })();
 

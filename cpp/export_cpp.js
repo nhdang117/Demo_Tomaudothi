@@ -49,7 +49,7 @@ function header(kind, name, log) {
     log ? '// Bản IN LOG: giống hệt code trên panel của demo, in từng bước (cout) như khung "Output C++".'
         : '// Bản KẾT QUẢ: cùng thuật toán với bản _log.cpp, bỏ mọi lệnh in log, chỉ in kết quả cuối cùng.',
     '// Sinh tự động từ solver.js bởi cpp/export_cpp.js — đừng sửa tay.',
-    '// Input (stdin): dòng đầu n (1 ≤ n ≤ 5000), mỗi dòng sau "u v" là một cạnh, đỉnh 0..n−1.',
+    '// Input (stdin): dòng đầu n (1 ≤ n ≤ 5000), sau đó ma trận kề n hàng × n số 0/1 (a[u][v] = 1 <=> u kề v).',
     '// Biên dịch: g++ -O2 -o ' + kind + ' ' + kind + '.cpp',
     '',
   ];

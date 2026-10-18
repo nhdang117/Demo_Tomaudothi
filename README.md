@@ -14,7 +14,7 @@ Demo trực quan hóa bài toán Khoang chứa vật chất (tô màu đồ th�
 | `build.py` | Ghép các file trên + `testcases/results.json` thành trang độc lập `index.html` (bản Lumen). |
 | `index.html` | Trang đã build, là trang GitHub Pages phục vụ. |
 | `test.js` | Kiểm thử tự động bộ giải (190 kiểm tra, gồm đối chiếu trace với bảng bậc cô chạy tay ở slide 18; nếu máy có `g++` thì biên dịch code C++ trên panel với `-Wall -Wextra`, chạy trên 48 đồ thị, so số màu + cách tô và so **nguyên stdout** với log trên web; kiểm tra 4 file trong `cpp/` khớp `solver.js`). |
-| `testcases/` | Bộ 102 testcase chia 6 nhóm (nhỏ, thông thường, biên, đặc biệt, lớn tới n = 5000, không hợp lệ): file input chuẩn hoá cho C++ + `expected.csv`, `gen_tests.js` sinh lại, `run_tests.js` chạy cả bộ **trên máy** bằng bộ giải JS và code C++ (bản chỉ in kết quả). Phần **Kiểm thử** cuối trang chỉ hiển thị kết quả; testcase nạp nhẹ thì bấm để xem demo. Xem [testcases/README.md](testcases/README.md). |
+| `testcases/` | Bộ 104 testcase chia 6 nhóm (nhỏ, thông thường, biên, đặc biệt, lớn tới n = 5000, không hợp lệ): file input dạng ma trận kề chuẩn hoá cho C++ + `expected.csv`, `gen_tests.js` sinh lại, `run_tests.js` chạy cả bộ **trên máy, chỉ bằng code C++** (`kiem_tra.cpp` kiểm tra input, rồi bản chỉ in kết quả của tham lam / quay lui). Phần **Kiểm thử** cuối trang chỉ hiển thị kết quả; testcase nạp nhẹ thì bấm để xem demo. Xem [testcases/README.md](testcases/README.md). |
 | `cpp/` | Code C++ của 2 thuật toán: bản in log (y hệt panel) và bản chỉ in kết quả (chạy testcase), sinh từ `solver.js` bằng `export_cpp.js`. Xem [cpp/README.md](cpp/README.md). |
 
 ## Chạy
@@ -22,7 +22,7 @@ Demo trực quan hóa bài toán Khoang chứa vật chất (tô màu đồ th�
 ```bash
 node test.js          # kiểm thử bộ giải
 node cpp/export_cpp.js        # xuất code C++ trên panel ra cpp/*.cpp (sau khi sửa solver.js)
-node testcases/run_tests.js   # chạy bộ 102 testcase (JS + C++, cần g++) → testcases/results.*
+node testcases/run_tests.js   # chạy bộ 104 testcase bằng code C++ (cần g++) → testcases/results.*
 python3 build.py      # tạo index.html
 ```
 

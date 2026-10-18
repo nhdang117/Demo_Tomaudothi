@@ -123,13 +123,20 @@ function bruteChi(g) {
 }
 
 /* ---------------- Định dạng file ----------------
- * Nhóm 01–05: input CHUẨN HÓA để code C++ (cpp/*.cpp, đọc bằng cin) đọc được — dòng đầu "n", mỗi dòng
- * sau "u v" (0 ≤ u, v < n), xuống dòng LF, không chú thích, không dòng trống. Mô tả và χ mong đợi nằm
- * trong expected.csv. Nhóm 06 kiểm tra bộ đọc input của web (input sai định dạng, khoảng trắng/CRLF…)
- * nên giữ dạng thô và chỉ chạy bằng bộ giải JS. */
-const CPP_READABLE = /^\d+\n(\d+ \d+\n)*$/;
-function edgeText(g) {
-  return [`${g.n}`, ...g.e.map(([a, b]) => `${a} ${b}`)].join('\n') + '\n';
+ * Nhóm 01–05: input CHUẨN HÓA để code C++ (cpp/*.cpp, đọc bằng cin) đọc được — dòng đầu "n", sau đó
+ * ma trận kề n hàng, mỗi hàng n số 0/1 cách nhau đúng 1 dấu cách, xuống dòng LF, không chú thích,
+ * không dòng trống. Mô tả và χ mong đợi nằm trong expected.csv. Nhóm 06 kiểm tra bộ đọc input của web
+ * (input sai định dạng, khoảng trắng/CRLF…) nên giữ dạng thô và chỉ chạy bằng bộ giải JS. */
+function isNormalized(text) {               // không dùng 1 regex cho cả file: file n = 5000 dài 50 MB
+  const L = text.split('\n');
+  if (!/^\d+$/.test(L[0])) return false;
+  const n = +L[0];
+  if (n < 1 || L.length !== n + 2 || L[n + 1] !== '') return false;
+  for (let u = 1; u <= n; u++) if (L[u].length !== 2 * n - 1 || !/^[01]( [01])*$/.test(L[u])) return false;
+  return true;
+}
+function matrixText(g) {
+  return S.toMatrixText(S.makeGraph(g.n, g.e)) + '\n';
 }
 
 /* ---------------- Danh sách testcase ---------------- */
@@ -145,12 +152,12 @@ function add(group, id, desc, g, { chi = null, src, check = true, oracle = true 
     if (d.exact && d.chi !== chi) throw new Error(`${id}: χ mong đợi ${chi} nhưng DSatur ra ${d.chi}`);
     if (!d.exact) console.log(`   (${id}: DSatur không chạy hết, giữ χ = ${chi} theo ${src})`);
   }
-  const text = edgeText(g);
-  if (!CPP_READABLE.test(text)) throw new Error(`${id}: file không đúng dạng chuẩn hóa`);
-  cases.push({ group, id, desc, fmt: 'edge', n: g.n, m: g.e.length, chi, src, text });
+  const text = matrixText(g);
+  if (!isNormalized(text)) throw new Error(`${id}: file không đúng dạng chuẩn hóa`);
+  cases.push({ group, id, desc, fmt: 'matrix', n: g.n, m: g.e.length, chi, src, text });
 }
 function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi = null, src = '' } = {}) {
-  cases.push({ group, id, desc, fmt: 'edge', n: '', m: '', chi, src, err, errCount, warn, text });
+  cases.push({ group, id, desc, fmt: 'matrix', n: '', m: '', chi, src, err, errCount, warn, text });
 }
 
 /* 01 — Dữ liệu nhỏ: đáp án bằng vét cạn */
@@ -197,8 +204,7 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   add('03_bien', 'k90', 'Đồ thị đầy đủ K₉₀ — n lớn nhất quay lui còn chạy', G.complete(90), { chi: 90, src: 'ly_thuyet', oracle: false });
   add('03_bien', 'k91', 'Đồ thị đầy đủ K₉₁ — vừa vượt ngưỡng quay lui', G.complete(91), { chi: 91, src: 'ly_thuyet', oracle: false });
   add('03_bien', 'k120', 'Đồ thị đầy đủ K₁₂₀ (7140 cạnh)', G.complete(120), { chi: 120, src: 'ly_thuyet', oracle: false });
-  add('03_bien', 'n5000_khong_canh', `n = ${S.MAX_N} (tối đa, = MAXN − 5 của code C++), không cạnh`, G.empty(S.MAX_N), { chi: 1, src: 'ly_thuyet' });
-  add('03_bien', 'n5000_canh_cuoi', `n = ${S.MAX_N}, một cạnh nối 2 đỉnh có chỉ số lớn nhất`, { n: S.MAX_N, e: [[S.MAX_N - 2, S.MAX_N - 1]] }, { chi: 2, src: 'ly_thuyet' });
+  add('03_bien', 'n5000_canh_cuoi', `n = ${S.MAX_N} (tối đa, = MAXN − 5 của code C++), một cạnh nối 2 đỉnh có chỉ số lớn nhất`, { n: S.MAX_N, e: [[S.MAX_N - 2, S.MAX_N - 1]] }, { chi: 2, src: 'ly_thuyet' });
 }
 
 /* 04 — Đặc biệt: tính chất đồ thị, bẫy cho tham lam, benchmark DIMACS */
@@ -235,43 +241,54 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   add('05_lon', 'day_300', 'Đồ thị dày G(n = 300, p = 0.5), seed 56', G.gnp(300, 0.5, 56));
   add('05_lon', 'day_1000', 'Đồ thị dày G(n = 1000, p = 0.1), seed 57', G.gnp(1000, 0.1, 57));
   add('05_lon', 'cai_san_1000_k5', '1000 đỉnh, 5 phần + clique K₅ cài sẵn → χ = 5', G.planted(1000, 5, 0.03, 58), { chi: 5, src: 'cai_san' });
-  add('05_lon', 'cai_san_3000_k8', '3000 đỉnh, 8 phần + clique K₈ cài sẵn → χ = 8', G.planted(3000, 8, 0.004, 59), { chi: 8, src: 'cai_san' });
+  add('05_lon', 'cai_san_2000_k8', '2000 đỉnh, 8 phần + clique K₈ cài sẵn → χ = 8', G.planted(2000, 8, 0.006, 59), { chi: 8, src: 'cai_san' });
   add('05_lon', 'luong_phan_2000', '2000 đỉnh, lưỡng phân ngẫu nhiên → χ = 2', G.planted(2000, 2, 0.003, 60), { chi: 2, src: 'cai_san' });
   add('05_lon', 'crown_100', 'Crown S₁₀₀ (200 đỉnh, 9900 cạnh): bẫy tham lam ở quy mô lớn', G.crown(100), { chi: 2, src: 'ly_thuyet' });
   add('05_lon', 'k150', 'Đồ thị đầy đủ K₁₅₀', G.complete(150), { chi: 150, src: 'ly_thuyet' });
-  add('05_lon', 'chu_trinh_4999', 'Chu trình lẻ C₄₉₉₉', G.cycle(4999), { chi: 3, src: 'ly_thuyet' });
-  add('05_lon', 'duong_di_5000', 'Đường đi P₅₀₀₀', G.path(5000), { chi: 2, src: 'ly_thuyet' });
+  add('05_lon', 'chu_trinh_1999', 'Chu trình lẻ C₁₉₉₉', G.cycle(1999), { chi: 3, src: 'ly_thuyet' });
+  add('05_lon', 'duong_di_2000', 'Đường đi P₂₀₀₀', G.path(2000), { chi: 2, src: 'ly_thuyet' });
 }
 
-/* 06 — Không hợp lệ: chỉ một định dạng input (dòng đầu n, mỗi dòng sau "u v", mỗi cặp một lần).
- * Chú thích #, DIMACS, dòng đầu "n K", cặp lặp đều phải bị báo lỗi; khoảng trắng / CRLF / dòng trống thì vẫn nhận. */
+/* 06 — Không hợp lệ: chỉ một định dạng input — dòng đầu n, sau đó ma trận kề n×n (0/1, đối xứng, đường chéo 0).
+ * Danh sách cạnh, danh sách kề, DIMACS, chú thích #, ma trận sai kích thước / không đối xứng / có khuyên đều phải
+ * bị báo lỗi; khoảng trắng / tab / CRLF / dòng trống thừa thì vẫn nhận (như cin). */
 {
   const H = '06_khong_hop_le';
+  const M = rows => rows.map(r => r.join(' ')).join('\n') + '\n';      // ma trận → chữ
   addRaw(H, 'rong', 'File rỗng', '', { err: 'Chưa có dữ liệu' });
   addRaw(H, 'chi_chu_thich', 'Chỉ có chú thích "#", không có dữ liệu', '# chỉ có chú thích\n\n# không có n\n', { err: 'chú thích', errCount: 1 });
-  addRaw(H, 'dong_dau_chu', 'Dòng đầu là chữ', 'abc\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
-  addRaw(H, 'n_am', 'n âm', '-3\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'dong_dau_chu', 'Dòng đầu là chữ', 'abc\n0 1\n1 0\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'n_am', 'n âm', '-3\n0\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_bang_0', 'n = 0', '0\n', { err: 'phải ≥ 1', errCount: 1 });
-  addRaw(H, 'n_so_thuc', 'n là số thực', '2.5\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
-  addRaw(H, 'n_qua_lon', `n = ${S.MAX_N + 1} vượt giới hạn MAX_N = ${S.MAX_N}`, `${S.MAX_N + 1}\n0 1\n`, { err: 'quá lớn', errCount: 1 });
-  addRaw(H, 'dong_dau_3_so', 'Dòng đầu có 3 số', '3 2 1\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
-  addRaw(H, 'dong_dau_n_K', 'Dòng đầu kiểu cũ "n K" (có số ngăn) → lỗi, chương trình tự tính số ngăn', '4 2\n0 1\n1 2\n2 3\n3 0\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'n_so_thuc', 'n là số thực', '2.5\n0 1\n1 0\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'n_qua_lon', `n = ${S.MAX_N + 1} vượt giới hạn MAX_N = ${S.MAX_N}`, `${S.MAX_N + 1}\n0\n`, { err: 'quá lớn', errCount: 1 });
+  addRaw(H, 'thieu_dong_n', 'Quên dòng n, nhập thẳng ma trận', M([[0, 1, 1], [1, 0, 0], [1, 0, 0]]), { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'dong_dau_n_K', 'Dòng đầu kiểu cũ "n K" (có số ngăn) → lỗi, chương trình tự tính số ngăn', '3 2\n' + M([[0, 1, 0], [1, 0, 1], [0, 1, 0]]), { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'danh_sach_canh', 'Nhập danh sách cạnh "u v" thay cho ma trận kề (C₄)', '4\n0 1\n1 2\n2 3\n3 0\n', { err: 'không nhập danh sách cạnh', errCount: 4 });
+  addRaw(H, 'danh_sach_ke', 'Nhập danh sách kề (mỗi hàng là các đỉnh kề) thay cho ma trận kề', '3\n1 2\n0\n0\n', { err: 'cần đúng 3 số', errCount: 3 });
   addRaw(H, 'dimacs', 'Định dạng DIMACS (p edge / e u v) không được nhận', 'c queen\np edge 3 2\ne 1 2\ne 2 3\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
-  addRaw(H, 'chu_thich_cuoi_dong', 'Chú thích "#" cuối dòng cạnh', '3\n0 1   # Na – H2O\n1 2\n', { err: 'chú thích', errCount: 1 });
-  addRaw(H, 'khuyen', 'Khuyên 2–2', '3\n0 1\n2 2\n', { err: 'khuyên', errCount: 1 });
-  addRaw(H, 'dinh_ngoai_pham_vi', 'Đỉnh 4 khi n = 4 (đỉnh đánh số 0..3)', '4\n0 1\n1 4\n', { err: 'ngoài phạm vi', errCount: 1 });
-  addRaw(H, 'dinh_am', 'Đỉnh âm', '4\n0 -1\n', { err: 'ngoài phạm vi', errCount: 1 });
-  addRaw(H, 'token_chu', 'Cạnh có chữ', '3\n0 x\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
-  addRaw(H, 'so_thuc', 'Cạnh có số thực', '3\n0 1.5\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
-  addRaw(H, 'canh_thieu_dinh', 'Dòng cạnh chỉ có 1 số', '3\n0\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
-  addRaw(H, 'ba_so_tren_dong', 'Dòng cạnh có 3 số', '3\n0 1 2\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
-  addRaw(H, 'canh_lap', 'Cặp lặp lại (0 1 hai lần)', '3\n0 1\n1 2\n0 1\n', { err: 'bị lặp', errCount: 1 });
-  addRaw(H, 'canh_lap_dao', 'Cặp lặp đảo chiều (1 0 sau 0 1)', '3\n0 1\n1 0\n1 2\n2 0\n', { err: 'bị lặp', errCount: 1 });
-  addRaw(H, 'nhieu_loi', 'Nhiều lỗi cùng lúc: khuyên, ngoài phạm vi, chữ', '4\n0 1\n1 1\n2 9\n3 y\n', { err: 'khuyên', errCount: 3 });
-  addRaw(H, 'crlf_tab_dong_trong', 'Hợp lệ: xuống dòng Windows (CRLF), tab, dòng trống — C₅ (giống cin của C++, vẫn nhận)',
-    '5\r\n0\t1\r\n\r\n1 2  \r\n2 3\r\n\r\n3 4\r\n4 0\r\n', { chi: 3, src: 'ly_thuyet' });
-  addRaw(H, 'khoang_trang_thua', 'Hợp lệ: khoảng trắng đầu dòng và dòng trống cuối file — Petersen',
-    '  10\n' + G.petersen().e.map(([a, b]) => `  ${a}   ${b}`).join('\n') + '\n\n\n', { chi: 3, src: 'ly_thuyet' });
+  addRaw(H, 'chu_thich_cuoi_dong', 'Chú thích "#" cuối một hàng', '3\n0 1 0   # Na\n1 0 1\n0 1 0\n', { err: 'chú thích', errCount: 1 });
+  addRaw(H, 'gia_tri_2', 'Phần tử 2 (ma trận kề chỉ gồm 0 và 1)', M([[3], [0, 2, 0], [2, 0, 0], [0, 0, 0]]), { err: 'chỉ gồm 0 và 1', errCount: 2 });
+  addRaw(H, 'token_chu', 'Phần tử là chữ', '3\n0 x 0\n1 0 0\n0 0 0\n', { err: 'chỉ gồm 0 và 1', errCount: 1 });
+  addRaw(H, 'so_thuc', 'Phần tử là số thực', '3\n0 0.5 0\n1 0 0\n0 0 0\n', { err: 'chỉ gồm 0 và 1', errCount: 1 });
+  addRaw(H, 'so_am', 'Phần tử âm', '3\n0 -1 0\n1 0 0\n0 0 0\n', { err: 'chỉ gồm 0 và 1', errCount: 1 });
+  addRaw(H, 'hang_thieu_so', 'Một hàng thiếu số (2 số khi n = 3)', '3\n0 1 0\n1 0\n0 0 0\n', { err: 'cần đúng 3 số', errCount: 1 });
+  addRaw(H, 'hang_thua_so', 'Một hàng thừa số (4 số khi n = 3)', '3\n0 1 0 0\n1 0 0\n0 0 0\n', { err: 'cần đúng 3 số', errCount: 1 });
+  addRaw(H, 'thieu_hang', 'Thiếu hàng (2 hàng khi n = 3)', '3\n0 1 0\n1 0 0\n', { err: 'Thiếu hàng', errCount: 1 });
+  addRaw(H, 'thua_hang', 'Thừa hàng (3 hàng khi n = 2)', '2\n0 1\n1 0\n0 0\n', { err: 'thừa hàng', errCount: 1 });
+  addRaw(H, 'khuyen', 'Khuyên: a[1][1] = 1 (đường chéo phải toàn 0)', '3\n0 1 0\n1 1 0\n0 0 0\n', { err: 'khuyên', errCount: 1 });
+  addRaw(H, 'khong_doi_xung', 'Không đối xứng: a[0][2] = 1 nhưng a[2][0] = 0', '3\n0 1 1\n1 0 0\n0 0 0\n', { err: 'đối xứng', errCount: 1 });
+  addRaw(H, 'nhieu_loi', 'Nhiều lỗi cùng lúc: chữ, hàng thiếu số, hàng thừa số', '4\n0 1 0 0\n1 0 x 0\n0 0 0\n0 0 0 0 1\n', { err: 'chỉ gồm 0 và 1', errCount: 3 });
+  {
+    const c5 = Array.from({ length: 5 }, (_, u) => Array.from({ length: 5 }, (_, v) => (Math.abs(u - v) === 1 || Math.abs(u - v) === 4 ? 1 : 0)));
+    addRaw(H, 'crlf_tab_dong_trong', 'Hợp lệ: xuống dòng Windows (CRLF), tab, dòng trống — C₅ (giống cin của C++, vẫn nhận)',
+      '5\r\n' + c5.map((r, i) => r.join(i % 2 ? '\t' : ' ') + (i === 2 ? '  \r\n\r\n' : '\r\n')).join(''), { chi: 3, src: 'ly_thuyet' });
+  }
+  {
+    const pe = S.toMatrixText(S.makeGraph(10, G.petersen().e)).split('\n');
+    addRaw(H, 'khoang_trang_thua', 'Hợp lệ: khoảng trắng đầu dòng, nhiều dấu cách giữa các số, dòng trống cuối file — Petersen',
+      '  ' + pe[0] + '\n' + pe.slice(1).map(r => '  ' + r.split(' ').join('   ')).join('\n') + '\n\n\n', { chi: 3, src: 'ly_thuyet' });
+  }
 }
 
 /* ---------------- Ghi file ---------------- */
@@ -288,11 +305,11 @@ for (const c of cases) {
   c.file = `${c.group}/${c.id}.txt`;
   fs.writeFileSync(path.join(OUT, c.file), c.text);
   bytes += Buffer.byteLength(c.text);
-  rows.push([c.id, c.group, c.file, c.fmt, CPP_READABLE.test(c.text) ? 1 : 0, c.n, c.m, c.chi ?? '', c.src || (c.chi == null && !c.err ? 'can' : ''),
+  rows.push([c.id, c.group, c.file, c.fmt, isNormalized(c.text) ? 1 : 0, c.n, c.m, c.chi ?? '', c.src || (c.chi == null && !c.err ? 'can' : ''),
     c.err || '', c.errCount || '', c.warn || '', c.desc].map(csvCell).join(','));
 }
 fs.writeFileSync(path.join(OUT, 'expected.csv'), '﻿' + rows.join('\n') + '\n');
 const by = {};
 for (const c of cases) by[c.group] = (by[c.group] || 0) + 1;
-console.log(`Đã sinh ${cases.length} testcase (${(bytes / 1024).toFixed(0)} KB):`);
+console.log(`Đã sinh ${cases.length} testcase (${(bytes / 1048576).toFixed(1)} MB):`);
 for (const [g, name] of Object.entries(GROUPS)) console.log(`   ${g.padEnd(16)} ${String(by[g] || 0).padStart(3)}  ${name}`);

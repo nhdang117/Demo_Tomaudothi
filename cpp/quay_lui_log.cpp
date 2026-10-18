@@ -1,7 +1,7 @@
 // Quay lui: tìm số màu ít nhất χ(G) (mô hình try(i), giữ lời giải tốt nhất)
 // Bản IN LOG: giống hệt code trên panel của demo, in từng bước (cout) như khung "Output C++".
 // Sinh tự động từ solver.js bởi cpp/export_cpp.js — đừng sửa tay.
-// Input (stdin): dòng đầu n (1 ≤ n ≤ 5000), mỗi dòng sau "u v" là một cạnh, đỉnh 0..n−1.
+// Input (stdin): dòng đầu n (1 ≤ n ≤ 5000), sau đó ma trận kề n hàng × n số 0/1 (a[u][v] = 1 <=> u kề v).
 // Biên dịch: g++ -O2 -o quay_lui_log quay_lui_log.cpp
 
 #include <iostream>
@@ -59,9 +59,11 @@ void quayLui(int i, int soMau) {  // bước i: màu S_i cho thuTu[i]
 }                                    // hết màu để thử → về bước trước
 
 int main() {
+    ios::sync_with_stdio(false);     // đọc nhanh: n = 5000 là 25 triệu số
     cin >> n;                        // đọc G: n, ma trận kề a
-    int x, y;
-    while (cin >> x >> y) a[x][y] = a[y][x] = 1;
+    char x;                          // mỗi phần tử là 1 ký tự 0/1
+    for (int u = 0; u < n; u++)      // n hàng, mỗi hàng n số
+        for (int v = 0; v < n; v++) { cin >> x; a[u][v] = (x == '1'); }
     for (int v = 0; v < n; v++) {    // bac[v] = số đỉnh kề của v
         bac[v] = 0;
         for (int u = 0; u < n; u++) bac[v] += a[v][u];
