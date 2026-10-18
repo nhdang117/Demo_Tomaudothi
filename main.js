@@ -1479,6 +1479,7 @@ function computeCompare() {
     : `Chưa xác định được χ. Chương trình tự xếp theo phương án tốt nhất tìm được: ${S.usedCount(st.best)} ngăn.`;
   $('#cmpSub').textContent = `${st.meta.name} · n = ${g.n} · m = ${g.edges.length}` +
     (chi != null ? ` · χ = ${chi}${st.meta.chi == null ? ' (tìm bằng quay lui)' : ''}` : ' · χ chưa xác định');
+  st.cmpRows = rows;                                   // cho ghi chú của đồ thị độ phức tạp
   $('#cmpBody').innerHTML = rows.map(r => {
     const name = `<td><span class="an">${r.A.short}<small>${esc(r.A.desc)}</small></span></td>`;
     if (r.skip || r.aborted) return `<tr>${name}<td><span class="pill na">vượt giới hạn</span></td><td class="num">—</td><td class="num">—</td><td class="num">${r.A.cx}</td></tr>`;
@@ -1490,6 +1491,150 @@ function computeCompare() {
       `<td class="num">${r.steps.toLocaleString('vi-VN')}${r.trunc ? '+' : ''}</td><td class="num">${fmtTime(r.ms)}</td><td class="num">${r.A.cx}</td></tr>`;
   }).join('');
 }
+
+/* ---------------- Đồ thị độ phức tạp (nút ở phần So sánh) ----------------
+   Vẽ cận xấu nhất của hai thuật toán theo n (mục 4.3.4, 4.4.6 của báo cáo):
+   tham lam n³, quay lui n·n!. Tính bằng log10 để n·n! không tràn số. */
+const CX = {
+  open: false, opener: null, scale: 'log', nMax: 25, hover: null,
+  curves: [
+    { id: 'g', name: 'Tham lam', f: 'n³', L: n => 3 * Math.log10(n) },
+    { id: 'b', name: 'Quay lui', f: 'n·n!', L: n => { let s = Math.log10(n); for (let k = 2; k <= n; k++) s += Math.log10(k); return s; } },
+  ],
+  OPS: 9,                                              // giả sử máy làm 10⁹ phép tính mỗi giây
+};
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const sup = k => String(k).split('').map(c => SUP[+c]).join('');
+const vnNum = (x, d = 2) => x.toLocaleString('vi-VN', { maximumSignificantDigits: d });
+function fmtPow(L) {                                   // 10^L → "8.000" hoặc "4,9·10¹⁹"
+  if (L < 6) return Math.round(10 ** L).toLocaleString('vi-VN');
+  let e = Math.floor(L), m = +(10 ** (L - e)).toFixed(1);
+  if (m >= 10) { m = 1; e++; }
+  return `${String(m).replace('.', ',')}·10${sup(e)}`;
+}
+function fmtDur(L) {                                   // thời gian ước tính cho 10^L phép tính
+  const ls = L - CX.OPS, s = 10 ** ls, YEAR = 3.156e7;
+  if (s < 1e-3) return `${vnNum(s * 1e6)} µs`;
+  if (s < 1) return `${vnNum(s * 1e3)} ms`;
+  if (s < 60) return `${vnNum(s)} giây`;
+  if (s < 3600) return `${vnNum(s / 60)} phút`;
+  if (s < 86400) return `${vnNum(s / 3600)} giờ`;
+  if (s < YEAR) return `${vnNum(s / 86400)} ngày`;
+  const ly = ls - Math.log10(YEAR);
+  return (ly < 6 ? `${Math.round(10 ** ly).toLocaleString('vi-VN')} năm` : `${fmtPow(ly)} năm`) +
+    (ly > Math.log10(1.38e10) ? ' — lâu hơn tuổi vũ trụ' : '');
+}
+function niceStep(x) {
+  const e = 10 ** Math.floor(Math.log10(x)), m = x / e;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e;
+}
+function drawCx() {
+  const svg = $('#cxSvg'), W = Math.max(300, Math.round(svg.parentElement.clientWidth)), H = W < 560 ? 290 : 360;
+  const P = { l: W < 560 ? 50 : 62, r: 14, t: 14, b: 36 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const nMax = CX.nMax, log = CX.scale === 'log';
+  const X = n => P.l + (n - 1) / (nMax - 1) * iw;
+  let Y, yTop;
+  const ticks = [];
+  if (log) {
+    yTop = Math.max(2, Math.ceil(CX.curves[1].L(nMax)));
+    Y = L => P.t + ih * (1 - L / yTop);
+    const dy = Math.max(1, Math.ceil(yTop / 8));
+    for (let e = 0; e <= yTop; e += dy) ticks.push([Y(e), e < 4 ? (10 ** e).toLocaleString('vi-VN') : `10${sup(e)}`]);
+  } else {
+    yTop = nMax ** 3 * 1.15;                           // khung vừa đường tham lam; quay lui vọt ra ngoài
+    Y = L => P.t + ih * (1 - 10 ** L / yTop);
+    const dy = niceStep(yTop / 5);
+    for (let v = 0; v <= yTop; v += dy) ticks.push([P.t + ih * (1 - v / yTop), v < 1e6 ? v.toLocaleString('vi-VN') : fmtPow(Math.log10(v))]);
+  }
+  const cy = y => Math.max(P.t - 400, Math.min(P.t + ih, y));
+  let h = `<defs><clipPath id="cxClip"><rect x="${P.l}" y="${P.t}" width="${iw}" height="${ih}"/></clipPath></defs>`;
+  ticks.forEach(([y, lab]) => { h += `<line class="gr" x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}"/><text class="tk" x="${P.l - 6}" y="${y + 3.5}" text-anchor="end">${lab}</text>`; });
+  const dx = niceStep(nMax / 8);
+  for (let n = dx; n <= nMax; n += dx) h += `<text class="tk" x="${X(n)}" y="${H - P.b + 16}" text-anchor="middle">${n}</text>`;
+  h += `<text class="tk" x="${W - P.r}" y="${H - 4}" text-anchor="end">n (số đỉnh)</text>`;
+  h += `<line class="ax" x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${P.t + ih}"/><line class="ax" x1="${P.l}" x2="${W - P.r}" y1="${P.t + ih}" y2="${P.t + ih}"/>`;
+  if (log) {                                            // mốc thời gian (10⁹ phép tính/giây)
+    let lastY = Infinity;                              // bỏ mốc quá sát mốc trước (n tối đa lớn)
+    [[CX.OPS, '≈ 1 giây'], [CX.OPS + Math.log10(3600), '≈ 1 giờ'], [CX.OPS + Math.log10(3.156e7), '≈ 1 năm']].forEach(([L, lab]) => {
+      if (L >= yTop || lastY - Y(L) < 14) return;
+      lastY = Y(L);
+      h += `<line class="ref" x1="${P.l}" x2="${W - P.r}" y1="${Y(L)}" y2="${Y(L)}"/><text class="refl" x="${P.l + 6}" y="${Y(L) - 4}">${lab}</text>`;
+    });
+  }
+  const n0 = st.g.n;
+  if (n0 >= 2 && n0 <= nMax) {
+    const right = X(n0) > W - (W < 560 ? 60 : 170);
+    h += `<line class="cur" x1="${X(n0)}" x2="${X(n0)}" y1="${P.t}" y2="${P.t + ih}"/>` +
+      `<text class="curl" x="${X(n0) + (right ? -5 : 5)}" y="${P.t + 12}" text-anchor="${right ? 'end' : 'start'}">${W < 560 ? '' : 'đồ thị đang chọn: '}n = ${n0}</text>`;
+  }
+  const n = Math.min(nMax, Math.max(1, CX.hover ?? Math.min(Math.max(n0, 2), nMax)));
+  h += `<line class="guide" x1="${X(n)}" x2="${X(n)}" y1="${P.t}" y2="${P.t + ih}"/>`;
+  CX.curves.forEach(c => {
+    const pts = [];
+    for (let n = 1; n <= nMax; n++) pts.push(`${X(n).toFixed(1)},${cy(Y(c.L(n))).toFixed(1)}`);
+    h += `<polyline class="ln ${c.id}" clip-path="url(#cxClip)" points="${pts.join(' ')}"/>`;
+  });
+  if (!log) {
+    let k = 1;
+    while (k <= nMax && 10 ** CX.curves[1].L(k) <= yTop) k++;
+    if (k <= nMax) {
+      const right = X(k) - 210 > P.l;                  // đủ chỗ thì đặt nhãn bên trái điểm vượt khung
+      h += `<text class="off" x="${X(k) + (right ? -6 : 6)}" y="${P.t + 30}" text-anchor="${right ? 'end' : 'start'}">quay lui vượt khung từ n = ${k} ↑</text>`;
+    }
+  }
+  CX.curves.forEach(c => { const y = Y(c.L(n)); if (y >= P.t) h += `<circle class="dot" cx="${X(n)}" cy="${y}" r="4.5" fill="var(--cx-${c.id})"/>`; });
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = h;
+  CX.X = X; CX.P = P; CX.W = W;
+  $('#cxRead').innerHTML = `<span><b>n = ${n}</b></span>` + CX.curves.map(c => {
+    const L = c.L(n);
+    return `<span class="${c.id}"><b>${c.name}</b> ${c.f} ${L < 6 ? '=' : '≈'} ${fmtPow(L)} phép tính · ≈ ${fmtDur(L)}</span>`;
+  }).join('');
+}
+function cxNote() {
+  const r = st.cmpRows && st.cmpRows.find(x => x.id === 'backtrack');
+  const live = r && !r.skip && !r.aborted
+    ? ` Trên đồ thị đang chọn (n = ${st.g.n}), quay lui chỉ chạy ${r.steps.toLocaleString('vi-VN')} dòng lệnh, thấp hơn cận rất xa nhờ cắt tỉa.`
+    : '';
+  $('#cxNote').textContent = 'Đường cong là cận trên trong trường hợp xấu nhất (số phép tính, bỏ hằng số); thời gian ước tính với máy làm 10⁹ phép tính mỗi giây. ' +
+    'Tham lam là đa thức: n tăng gấp đôi thì cận tăng 8 lần. Quay lui là hàm mũ: n tăng thêm 1 thì cận nhân thêm khoảng n lần.' + live +
+    ' Nhưng cắt tỉa không đổi được cận: có đồ thị chỉ 47 đỉnh (myciel5) mà quay lui C++ chạy 10 giây chưa xong.';
+}
+function openCx(btn) {
+  if (CX.open) return;
+  CX.open = true; CX.opener = btn || null; CX.hover = null;
+  $('#cxm').hidden = false;
+  play(false);
+  lenis && lenis.stop();
+  document.documentElement.style.overflow = 'hidden';
+  cxNote(); drawCx();
+  $('#cxClose').focus({ preventScroll: true });
+}
+function closeCx() {
+  if (!CX.open) return;
+  CX.open = false;
+  $('#cxm').hidden = true;
+  document.documentElement.style.overflow = '';
+  lenis && lenis.start();
+  if (CX.opener) CX.opener.focus({ preventScroll: true });
+}
+$('#cxOpen').addEventListener('click', e => openCx(e.currentTarget));
+$('#cxClose').addEventListener('click', closeCx);
+$('#cxm').addEventListener('click', e => { if (e.target.closest('[data-cx-close]')) closeCx(); });
+$('.cx-seg').addEventListener('click', e => {
+  const b = e.target.closest('[data-scale]'); if (!b) return;
+  CX.scale = b.dataset.scale;
+  $$('.cx-seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  drawCx();
+});
+$('#cxN').addEventListener('input', e => { CX.nMax = +e.target.value; $('#cxNOut').textContent = CX.nMax; CX.hover = null; drawCx(); });
+$('#cxSvg').addEventListener('pointermove', e => {
+  if (!CX.X) return;
+  const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) * CX.W / r.width;
+  const n = Math.min(CX.nMax, Math.max(1, Math.round(1 + (x - CX.P.l) / (CX.X(2) - CX.X(1)))));
+  if (n !== CX.hover) { CX.hover = n; drawCx(); }
+});
+addEventListener('resize', () => { if (CX.open) drawCx(); });
 
 /* ---------------- Ví dụ mẫu ở phần Mô hình ---------------- */
 (function fillSample() {
@@ -1722,6 +1867,7 @@ document.addEventListener('click', e => {
 /* Bàn phím cho player khi đang ở phần Demo */
 let domSec = 'hero';
 document.addEventListener('keydown', e => {
+  if (CX.open) { if (e.key === 'Escape') closeCx(); return; }
   if (optsOpen) { if (e.key === 'Escape') closeOpts(); return; }
   if (domSec !== 'demo') return;
   const t = e.target;
