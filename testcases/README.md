@@ -1,6 +1,6 @@
 # Bộ testcase — Chromatic Cargo
 
-105 testcase cho bài toán tô màu đồ thị (Khoang chứa vật chất), chia 6 nhóm. Kết quả chạy mới nhất: [results.md](results.md).
+102 testcase cho bài toán tô màu đồ thị (Khoang chứa vật chất), chia 6 nhóm. Kết quả chạy mới nhất: [results.md](results.md).
 
 ## Chạy
 
@@ -32,14 +32,14 @@ Với mỗi testcase hợp lệ, JS và C++ phải ra **cùng số màu và cùn
 | `03_bien/` | n = 1, n = 2, n = 120, K₉₀ / K₉₁ (ngưỡng quay lui trên web), K₁₂₀, n = 5000 (tối đa = MAXN − 5) |
 | `04_dac_biet/` | Crown (bẫy tham lam), Mycielski, Petersen, chu trình chẵn/lẻ, bánh xe, cây, không liên thông, Sudoku, queen (benchmark DIMACS) |
 | `05_lon/` | n = 150…5000: thưa, dày, cài sẵn χ, Crown S₁₀₀, K₁₅₀, C₄₉₉₉, P₅₀₀₀ |
-| `06_khong_hop_le/` | 18 input lỗi phải bị bắt + 8 input hợp lệ ở dạng thô (DIMACS, chú thích, cạnh lặp, CRLF…) |
+| `06_khong_hop_le/` | 21 input sai định dạng phải bị báo lỗi (chú thích `#`, DIMACS, dòng đầu "n K", cặp lặp, khuyên, đỉnh ngoài phạm vi…) + 2 input hợp lệ có khoảng trắng / CRLF / dòng trống thừa |
 | `expected.csv` | Đáp án mong đợi của từng testcase |
 | `gen_tests.js` | Sinh bộ testcase |
 | `run_tests.js` | Chạy cả bộ (JS + C++), ghi kết quả |
 | `suite.js` | Luật chấm bộ giải JS + đo chi phí nạp vào trang + DSatur nhánh-cận kiểm chứng, Bron–Kerbosch tính ω(G) |
 | `results.csv` / `.md` / `.json` | Kết quả lần chạy gần nhất |
 
-**Định dạng file.** Nhóm 01–05 là input **chuẩn hoá để code C++ đọc được** bằng `cin`: dòng đầu `n`, mỗi dòng sau `u v` (0 ≤ u, v < n), xuống dòng LF, không chú thích, không dòng trống. Mô tả và χ mong đợi nằm trong `expected.csv`. Nhóm 06 kiểm tra **bộ đọc input của trang web** (chú thích `#`, DIMACS, CRLF, tab, input lỗi…) nên giữ dạng thô và chỉ chạy bằng bộ giải JS (code C++ không có bộ đọc này); riêng vài file nhóm 06 vô tình đúng dạng chuẩn (ví dụ cạnh lặp) thì vẫn chạy C++.
+**Định dạng file.** Nhóm 01–05 là input **chuẩn hoá để code C++ đọc được** bằng `cin`: dòng đầu `n`, mỗi dòng sau `u v` (0 ≤ u, v < n), xuống dòng LF, không chú thích, không dòng trống. Mô tả và χ mong đợi nằm trong `expected.csv`. Demo chỉ nhận **đúng một định dạng** input này (khoảng trắng, tab, CRLF, dòng trống thừa được bỏ qua như `cin`). Nhóm 06 kiểm tra **bộ đọc input của trang web**: input sai định dạng phải bị báo lỗi đúng dòng; các file này chỉ chạy bằng bộ giải JS vì code C++ không kiểm tra input.
 
 ## `expected.csv`
 

@@ -79,28 +79,25 @@ k150,05_lon,05_lon/k150.txt,edge,1,150,11175,150,ly_thuyet,,,,Đồ thị đầy
 chu_trinh_4999,05_lon,05_lon/chu_trinh_4999.txt,edge,1,4999,4999,3,ly_thuyet,,,,Chu trình lẻ C₄₉₉₉
 duong_di_5000,05_lon,05_lon/duong_di_5000.txt,edge,1,5000,4999,2,ly_thuyet,,,,Đường đi P₅₀₀₀
 rong,06_khong_hop_le,06_khong_hop_le/rong.txt,edge,0,,,,,Chưa có dữ liệu,,,File rỗng
-chi_chu_thich,06_khong_hop_le,06_khong_hop_le/chi_chu_thich.txt,edge,0,,,,,Chưa có dữ liệu,,,"Chỉ có chú thích, không có dữ liệu"
+chi_chu_thich,06_khong_hop_le,06_khong_hop_le/chi_chu_thich.txt,edge,0,,,,,chú thích,1,,"Chỉ có chú thích ""#"", không có dữ liệu"
 dong_dau_chu,06_khong_hop_le,06_khong_hop_le/dong_dau_chu.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,Dòng đầu là chữ
 n_am,06_khong_hop_le,06_khong_hop_le/n_am.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,n âm
 n_bang_0,06_khong_hop_le,06_khong_hop_le/n_bang_0.txt,edge,1,,,,,phải ≥ 1,1,,n = 0
+n_so_thuc,06_khong_hop_le,06_khong_hop_le/n_so_thuc.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,n là số thực
 n_qua_lon,06_khong_hop_le,06_khong_hop_le/n_qua_lon.txt,edge,1,,,,,quá lớn,1,,n = 5001 vượt giới hạn MAX_N = 5000
 dong_dau_3_so,06_khong_hop_le,06_khong_hop_le/dong_dau_3_so.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,Dòng đầu có 3 số
+dong_dau_n_K,06_khong_hop_le,06_khong_hop_le/dong_dau_n_K.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,"Dòng đầu kiểu cũ ""n K"" (có số ngăn) → lỗi, chương trình tự tính số ngăn"
+dimacs,06_khong_hop_le,06_khong_hop_le/dimacs.txt,edge,0,,,,,dòng đầu phải là số mẫu,1,,Định dạng DIMACS (p edge / e u v) không được nhận
+chu_thich_cuoi_dong,06_khong_hop_le,06_khong_hop_le/chu_thich_cuoi_dong.txt,edge,0,,,,,chú thích,1,,"Chú thích ""#"" cuối dòng cạnh"
 khuyen,06_khong_hop_le,06_khong_hop_le/khuyen.txt,edge,1,,,,,khuyên,1,,Khuyên 2–2
 dinh_ngoai_pham_vi,06_khong_hop_le,06_khong_hop_le/dinh_ngoai_pham_vi.txt,edge,1,,,,,ngoài phạm vi,1,,Đỉnh 4 khi n = 4 (đỉnh đánh số 0..3)
 dinh_am,06_khong_hop_le,06_khong_hop_le/dinh_am.txt,edge,0,,,,,ngoài phạm vi,1,,Đỉnh âm
 token_chu,06_khong_hop_le,06_khong_hop_le/token_chu.txt,edge,0,,,,,phải gồm đúng 2 số nguyên,1,,Cạnh có chữ
 so_thuc,06_khong_hop_le,06_khong_hop_le/so_thuc.txt,edge,0,,,,,phải gồm đúng 2 số nguyên,1,,Cạnh có số thực
+canh_thieu_dinh,06_khong_hop_le,06_khong_hop_le/canh_thieu_dinh.txt,edge,0,,,,,phải gồm đúng 2 số nguyên,1,,Dòng cạnh chỉ có 1 số
 ba_so_tren_dong,06_khong_hop_le,06_khong_hop_le/ba_so_tren_dong.txt,edge,0,,,,,phải gồm đúng 2 số nguyên,1,,Dòng cạnh có 3 số
-dimacs_e_truoc_p,06_khong_hop_le,06_khong_hop_le/dimacs_e_truoc_p.txt,dimacs,0,,,,,trước dòng,1,,"DIMACS: cạnh ""e"" đứng trước dòng ""p"""
-dimacs_p_sai,06_khong_hop_le,06_khong_hop_le/dimacs_p_sai.txt,dimacs,0,,,,,p edge n m,1,,"DIMACS: dòng ""p"" thiếu số đỉnh"
-dimacs_e_thieu,06_khong_hop_le,06_khong_hop_le/dimacs_e_thieu.txt,dimacs,0,,,,,e u v,1,,"DIMACS: dòng ""e"" thiếu đỉnh"
-dimacs_dinh_0,06_khong_hop_le,06_khong_hop_le/dimacs_dinh_0.txt,dimacs,0,,,,,ngoài phạm vi,1,,"DIMACS đánh số từ 1, đỉnh 0 không hợp lệ"
+canh_lap,06_khong_hop_le,06_khong_hop_le/canh_lap.txt,edge,1,,,,,bị lặp,1,,Cặp lặp lại (0 1 hai lần)
+canh_lap_dao,06_khong_hop_le,06_khong_hop_le/canh_lap_dao.txt,edge,1,,,,,bị lặp,1,,Cặp lặp đảo chiều (1 0 sau 0 1)
 nhieu_loi,06_khong_hop_le,06_khong_hop_le/nhieu_loi.txt,edge,0,,,,,khuyên,3,,"Nhiều lỗi cùng lúc: khuyên, ngoài phạm vi, chữ"
-canh_lap,06_khong_hop_le,06_khong_hop_le/canh_lap.txt,edge,1,,,2,ly_thuyet,,,bị lặp,"Cạnh lặp → bỏ qua, cảnh báo"
-canh_lap_dao,06_khong_hop_le,06_khong_hop_le/canh_lap_dao.txt,edge,1,,,3,ly_thuyet,,,bị lặp,Cạnh lặp đảo chiều (1 0 sau 0 1)
-dong_dau_n_K,06_khong_hop_le,06_khong_hop_le/dong_dau_n_K.txt,edge,0,,,2,ly_thuyet,,,không cần nhập số ngăn,"Dòng đầu kiểu cũ ""n K"" → bỏ qua K, cảnh báo"
-dimacs_m_sai,06_khong_hop_le,06_khong_hop_le/dimacs_m_sai.txt,dimacs,0,,,2,ly_thuyet,,,khai báo m = 5,DIMACS khai m = 5 nhưng chỉ có 2 cạnh
-dimacs_myciel3,06_khong_hop_le,06_khong_hop_le/dimacs_myciel3.txt,dimacs,0,,,4,ly_thuyet,,,,"DIMACS hợp lệ (định dạng benchmark, đỉnh 1..n, chú thích c): Grötzsch"
-dimacs_queen5_5,06_khong_hop_le,06_khong_hop_le/dimacs_queen5_5.txt,dimacs,0,,,5,ly_thuyet,,,,DIMACS hợp lệ: bàn cờ hậu 5×5
-chu_thich,06_khong_hop_le,06_khong_hop_le/chu_thich.txt,edge,0,,,3,ly_thuyet,,,,Danh sách cạnh có chú thích # đầu file và cuối dòng — Petersen
-crlf_tab_chu_thich,06_khong_hop_le,06_khong_hop_le/crlf_tab_chu_thich.txt,edge,0,,,3,ly_thuyet,,,,"Xuống dòng Windows (CRLF), tab, dòng trống, chú thích cuối dòng — C₅ hợp lệ"
+crlf_tab_dong_trong,06_khong_hop_le,06_khong_hop_le/crlf_tab_dong_trong.txt,edge,0,,,3,ly_thuyet,,,,"Hợp lệ: xuống dòng Windows (CRLF), tab, dòng trống — C₅ (giống cin của C++, vẫn nhận)"
+khoang_trang_thua,06_khong_hop_le,06_khong_hop_le/khoang_trang_thua.txt,edge,0,,,3,ly_thuyet,,,,Hợp lệ: khoảng trắng đầu dòng và dòng trống cuối file — Petersen

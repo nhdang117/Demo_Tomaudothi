@@ -1575,7 +1575,7 @@ async function tsInput(r) {
 function tsDetail(r, text, loaded) {
   const dd = (k, v) => v == null || v === '' ? '' : `<dt>${k}</dt><dd>${v}</dd>`;
   $('#tsDetail').innerHTML = `<h3>${esc(r.id)} ${tsPill(r.status)}</h3><p>${esc(r.desc)}</p><dl>` +
-    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.fmt === 'dimacs' ? 'DIMACS' : r.norm ? 'chuẩn hoá cho C++' : 'danh sách cạnh (thô)'}`) +
+    dd('Nhóm', esc(TSD.groups[r.group])) + dd('File', `<a href="testcases/${esc(r.file)}" target="_blank" rel="noopener">${esc(r.file)}</a> · ${r.norm ? 'đúng định dạng chuẩn' : r.expErr ? 'input sai định dạng' : 'hợp lệ, có khoảng trắng / dòng trống thừa'}`) +
     dd('Mong đợi', tsExpect(r) + (r.src && !r.expErr ? ` <small>(${TS_SRC[r.src] || esc(r.src)})</small>` : '')) +
     dd('Ghi chú', r.notes.length ? esc(r.notes.join(' · ')) : null) +
     (r.fails.length ? dd('Lỗi', `<span class="fails">${esc(r.fails.join(' · '))}</span>`) : '') + '</dl>' +

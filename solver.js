@@ -826,8 +826,10 @@ const Solver = (() => {
   }
 
   /* ---------------- Đọc input văn bản ----------------
-   * Định dạng 1:  dòng đầu "n", mỗi dòng sau "u v" (đỉnh 0..n-1)
-   * Định dạng 2:  DIMACS — "p edge n m", "e u v" (đỉnh 1..n), "c ..." chú thích
+   * Chỉ một định dạng (trùng input của code C++ và file testcase):
+   *   dòng đầu "n" (1 ≤ n ≤ MAX_N), mỗi dòng sau "u v" (0 ≤ u, v ≤ n − 1, u ≠ v), mỗi cặp một lần.
+   * Khoảng trắng / tab thừa, xuống dòng Windows và dòng trống được bỏ qua (cin của C++ cũng vậy);
+   * chú thích "#", DIMACS, dòng đầu "n K" kiểu cũ, cặp lặp đều là lỗi.
    * opts.maxN: giới hạn n (mặc định MAX_N)
    */
   const MAX_N = 5000;          // = MAXN − 5 của code C++ (mảng tĩnh)
@@ -846,61 +848,40 @@ const Solver = (() => {
     const maxN = opts.maxN ?? MAX_N;
     const errors = [], warnings = [];
     const lines = text.split(/\r?\n/);
-    let n = null, dimacs = false, mDecl = null;
-    const edges = [], seen = new Set();
+    let n = null;
+    const edges = [], seen = new Map();          // cặp → dòng xuất hiện đầu tiên
     for (let li = 0; li < lines.length; li++) {
-      const raw = lines[li];
-      const line = raw.replace(/#.*$/, '').trim();
-      const ln = li + 1;
+      const raw = lines[li], line = raw.trim(), ln = li + 1;
       if (!line) continue;
+      if (line.includes('#')) { errors.push(`Dòng ${ln}: không dùng chú thích "#", mỗi dòng chỉ gồm các số nguyên.`); if (n === null) break; continue; }
       const tok = line.split(/\s+/);
-      if (tok[0] === 'c') continue;
-      if (tok[0] === 'p') {
-        if (tok.length < 3 || !/^\d+$/.test(tok[2])) { errors.push(`Dòng ${ln}: dòng "p" phải có dạng "p edge n m".`); continue; }
-        n = +tok[2]; dimacs = true;
-        if (/^\d+$/.test(tok[3] || '')) mDecl = +tok[3];
-        continue;
-      }
-      let a, b;
-      if (tok[0] === 'e') {
-        if (n === null) { errors.push(`Dòng ${ln}: cạnh xuất hiện trước dòng "p edge n m".`); continue; }
-        if (tok.length !== 3 || !/^-?\d+$/.test(tok[1]) || !/^-?\d+$/.test(tok[2])) { errors.push(`Dòng ${ln}: "${raw.trim()}" phải có dạng "e u v".`); continue; }
-        a = +tok[1] - 1; b = +tok[2] - 1;
-      } else if (n === null) {
-        if (tok.length > 2 || !tok.every(t => /^\d+$/.test(t))) { errors.push(`Dòng ${ln}: dòng đầu phải là số mẫu "n".`); break; }
+      if (n === null) {
+        if (tok.length !== 1 || !/^\d+$/.test(tok[0])) { errors.push(`Dòng ${ln}: dòng đầu phải là số mẫu "n" (đúng một số nguyên).`); break; }
         n = +tok[0];
-        if (tok.length === 2) warnings.push(`Dòng ${ln}: không cần nhập số ngăn, chương trình tự xếp nên đã bỏ qua "${tok[1]}".`);
         continue;
-      } else {
-        if (tok.length !== 2 || !/^-?\d+$/.test(tok[0]) || !/^-?\d+$/.test(tok[1])) { errors.push(`Dòng ${ln}: "${raw.trim()}" phải gồm đúng 2 số nguyên "u v".`); continue; }
-        a = +tok[0]; b = +tok[1];
       }
-      const base = dimacs ? 1 : 0;
-      if (a < 0 || b < 0 || a >= n || b >= n) {
-        errors.push(`Dòng ${ln}: đỉnh ${(a < 0 || a >= n ? a : b) + base} nằm ngoài phạm vi ${base}..${n - 1 + base}.`); continue;
-      }
-      if (a === b) { errors.push(`Dòng ${ln}: khuyên ${a + base}–${a + base} không hợp lệ (một mẫu không thể phản ứng với chính nó).`); continue; }
+      if (tok.length !== 2 || !/^-?\d+$/.test(tok[0]) || !/^-?\d+$/.test(tok[1])) { errors.push(`Dòng ${ln}: "${line}" phải gồm đúng 2 số nguyên "u v".`); continue; }
+      const a = +tok[0], b = +tok[1];
+      if (a < 0 || b < 0 || a >= n || b >= n) { errors.push(`Dòng ${ln}: đỉnh ${a < 0 || a >= n ? a : b} nằm ngoài phạm vi 0..${n - 1}.`); continue; }
+      if (a === b) { errors.push(`Dòng ${ln}: khuyên ${a}–${a} không hợp lệ (một mẫu không thể phản ứng với chính nó).`); continue; }
       const key = a < b ? a * n + b : b * n + a;
-      if (seen.has(key)) { warnings.push(`Dòng ${ln}: cạnh ${a + base}–${b + base} bị lặp, đã bỏ qua.`); continue; }
-      seen.add(key);
+      if (seen.has(key)) { errors.push(`Dòng ${ln}: cặp ${a}–${b} bị lặp (đã có ở dòng ${seen.get(key)}).`); continue; }
+      seen.set(key, ln);
       edges.push([a, b]);
     }
     if (n === null && errors.length === 0) errors.push('Chưa có dữ liệu: dòng đầu là số đỉnh n.');
     if (n !== null && n < 1) errors.push('Số đỉnh n phải ≥ 1.');
     if (n !== null && n > maxN) errors.push(`n = ${n} quá lớn (tối đa ${maxN}, giới hạn mảng MAXN của code C++).`);
     if (errors.length) return { errors, warnings, graph: null };
-    if (mDecl !== null && mDecl !== edges.length) warnings.push(`Dòng "p" khai báo m = ${mDecl} nhưng đọc được ${edges.length} cạnh khác nhau.`);
     if (n > 40) warnings.push('Đồ thị lớn: nhãn đỉnh sẽ ẩn bớt, chế độ từng bước có thể bị cắt ngắn.');
     if (n > UI.TABLE_MAX_N) warnings.push(`n > ${UI.TABLE_MAX_N}: không vẽ ma trận kề và bảng trạng thái; n > ${UI.BT_MAX_N}: không chạy quay lui.`);
     return { errors, warnings, graph: makeGraph(n, edges) };
   }
 
+  /** Đồ thị → đúng định dạng input (không chú thích), đọc lại được bằng parseInput và code C++. */
   function toEdgeListText(g) {
-    const L = g.labels;
-    return [`${g.n}`.padEnd(6) + '# n', ...g.edges.map(([a, b]) =>
-      L ? `${a} ${b}`.padEnd(6) + `# ${L[a].name} – ${L[b].name}` : `${a} ${b}`)].join('\n');
+    return [`${g.n}`, ...g.edges.map(([a, b]) => `${a} ${b}`)].join('\n');
   }
-
   return {
     Recorder, makeGraph, usedCount, setStr, isProper, isPartialProper,
     greedy, backtrack, ALGOS, trace, stdoutOf,

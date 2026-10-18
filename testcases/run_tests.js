@@ -18,7 +18,7 @@ const T = require('./suite.js');
 const DIR = __dirname, CPP = path.join(DIR, '..', 'cpp'), BUILD = path.join(CPP, 'build');
 const GROUPS = {
   '01_nho': 'Dữ liệu nhỏ', '02_thong_thuong': 'Thông thường', '03_bien': 'Biên',
-  '04_dac_biet': 'Đặc biệt', '05_lon': 'Dữ liệu lớn', '06_khong_hop_le': 'Không hợp lệ / cảnh báo',
+  '04_dac_biet': 'Đặc biệt', '05_lon': 'Dữ liệu lớn', '06_khong_hop_le': 'Không hợp lệ',
 };
 const EMBED_MAX = 12 * 1024;      // input ≤ 12 KB nhúng thẳng vào trang web, lớn hơn thì trang tải file
 const TIMEOUT_S = +((process.argv.find(a => a.startsWith('--timeout=')) || '').split('=')[1] || 10);

@@ -22,7 +22,7 @@ const GROUPS = {
   '03_bien': 'Biên',
   '04_dac_biet': 'Đặc biệt',
   '05_lon': 'Dữ liệu lớn',
-  '06_khong_hop_le': 'Không hợp lệ / cảnh báo',
+  '06_khong_hop_le': 'Không hợp lệ',
 };
 
 /* ---------------- RNG có seed (mulberry32) ---------------- */
@@ -125,14 +125,11 @@ function bruteChi(g) {
 /* ---------------- Định dạng file ----------------
  * Nhóm 01–05: input CHUẨN HÓA để code C++ (cpp/*.cpp, đọc bằng cin) đọc được — dòng đầu "n", mỗi dòng
  * sau "u v" (0 ≤ u, v < n), xuống dòng LF, không chú thích, không dòng trống. Mô tả và χ mong đợi nằm
- * trong expected.csv. Nhóm 06 kiểm tra bộ đọc input của web (chú thích, DIMACS, CRLF, input lỗi…)
+ * trong expected.csv. Nhóm 06 kiểm tra bộ đọc input của web (input sai định dạng, khoảng trắng/CRLF…)
  * nên giữ dạng thô và chỉ chạy bằng bộ giải JS. */
 const CPP_READABLE = /^\d+\n(\d+ \d+\n)*$/;
 function edgeText(g) {
   return [`${g.n}`, ...g.e.map(([a, b]) => `${a} ${b}`)].join('\n') + '\n';
-}
-function dimacsText(g, head) {
-  return [...head.map(h => `c ${h}`), `p edge ${g.n} ${g.e.length}`, ...g.e.map(([a, b]) => `e ${a + 1} ${b + 1}`)].join('\n') + '\n';
 }
 
 /* ---------------- Danh sách testcase ---------------- */
@@ -153,7 +150,7 @@ function add(group, id, desc, g, { chi = null, src, check = true, oracle = true 
   cases.push({ group, id, desc, fmt: 'edge', n: g.n, m: g.e.length, chi, src, text });
 }
 function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi = null, src = '' } = {}) {
-  cases.push({ group, id, desc, fmt: /^\s*(c |p )/m.test(text) ? 'dimacs' : 'edge', n: '', m: '', chi, src, err, errCount, warn, text });
+  cases.push({ group, id, desc, fmt: 'edge', n: '', m: '', chi, src, err, errCount, warn, text });
 }
 
 /* 01 — Dữ liệu nhỏ: đáp án bằng vét cạn */
@@ -246,38 +243,35 @@ function addRaw(group, id, desc, text, { err = '', errCount = '', warn = '', chi
   add('05_lon', 'duong_di_5000', 'Đường đi P₅₀₀₀', G.path(5000), { chi: 2, src: 'ly_thuyet' });
 }
 
-/* 06 — Không hợp lệ (phải bắt lỗi) và hợp lệ kèm cảnh báo */
+/* 06 — Không hợp lệ: chỉ một định dạng input (dòng đầu n, mỗi dòng sau "u v", mỗi cặp một lần).
+ * Chú thích #, DIMACS, dòng đầu "n K", cặp lặp đều phải bị báo lỗi; khoảng trắng / CRLF / dòng trống thì vẫn nhận. */
 {
   const H = '06_khong_hop_le';
   addRaw(H, 'rong', 'File rỗng', '', { err: 'Chưa có dữ liệu' });
-  addRaw(H, 'chi_chu_thich', 'Chỉ có chú thích, không có dữ liệu', '# chỉ có chú thích\n\n# không có n\n', { err: 'Chưa có dữ liệu' });
+  addRaw(H, 'chi_chu_thich', 'Chỉ có chú thích "#", không có dữ liệu', '# chỉ có chú thích\n\n# không có n\n', { err: 'chú thích', errCount: 1 });
   addRaw(H, 'dong_dau_chu', 'Dòng đầu là chữ', 'abc\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_am', 'n âm', '-3\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_bang_0', 'n = 0', '0\n', { err: 'phải ≥ 1', errCount: 1 });
+  addRaw(H, 'n_so_thuc', 'n là số thực', '2.5\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
   addRaw(H, 'n_qua_lon', `n = ${S.MAX_N + 1} vượt giới hạn MAX_N = ${S.MAX_N}`, `${S.MAX_N + 1}\n0 1\n`, { err: 'quá lớn', errCount: 1 });
   addRaw(H, 'dong_dau_3_so', 'Dòng đầu có 3 số', '3 2 1\n0 1\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'dong_dau_n_K', 'Dòng đầu kiểu cũ "n K" (có số ngăn) → lỗi, chương trình tự tính số ngăn', '4 2\n0 1\n1 2\n2 3\n3 0\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'dimacs', 'Định dạng DIMACS (p edge / e u v) không được nhận', 'c queen\np edge 3 2\ne 1 2\ne 2 3\n', { err: 'dòng đầu phải là số mẫu', errCount: 1 });
+  addRaw(H, 'chu_thich_cuoi_dong', 'Chú thích "#" cuối dòng cạnh', '3\n0 1   # Na – H2O\n1 2\n', { err: 'chú thích', errCount: 1 });
   addRaw(H, 'khuyen', 'Khuyên 2–2', '3\n0 1\n2 2\n', { err: 'khuyên', errCount: 1 });
   addRaw(H, 'dinh_ngoai_pham_vi', 'Đỉnh 4 khi n = 4 (đỉnh đánh số 0..3)', '4\n0 1\n1 4\n', { err: 'ngoài phạm vi', errCount: 1 });
   addRaw(H, 'dinh_am', 'Đỉnh âm', '4\n0 -1\n', { err: 'ngoài phạm vi', errCount: 1 });
   addRaw(H, 'token_chu', 'Cạnh có chữ', '3\n0 x\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
   addRaw(H, 'so_thuc', 'Cạnh có số thực', '3\n0 1.5\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
+  addRaw(H, 'canh_thieu_dinh', 'Dòng cạnh chỉ có 1 số', '3\n0\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
   addRaw(H, 'ba_so_tren_dong', 'Dòng cạnh có 3 số', '3\n0 1 2\n', { err: 'phải gồm đúng 2 số nguyên', errCount: 1 });
-  addRaw(H, 'dimacs_e_truoc_p', 'DIMACS: cạnh "e" đứng trước dòng "p"', 'e 1 2\np edge 2 1\n', { err: 'trước dòng', errCount: 1 });
-  addRaw(H, 'dimacs_p_sai', 'DIMACS: dòng "p" thiếu số đỉnh', 'p edge x 1\n', { err: 'p edge n m', errCount: 1 });
-  addRaw(H, 'dimacs_e_thieu', 'DIMACS: dòng "e" thiếu đỉnh', 'p edge 3 1\ne 1\n', { err: 'e u v', errCount: 1 });
-  addRaw(H, 'dimacs_dinh_0', 'DIMACS đánh số từ 1, đỉnh 0 không hợp lệ', 'p edge 3 1\ne 0 1\n', { err: 'ngoài phạm vi', errCount: 1 });
+  addRaw(H, 'canh_lap', 'Cặp lặp lại (0 1 hai lần)', '3\n0 1\n1 2\n0 1\n', { err: 'bị lặp', errCount: 1 });
+  addRaw(H, 'canh_lap_dao', 'Cặp lặp đảo chiều (1 0 sau 0 1)', '3\n0 1\n1 0\n1 2\n2 0\n', { err: 'bị lặp', errCount: 1 });
   addRaw(H, 'nhieu_loi', 'Nhiều lỗi cùng lúc: khuyên, ngoài phạm vi, chữ', '4\n0 1\n1 1\n2 9\n3 y\n', { err: 'khuyên', errCount: 3 });
-  addRaw(H, 'canh_lap', 'Cạnh lặp → bỏ qua, cảnh báo', '3\n0 1\n1 2\n0 1\n', { warn: 'bị lặp', chi: 2, src: 'ly_thuyet' });
-  addRaw(H, 'canh_lap_dao', 'Cạnh lặp đảo chiều (1 0 sau 0 1)', '3\n0 1\n1 0\n1 2\n2 0\n', { warn: 'bị lặp', chi: 3, src: 'ly_thuyet' });
-  addRaw(H, 'dong_dau_n_K', 'Dòng đầu kiểu cũ "n K" → bỏ qua K, cảnh báo', '4 2\n0 1\n1 2\n2 3\n3 0\n', { warn: 'không cần nhập số ngăn', chi: 2, src: 'ly_thuyet' });
-  addRaw(H, 'dimacs_m_sai', 'DIMACS khai m = 5 nhưng chỉ có 2 cạnh', 'p edge 3 5\ne 1 2\ne 2 3\n', { warn: 'khai báo m = 5', chi: 2, src: 'ly_thuyet' });
-  addRaw(H, 'dimacs_myciel3', 'DIMACS hợp lệ (định dạng benchmark, đỉnh 1..n, chú thích c): Grötzsch',
-    dimacsText(G.mycielski(G.cycle(5)), ['myciel3 = Mycielski(C5), chi = 4']), { chi: 4, src: 'ly_thuyet' });
-  addRaw(H, 'dimacs_queen5_5', 'DIMACS hợp lệ: bàn cờ hậu 5×5', dimacsText(G.queen(5), ['queen5_5, chi = 5']), { chi: 5, src: 'ly_thuyet' });
-  addRaw(H, 'chu_thich', 'Danh sách cạnh có chú thích # đầu file và cuối dòng — Petersen',
-    '# Petersen: 10 đỉnh, 15 cạnh\n10   # n\n' + G.petersen().e.map(([a, b]) => `${a} ${b}   # cạnh`).join('\n') + '\n', { chi: 3, src: 'ly_thuyet' });
-  addRaw(H, 'crlf_tab_chu_thich', 'Xuống dòng Windows (CRLF), tab, dòng trống, chú thích cuối dòng — C₅ hợp lệ',
-    '# C5 gõ tay trên Windows\r\n5\t# n\r\n\r\n0  1\r\n1\t2   # cạnh\r\n2 3\r\n\r\n3 4\r\n4 0\r\n', { chi: 3, src: 'ly_thuyet' });
+  addRaw(H, 'crlf_tab_dong_trong', 'Hợp lệ: xuống dòng Windows (CRLF), tab, dòng trống — C₅ (giống cin của C++, vẫn nhận)',
+    '5\r\n0\t1\r\n\r\n1 2  \r\n2 3\r\n\r\n3 4\r\n4 0\r\n', { chi: 3, src: 'ly_thuyet' });
+  addRaw(H, 'khoang_trang_thua', 'Hợp lệ: khoảng trắng đầu dòng và dòng trống cuối file — Petersen',
+    '  10\n' + G.petersen().e.map(([a, b]) => `  ${a}   ${b}`).join('\n') + '\n\n\n', { chi: 3, src: 'ly_thuyet' });
 }
 
 /* ---------------- Ghi file ---------------- */

@@ -1,106 +1,103 @@
 ﻿id,group,n,m,chi,src,lb,ub,greedyK,greedyMs,btStatus,btK,btMs,btCalls,cppGreedyK,cppGreedyMs,cppBtStatus,cppBtK,cppBtMs,trace,demo,webMs,errors,warnings,msg,status,fails,notes
-nho_01,01_nho,3,1,2,vet_can,2,2,2,0.006904,xong,2,0.01692,3,2,16.49,xong,2,77.01,khớp,true,1.096,0,0,,Đạt,,
-nho_02,01_nho,4,0,1,vet_can,1,1,1,0.00557,xong,1,0.01292,4,1,22.18,xong,1,19.62,khớp,true,1.375,0,0,,Đạt,,
-nho_03,01_nho,5,7,3,vet_can,3,5,3,0.009102,xong,3,0.009438,5,3,17.05,xong,3,16.11,khớp,true,1.668,0,0,,Đạt,,
-nho_04,01_nho,6,11,4,vet_can,4,6,4,0.00772,xong,4,0.004154,6,4,16.16,xong,4,15.95,khớp,true,1.858,0,0,,Đạt,,
-nho_05,01_nho,7,1,2,vet_can,2,2,2,0.002407,xong,2,0.003242,7,2,16.83,xong,2,15.28,khớp,true,1.775,0,0,,Đạt,,
-nho_06,01_nho,8,13,3,vet_can,3,6,4,0.03106,xong,3,0.007086,12,4,16.92,xong,3,15.46,khớp,true,1.854,0,0,,Đạt,,
-nho_07,01_nho,9,24,5,vet_can,5,8,5,0.007246,xong,5,0.009582,13,5,16.91,xong,5,15.54,khớp,true,2.234,0,0,,Đạt,,
-nho_08,01_nho,3,3,3,vet_can,3,3,3,0.001318,xong,3,0.002628,3,3,15.57,xong,3,15.18,khớp,true,0.4182,0,0,,Đạt,,
-nho_09,01_nho,4,1,2,vet_can,2,2,2,0.001427,xong,2,0.004074,4,2,16.39,xong,2,16.16,khớp,true,0.4001,0,0,,Đạt,,
-nho_10,01_nho,5,4,3,vet_can,3,4,3,0.001997,xong,3,0.003544,5,3,18.43,xong,3,16.73,khớp,true,2.325,0,0,,Đạt,,
-nho_11,01_nho,6,9,3,vet_can,3,5,3,0.001943,xong,3,0.003724,6,3,16.52,xong,3,18.21,khớp,true,0.8426,0,0,,Đạt,,
-nho_12,01_nho,7,18,5,vet_can,5,7,5,0.002982,xong,5,0.003124,7,5,17.66,xong,5,16.01,khớp,true,1.543,0,0,,Đạt,,
-nho_13,01_nho,8,1,2,vet_can,2,2,2,0.002689,xong,2,0.003556,8,2,15.95,xong,2,17.19,khớp,true,0.8845,0,0,,Đạt,,
-nho_14,01_nho,9,12,3,vet_can,3,5,3,0.003428,xong,3,0.004508,10,3,16.55,xong,3,16.27,khớp,true,0.9953,0,0,,Đạt,,
-nho_15,01_nho,3,1,2,vet_can,2,2,2,0.001233,xong,2,0.00155,3,2,15.47,xong,2,15.32,khớp,true,0.2615,0,0,,Đạt,,
-nho_16,01_nho,4,3,2,vet_can,2,3,2,0.001816,xong,2,0.002982,4,2,15.95,xong,2,17.18,khớp,true,0.511,0,0,,Đạt,,
-nho_17,01_nho,5,1,2,vet_can,2,2,2,0.003728,xong,2,0.004302,5,2,15.74,xong,2,15.91,khớp,true,0.5783,0,0,,Đạt,,
-nho_18,01_nho,6,12,4,vet_can,4,6,4,0.003556,xong,4,0.003824,6,4,17.76,xong,4,15.95,khớp,true,0.9906,0,0,,Đạt,,
-nho_19,01_nho,7,12,3,vet_can,3,6,3,0.002122,xong,3,0.00261,7,3,15.71,xong,3,15.15,khớp,true,0.8917,0,0,,Đạt,,
-nho_20,01_nho,8,23,5,vet_can,5,8,5,0.002562,xong,5,0.003108,8,5,15.46,xong,5,15.44,khớp,true,1.238,0,0,,Đạt,,
-khoang_chua,02_thong_thuong,12,30,4,de_bai,4,12,4,0.003508,xong,4,0.005448,13,4,16.26,xong,4,15.77,khớp,true,2.004,0,0,,Đạt,,
-buoi10_slide18,02_thong_thuong,10,17,3,de_bai,3,6,3,0.002866,xong,3,0.003138,10,3,15.64,xong,3,15.76,khớp,true,1.197,0,0,,Đạt,,
-so_thu,02_thong_thuong,10,17,4,de_bai,4,7,4,0.01722,xong,4,0.007604,10,4,17.67,xong,4,16.48,khớp,true,4.521,0,0,,Đạt,,
-lich_thi_20mon,02_thong_thuong,20,93,6,kiem_chung,6,16,6,0.007101,xong,6,0.01235,29,6,16.61,xong,6,16,khớp,true,6.776,0,0,,Đạt,,
-lich_thi_30mon,02_thong_thuong,30,148,6,kiem_chung,6,20,6,0.01329,xong,6,0.2493,591,6,17.82,xong,6,16.81,khớp,true,24.87,0,0,,Đạt,,
-lich_thi_40mon,02_thong_thuong,40,233,6,kiem_chung,6,21,7,0.04813,xong,6,11.7,33364,7,17.85,xong,6,23.24,cắt,true,70.14,0,0,,Đạt,,"trace quay lui dài hơn 750,000 bước: chỉ chấm phần đầu"
-gnp_12_5,02_thong_thuong,12,31,4,kiem_chung,4,9,4,0.0033,xong,4,0.005122,12,4,15.97,xong,4,15.3,khớp,true,1.603,0,0,,Đạt,,
-gnp_16_4,02_thong_thuong,16,60,5,kiem_chung,5,12,6,0.004821,xong,5,0.01451,61,6,16.56,xong,5,15.58,khớp,true,4.583,0,0,,Đạt,,
-gnp_20_3,02_thong_thuong,20,66,4,kiem_chung,4,12,4,0.005817,xong,4,0.008112,22,4,15.88,xong,4,15.64,khớp,true,3.175,0,0,,Đạt,,
-gnp_25_25,02_thong_thuong,25,67,4,kiem_chung,4,10,4,0.006902,xong,4,0.03613,240,4,17.11,xong,4,15.55,khớp,true,11.98,0,0,,Đạt,,
-gnp_30_2,02_thong_thuong,30,81,4,kiem_chung,4,12,5,0.008457,xong,4,0.04252,284,5,18.24,xong,4,15.72,khớp,true,13.93,0,0,,Đạt,,
-gnp_30_5,02_thong_thuong,30,209,7,kiem_chung,7,21,8,0.01154,xong,7,0.05473,181,8,16.88,xong,7,16.26,khớp,true,16.38,0,0,,Đạt,,
-gnp_40_15,02_thong_thuong,40,115,4,kiem_chung,4,12,5,0.01444,xong,4,0.3811,1471,5,17.07,xong,4,16.85,khớp,true,39.02,0,0,,Đạt,,
-gnp_50_1,02_thong_thuong,50,117,4,kiem_chung,4,11,4,0.0183,xong,4,6.042,36761,4,17.79,xong,4,20.9,cắt,true,46.67,0,1,,Đạt,,"trace quay lui dài hơn 600,000 bước: chỉ chấm phần đầu"
-gnp_60_08,02_thong_thuong,60,129,3,kiem_chung,3,8,4,0.02375,xong,3,3.08,22084,4,19.36,xong,3,19.74,cắt,true,48.35,0,1,,Đạt,,"trace quay lui dài hơn 500,000 bước: chỉ chấm phần đầu"
-n1,03_bien,1,0,1,ly_thuyet,1,1,1,0.001202,xong,1,0.001088,1,1,15.98,xong,1,15.53,khớp,true,0.0761,0,0,,Đạt,,
-n2_mot_canh,03_bien,2,1,2,ly_thuyet,2,2,2,0.0011,xong,2,0.001598,2,2,16.24,xong,2,16.26,khớp,true,0.1832,0,0,,Đạt,,
-n2_khong_canh,03_bien,2,0,1,ly_thuyet,1,1,1,0.001079,xong,1,0.001474,2,1,17.28,xong,1,16.12,khớp,true,0.0994,0,0,,Đạt,,
-canh_dinh_cuoi,03_bien,5,2,2,ly_thuyet,2,3,2,0.001677,xong,2,0.002116,5,2,15.46,xong,2,15.6,khớp,true,0.3257,0,0,,Đạt,,
-n120_khong_canh,03_bien,120,0,1,ly_thuyet,1,1,1,0.05054,bỏ qua,,,,1,17.15,xong,1,15.84,khớp,true,34.29,0,1,,Đạt,,
-n120_duong_di,03_bien,120,119,2,ly_thuyet,2,3,2,0.05205,bỏ qua,,,,2,17.85,xong,2,16.06,khớp,true,39.07,0,1,,Đạt,,
-n120_hinh_sao,03_bien,120,119,2,ly_thuyet,2,120,2,0.05359,bỏ qua,,,,2,17.47,xong,2,16.31,khớp,true,38.75,0,1,,Đạt,,
-n119_chu_trinh_le,03_bien,119,119,3,ly_thuyet,3,3,3,0.05396,bỏ qua,,,,3,17.31,xong,3,16.47,khớp,true,40.76,0,1,,Đạt,,
-k90,03_bien,90,4005,90,ly_thuyet,90,90,90,0.477,xong,90,0.4874,90,90,23.9,xong,90,23.12,khớp,true,189.1,0,1,,Đạt,,
-k91,03_bien,91,4095,91,ly_thuyet,91,91,91,0.4927,bỏ qua,,,,91,23.64,xong,91,22.91,khớp,true,156.8,0,1,,Đạt,,
-k120,03_bien,120,7140,120,ly_thuyet,120,120,120,1.37,bỏ qua,,,,120,29.75,xong,120,28.46,khớp,true,182.5,0,1,,Đạt,,
-n5000_khong_canh,03_bien,5000,0,1,ly_thuyet,1,1,1,47.02,bỏ qua,,,,1,186.3,xong,1,95.59,cắt,false,1933,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
-n5000_canh_cuoi,03_bien,5000,1,2,ly_thuyet,2,2,2,40.56,bỏ qua,,,,2,185.7,xong,2,96.03,cắt,false,1939,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
-crown_6,04_dac_biet,12,30,2,ly_thuyet,2,6,6,0.004454,xong,2,0.04989,40,6,17.18,xong,2,16.2,khớp,true,3.36,0,0,,Đạt,,
-crown_10,04_dac_biet,20,90,2,ly_thuyet,2,10,10,0.00692,xong,2,0.02233,108,10,17.65,xong,2,16.13,khớp,true,10.55,0,0,,Đạt,,
-myciel3,04_dac_biet,11,20,4,ly_thuyet,4,6,4,0.002963,xong,4,0.01107,82,4,20.43,xong,4,15.88,khớp,true,4.155,0,0,,Đạt,,
-myciel4,04_dac_biet,23,71,5,ly_thuyet,5,12,5,0.006489,xong,5,5.886,32373,5,17.99,xong,5,18.33,khớp,true,30.75,0,0,,Đạt,,
-myciel5,04_dac_biet,47,236,6,ly_thuyet,6,24,6,0.01978,vượt ngân sách,,215.4,1000001,6,17.64,quá thời gian,,10000,khớp,false,317.5,0,1,,Đạt,,C++ quay lui chưa xong sau 10 s
-petersen,04_dac_biet,10,15,3,ly_thuyet,3,4,3,0.003239,xong,3,0.003226,10,3,17.52,xong,3,16.14,khớp,true,0.8986,0,0,,Đạt,,
-c7_le,04_dac_biet,7,7,3,ly_thuyet,3,3,3,0.00201,xong,3,0.002998,7,3,16.65,xong,3,15.89,khớp,true,0.5101,0,0,,Đạt,,
-c8_chan,04_dac_biet,8,8,2,ly_thuyet,2,3,2,0.002179,xong,2,0.002462,8,2,15.86,xong,2,16.01,khớp,true,0.6298,0,0,,Đạt,,
-banh_xe_w8,04_dac_biet,8,14,4,ly_thuyet,4,8,4,0.002467,xong,4,0.002698,8,4,15.48,xong,4,15.39,khớp,true,0.6611,0,0,,Đạt,,
-banh_xe_w9,04_dac_biet,9,16,3,ly_thuyet,3,9,3,0.002507,xong,3,0.002854,9,3,15.95,xong,3,15.65,khớp,true,0.7631,0,0,,Đạt,,
-k_5_7,04_dac_biet,12,35,2,ly_thuyet,2,8,2,0.003534,xong,2,0.003214,12,2,16.73,xong,2,15.73,khớp,true,4.292,0,0,,Đạt,,
-cay_40,04_dac_biet,40,39,2,ly_thuyet,2,6,3,0.01269,xong,2,0.01492,82,3,17.21,xong,2,15.86,khớp,true,10.44,0,0,,Đạt,,
-khong_lien_thong,04_dac_biet,12,11,4,ly_thuyet,4,4,4,0.003037,xong,4,0.003158,12,4,15.68,xong,4,16.17,khớp,true,0.9363,0,0,,Đạt,,
-dinh_ke_tat_ca,04_dac_biet,9,24,3,ly_thuyet,3,9,3,0.002632,xong,3,0.003082,9,3,15.86,xong,3,15.45,khớp,true,0.8817,0,0,,Đạt,,
-queen5_5,04_dac_biet,25,160,5,ly_thuyet,5,17,7,0.008891,xong,5,0.01779,63,7,16.67,xong,5,15.91,khớp,true,6.631,0,0,,Đạt,,
-queen6_6,04_dac_biet,36,290,7,ly_thuyet,7,20,9,0.0165,xong,7,5.199,12523,9,24.31,xong,7,22.99,khớp,true,40.29,0,0,,Đạt,,
-sudoku,04_dac_biet,81,810,9,ly_thuyet,9,21,12,0.1137,xong,9,0.3413,816,12,18.76,xong,9,20.9,khớp,true,94.81,0,1,,Đạt,,
-thua_200,05_lon,200,957,,can,3,18,6,0.1555,bỏ qua,,,,6,27.19,quá thời gian,,10020,khớp,true,163.1,0,2,,Đạt,,C++ quay lui chưa xong sau 10 s
-thua_500,05_lon,500,2528,,can,3,23,7,0.803,bỏ qua,,,,7,26.52,quá thời gian,,10020,khớp,false,470.2,0,2,,Đạt,,C++ quay lui chưa xong sau 10 s
-thua_1000,05_lon,1000,5027,,can,3,22,7,3.101,bỏ qua,,,,7,39.66,quá thời gian,,10020,cắt,false,458,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-thua_2000,05_lon,2000,9945,,can,3,23,7,10.11,bỏ qua,,,,7,77.22,quá thời gian,,10010,cắt,false,432.1,0,2,,Đạt,,"trace tham lam dài hơn 15,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-thua_5000,05_lon,5000,24910,,can,3,23,7,60.63,bỏ qua,,,,7,272.1,quá thời gian,,10010,cắt,false,515.1,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-day_300,05_lon,300,22636,,can,12,176,47,1.629,bỏ qua,,,,47,66.32,quá thời gian,,10020,cắt,true,196.6,0,2,,Đạt,,"trace tham lam dài hơn 100,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-day_1000,05_lon,1000,50051,,can,6,133,28,5.036,bỏ qua,,,,28,130.1,quá thời gian,,10010,cắt,true,172.4,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-cai_san_1000_k5,05_lon,1000,12117,5,cai_san,5,43,11,3.114,bỏ qua,,,,11,54.18,quá thời gian,,10020,cắt,true,282.8,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-cai_san_3000_k8,05_lon,3000,15904,8,cai_san,8,25,8,25.18,bỏ qua,,,,8,128.9,quá thời gian,,10010,cắt,false,421,0,2,,Đạt,,"trace tham lam dài hơn 10,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-luong_phan_2000,05_lon,2000,2980,2,cai_san,2,14,4,9.595,bỏ qua,,,,4,58.81,quá thời gian,,10010,cắt,false,760,0,2,,Đạt,,"trace tham lam dài hơn 15,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
-crown_100,05_lon,200,9900,2,ly_thuyet,2,100,100,1.667,bỏ qua,,,,100,37.07,xong,2,60.86,khớp,true,205.8,0,2,,Đạt,,
-k150,05_lon,150,11175,150,ly_thuyet,150,150,150,1.985,bỏ qua,,,,150,37.53,xong,150,36.32,khớp,true,155,0,2,,Đạt,,
-chu_trinh_4999,05_lon,4999,4999,3,ly_thuyet,3,3,3,45.84,bỏ qua,,,,3,202.9,xong,3,123.8,cắt,false,1311,0,2,,Đạt,,"trace tham lam dài hơn 6,001 bước: chỉ chấm phần đầu"
-duong_di_5000,05_lon,5000,4999,2,ly_thuyet,2,3,2,46.32,bỏ qua,,,,2,206.6,xong,2,115.8,cắt,false,1310,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
+nho_01,01_nho,3,1,2,vet_can,2,2,2,0.01423,xong,2,0.01597,3,2,17.59,xong,2,82.44,khớp,true,1.204,0,0,,Đạt,,
+nho_02,01_nho,4,0,1,vet_can,1,1,1,0.004348,xong,1,0.00593,4,1,16.39,xong,1,15.8,khớp,true,1.466,0,0,,Đạt,,
+nho_03,01_nho,5,7,3,vet_can,3,5,3,0.007494,xong,3,0.006006,5,3,16.12,xong,3,15.93,khớp,true,1.344,0,0,,Đạt,,
+nho_04,01_nho,6,11,4,vet_can,4,6,4,0.007652,xong,4,0.004258,6,4,17.6,xong,4,15.99,khớp,true,1.764,0,0,,Đạt,,
+nho_05,01_nho,7,1,2,vet_can,2,2,2,0.002406,xong,2,0.003298,7,2,15.79,xong,2,16.25,khớp,true,1.907,0,0,,Đạt,,
+nho_06,01_nho,8,13,3,vet_can,3,6,4,0.03296,xong,3,0.005936,12,4,17.41,xong,3,16.84,khớp,true,1.711,0,0,,Đạt,,
+nho_07,01_nho,9,24,5,vet_can,5,8,5,0.02223,xong,5,0.01031,13,5,17.97,xong,5,17.71,khớp,true,2.245,0,0,,Đạt,,
+nho_08,01_nho,3,3,3,vet_can,3,3,3,0.001274,xong,3,0.002714,3,3,16.95,xong,3,21.83,khớp,true,0.3567,0,0,,Đạt,,
+nho_09,01_nho,4,1,2,vet_can,2,2,2,0.001401,xong,2,0.005326,4,2,17.7,xong,2,16.36,khớp,true,0.3868,0,0,,Đạt,,
+nho_10,01_nho,5,4,3,vet_can,3,4,3,0.001947,xong,3,0.003506,5,3,18.15,xong,3,16.33,khớp,true,2.838,0,0,,Đạt,,
+nho_11,01_nho,6,9,3,vet_can,3,5,3,0.001854,xong,3,0.003788,6,3,17,xong,3,16.38,khớp,true,0.8854,0,0,,Đạt,,
+nho_12,01_nho,7,18,5,vet_can,5,7,5,0.002568,xong,5,0.002862,7,5,16.6,xong,5,15.89,khớp,true,1.367,0,0,,Đạt,,
+nho_13,01_nho,8,1,2,vet_can,2,2,2,0.002863,xong,2,0.002998,8,2,16.42,xong,2,15.88,khớp,true,1.026,0,0,,Đạt,,
+nho_14,01_nho,9,12,3,vet_can,3,5,3,0.003247,xong,3,0.004646,10,3,17.57,xong,3,16.5,khớp,true,1.056,0,0,,Đạt,,
+nho_15,01_nho,3,1,2,vet_can,2,2,2,0.00143,xong,2,0.001954,3,2,15.82,xong,2,15.86,khớp,true,0.2438,0,0,,Đạt,,
+nho_16,01_nho,4,3,2,vet_can,2,3,2,0.001997,xong,2,0.00236,4,2,15.51,xong,2,16.03,khớp,true,0.4254,0,0,,Đạt,,
+nho_17,01_nho,5,1,2,vet_can,2,2,2,0.002004,xong,2,0.003034,5,2,16.27,xong,2,15.77,khớp,true,0.5125,0,0,,Đạt,,
+nho_18,01_nho,6,12,4,vet_can,4,6,4,0.002743,xong,4,0.003758,6,4,15.68,xong,4,16.34,khớp,true,2.74,0,0,,Đạt,,
+nho_19,01_nho,7,12,3,vet_can,3,6,3,0.002062,xong,3,0.002626,7,3,15.95,xong,3,15.37,khớp,true,0.8068,0,0,,Đạt,,
+nho_20,01_nho,8,23,5,vet_can,5,8,5,0.002488,xong,5,0.00317,8,5,16.27,xong,5,16.26,khớp,true,1.2,0,0,,Đạt,,
+khoang_chua,02_thong_thuong,12,30,4,de_bai,4,12,4,0.003338,xong,4,0.005504,13,4,16.82,xong,4,15.5,khớp,true,1.878,0,0,,Đạt,,
+buoi10_slide18,02_thong_thuong,10,17,3,de_bai,3,6,3,0.002686,xong,3,0.003236,10,3,16.63,xong,3,15.82,khớp,true,2.286,0,0,,Đạt,,
+so_thu,02_thong_thuong,10,17,4,de_bai,4,7,4,0.03196,xong,4,0.004166,10,4,17.03,xong,4,16.52,khớp,true,2.131,0,0,,Đạt,,
+lich_thi_20mon,02_thong_thuong,20,93,6,kiem_chung,6,16,6,0.006826,xong,6,0.01167,29,6,16.49,xong,6,16.15,khớp,true,6.954,0,0,,Đạt,,
+lich_thi_30mon,02_thong_thuong,30,148,6,kiem_chung,6,20,6,0.02398,xong,6,0.2188,591,6,17.37,xong,6,17.03,khớp,true,33.92,0,0,,Đạt,,
+lich_thi_40mon,02_thong_thuong,40,233,6,kiem_chung,6,21,7,0.01637,xong,6,10.83,33364,7,66.92,xong,6,31.26,cắt,true,127,0,0,,Đạt,,"trace quay lui dài hơn 750,000 bước: chỉ chấm phần đầu"
+gnp_12_5,02_thong_thuong,12,31,4,kiem_chung,4,9,4,0.003593,xong,4,0.004414,12,4,16.5,xong,4,15.48,khớp,true,1.735,0,0,,Đạt,,
+gnp_16_4,02_thong_thuong,16,60,5,kiem_chung,5,12,6,0.005157,xong,5,0.0185,61,6,16.5,xong,5,15.64,khớp,true,5.221,0,0,,Đạt,,
+gnp_20_3,02_thong_thuong,20,66,4,kiem_chung,4,12,4,0.005961,xong,4,0.00957,22,4,16.29,xong,4,15.56,khớp,true,3.59,0,0,,Đạt,,
+gnp_25_25,02_thong_thuong,25,67,4,kiem_chung,4,10,4,0.007542,xong,4,0.05057,240,4,17.31,xong,4,16.35,khớp,true,11.72,0,0,,Đạt,,
+gnp_30_2,02_thong_thuong,30,81,4,kiem_chung,4,12,5,0.008742,xong,4,0.04166,284,5,17.22,xong,4,15.64,khớp,true,14.77,0,0,,Đạt,,
+gnp_30_5,02_thong_thuong,30,209,7,kiem_chung,7,21,8,0.01106,xong,7,0.05384,181,8,17.67,xong,7,15.85,khớp,true,16.07,0,0,,Đạt,,
+gnp_40_15,02_thong_thuong,40,115,4,kiem_chung,4,12,5,0.01419,xong,4,0.4021,1471,5,17.26,xong,4,15.97,khớp,true,41.47,0,0,,Đạt,,
+gnp_50_1,02_thong_thuong,50,117,4,kiem_chung,4,11,4,0.01826,xong,4,5.949,36761,4,25.83,xong,4,25.69,cắt,true,57.17,0,1,,Đạt,,"trace quay lui dài hơn 600,000 bước: chỉ chấm phần đầu"
+gnp_60_08,02_thong_thuong,60,129,3,kiem_chung,3,8,4,0.02297,xong,3,3.781,22084,4,20.86,xong,3,23.27,cắt,true,50.4,0,1,,Đạt,,"trace quay lui dài hơn 500,000 bước: chỉ chấm phần đầu"
+n1,03_bien,1,0,1,ly_thuyet,1,1,1,0.0008595,xong,1,0.001056,1,1,17.99,xong,1,17.94,khớp,true,0.0775,0,0,,Đạt,,
+n2_mot_canh,03_bien,2,1,2,ly_thuyet,2,2,2,0.001116,xong,2,0.001616,2,2,17.41,xong,2,16.74,khớp,true,0.2312,0,0,,Đạt,,
+n2_khong_canh,03_bien,2,0,1,ly_thuyet,1,1,1,0.00106,xong,1,0.001654,2,1,20.12,xong,1,15.92,khớp,true,0.131,0,0,,Đạt,,
+canh_dinh_cuoi,03_bien,5,2,2,ly_thuyet,2,3,2,0.001637,xong,2,0.002126,5,2,15.62,xong,2,15.89,khớp,true,0.3044,0,0,,Đạt,,
+n120_khong_canh,03_bien,120,0,1,ly_thuyet,1,1,1,0.04995,bỏ qua,,,,1,17.54,xong,1,15.78,khớp,true,32.4,0,1,,Đạt,,
+n120_duong_di,03_bien,120,119,2,ly_thuyet,2,3,2,0.05127,bỏ qua,,,,2,17.63,xong,2,16.68,khớp,true,37.54,0,1,,Đạt,,
+n120_hinh_sao,03_bien,120,119,2,ly_thuyet,2,120,2,0.05195,bỏ qua,,,,2,17.27,xong,2,15.88,khớp,true,35.57,0,1,,Đạt,,
+n119_chu_trinh_le,03_bien,119,119,3,ly_thuyet,3,3,3,0.05116,bỏ qua,,,,3,17.75,xong,3,16.04,khớp,true,38.07,0,1,,Đạt,,
+k90,03_bien,90,4005,90,ly_thuyet,90,90,90,0.4902,xong,90,0.4955,90,90,23.67,xong,90,26.98,khớp,true,186.9,0,1,,Đạt,,
+k91,03_bien,91,4095,91,ly_thuyet,91,91,91,0.4974,bỏ qua,,,,91,24.43,xong,91,23.06,khớp,true,162.6,0,1,,Đạt,,
+k120,03_bien,120,7140,120,ly_thuyet,120,120,120,1.076,bỏ qua,,,,120,31.28,xong,120,29.68,khớp,true,194.4,0,1,,Đạt,,
+n5000_khong_canh,03_bien,5000,0,1,ly_thuyet,1,1,1,42.55,bỏ qua,,,,1,188.8,xong,1,97.54,cắt,false,1811,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
+n5000_canh_cuoi,03_bien,5000,1,2,ly_thuyet,2,2,2,44.92,bỏ qua,,,,2,187.1,xong,2,94.01,cắt,false,1718,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
+crown_6,04_dac_biet,12,30,2,ly_thuyet,2,6,6,0.005884,xong,2,0.09686,40,6,18.55,xong,2,17.68,khớp,true,3.851,0,0,,Đạt,,
+crown_10,04_dac_biet,20,90,2,ly_thuyet,2,10,10,0.006652,xong,2,0.02109,108,10,17.12,xong,2,16.7,khớp,true,10.03,0,0,,Đạt,,
+myciel3,04_dac_biet,11,20,4,ly_thuyet,4,6,4,0.002984,xong,4,0.01098,82,4,17.01,xong,4,16.48,khớp,true,4.178,0,0,,Đạt,,
+myciel4,04_dac_biet,23,71,5,ly_thuyet,5,12,5,0.00665,xong,5,7.312,32373,5,18.11,xong,5,19.81,khớp,true,40.46,0,0,,Đạt,,
+myciel5,04_dac_biet,47,236,6,ly_thuyet,6,24,6,0.03546,vượt ngân sách,,232.5,1000001,6,18.21,quá thời gian,,10020,khớp,false,325.2,0,1,,Đạt,,C++ quay lui chưa xong sau 10 s
+petersen,04_dac_biet,10,15,3,ly_thuyet,3,4,3,0.00267,xong,3,0.002932,10,3,17.91,xong,3,16,khớp,true,0.8327,0,0,,Đạt,,
+c7_le,04_dac_biet,7,7,3,ly_thuyet,3,3,3,0.002248,xong,3,0.002342,7,3,16.31,xong,3,16.02,khớp,true,0.4859,0,0,,Đạt,,
+c8_chan,04_dac_biet,8,8,2,ly_thuyet,2,3,2,0.02272,xong,2,0.0025,8,2,16.82,xong,2,15.86,khớp,true,0.5898,0,0,,Đạt,,
+banh_xe_w8,04_dac_biet,8,14,4,ly_thuyet,4,8,4,0.002407,xong,4,0.002734,8,4,17.29,xong,4,16.78,khớp,true,1.335,0,0,,Đạt,,
+banh_xe_w9,04_dac_biet,9,16,3,ly_thuyet,3,9,3,0.002578,xong,3,0.002832,9,3,16.1,xong,3,15.98,khớp,true,0.7391,0,0,,Đạt,,
+k_5_7,04_dac_biet,12,35,2,ly_thuyet,2,8,2,0.004864,xong,2,0.003226,12,2,16.52,xong,2,16.33,khớp,true,1.062,0,0,,Đạt,,
+cay_40,04_dac_biet,40,39,2,ly_thuyet,2,6,3,0.013,xong,2,0.01421,82,3,17.58,xong,2,16.33,khớp,true,10.46,0,0,,Đạt,,
+khong_lien_thong,04_dac_biet,12,11,4,ly_thuyet,4,4,4,0.003002,xong,4,0.003144,12,4,16.19,xong,4,15.8,khớp,true,1.006,0,0,,Đạt,,
+dinh_ke_tat_ca,04_dac_biet,9,24,3,ly_thuyet,3,9,3,0.002768,xong,3,0.003066,9,3,16.37,xong,3,15.46,khớp,true,0.889,0,0,,Đạt,,
+queen5_5,04_dac_biet,25,160,5,ly_thuyet,5,17,7,0.008482,xong,5,0.02027,63,7,17.97,xong,5,16.36,khớp,true,14.29,0,0,,Đạt,,
+queen6_6,04_dac_biet,36,290,7,ly_thuyet,7,20,9,0.01669,xong,7,3.771,12523,9,22.24,xong,7,22.36,khớp,true,51.38,0,0,,Đạt,,
+sudoku,04_dac_biet,81,810,9,ly_thuyet,9,21,12,0.05932,xong,9,0.4312,816,12,34.37,xong,9,20.92,khớp,true,114.9,0,1,,Đạt,,
+thua_200,05_lon,200,957,,can,3,18,6,0.1556,bỏ qua,,,,6,22.33,quá thời gian,,10020,khớp,true,144.4,0,2,,Đạt,,C++ quay lui chưa xong sau 10 s
+thua_500,05_lon,500,2528,,can,3,23,7,0.8936,bỏ qua,,,,7,27.73,quá thời gian,,10020,khớp,false,482.3,0,2,,Đạt,,C++ quay lui chưa xong sau 10 s
+thua_1000,05_lon,1000,5027,,can,3,22,7,2.614,bỏ qua,,,,7,40.03,quá thời gian,,10020,cắt,false,456.7,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+thua_2000,05_lon,2000,9945,,can,3,23,7,10.83,bỏ qua,,,,7,77.24,quá thời gian,,10010,cắt,false,430.9,0,2,,Đạt,,"trace tham lam dài hơn 15,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+thua_5000,05_lon,5000,24910,,can,3,23,7,57.37,bỏ qua,,,,7,262.2,quá thời gian,,10010,cắt,false,514.7,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+day_300,05_lon,300,22636,,can,12,176,47,1.697,bỏ qua,,,,47,62.02,quá thời gian,,10010,cắt,true,199.9,0,2,,Đạt,,"trace tham lam dài hơn 100,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+day_1000,05_lon,1000,50051,,can,6,133,28,5.169,bỏ qua,,,,28,130.8,quá thời gian,,10020,cắt,true,170.4,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+cai_san_1000_k5,05_lon,1000,12117,5,cai_san,5,43,11,3.088,bỏ qua,,,,11,54.97,quá thời gian,,10020,cắt,true,296.4,0,2,,Đạt,,"trace tham lam dài hơn 30,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+cai_san_3000_k8,05_lon,3000,15904,8,cai_san,8,25,8,20.91,bỏ qua,,,,8,130,quá thời gian,,10010,cắt,false,403.2,0,2,,Đạt,,"trace tham lam dài hơn 10,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+luong_phan_2000,05_lon,2000,2980,2,cai_san,2,14,4,8.822,bỏ qua,,,,4,65.34,quá thời gian,,10010,cắt,false,769.4,0,2,,Đạt,,"trace tham lam dài hơn 15,000 bước: chỉ chấm phần đầu; C++ quay lui chưa xong sau 10 s"
+crown_100,05_lon,200,9900,2,ly_thuyet,2,100,100,1.382,bỏ qua,,,,100,41.25,xong,2,60.11,khớp,true,214.4,0,2,,Đạt,,
+k150,05_lon,150,11175,150,ly_thuyet,150,150,150,2.834,bỏ qua,,,,150,37.47,xong,150,36.9,khớp,true,172.8,0,2,,Đạt,,
+chu_trinh_4999,05_lon,4999,4999,3,ly_thuyet,3,3,3,61.57,bỏ qua,,,,3,210.6,xong,3,122.7,cắt,false,1272,0,2,,Đạt,,"trace tham lam dài hơn 6,001 bước: chỉ chấm phần đầu"
+duong_di_5000,05_lon,5000,4999,2,ly_thuyet,2,3,2,45.25,bỏ qua,,,,2,211.8,xong,2,118.6,cắt,false,1353,0,2,,Đạt,,"trace tham lam dài hơn 6,000 bước: chỉ chấm phần đầu"
 rong,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Chưa có dữ liệu: dòng đầu là số đỉnh n.,Đạt,,
-chi_chu_thich,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Chưa có dữ liệu: dòng đầu là số đỉnh n.,Đạt,,
-dong_dau_chu,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
-n_am,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
+chi_chu_thich,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: không dùng chú thích ""#"", mỗi dòng chỉ gồm các số nguyên.",Đạt,,
+dong_dau_chu,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
+n_am,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
 n_bang_0,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Số đỉnh n phải ≥ 1.,Đạt,,
+n_so_thuc,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
 n_qua_lon,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"n = 5001 quá lớn (tối đa 5000, giới hạn mảng MAXN của code C++).",Đạt,,
-dong_dau_3_so,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"".",Đạt,,
+dong_dau_3_so,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
+dong_dau_n_K,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
+dimacs,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng đầu phải là số mẫu ""n"" (đúng một số nguyên).",Đạt,,
+chu_thich_cuoi_dong,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: không dùng chú thích ""#"", mỗi dòng chỉ gồm các số nguyên.",Đạt,,
 khuyen,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 3: khuyên 2–2 không hợp lệ (một mẫu không thể phản ứng với chính nó).,Đạt,,
 dinh_ngoai_pham_vi,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 3: đỉnh 4 nằm ngoài phạm vi 0..3.,Đạt,,
 dinh_am,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 2: đỉnh -1 nằm ngoài phạm vi 0..3.,Đạt,,
 token_chu,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: ""0 x"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
 so_thuc,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: ""0 1.5"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
+canh_thieu_dinh,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: ""0"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
 ba_so_tren_dong,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: ""0 1 2"" phải gồm đúng 2 số nguyên ""u v"".",Đạt,,
-dimacs_e_truoc_p,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: cạnh xuất hiện trước dòng ""p edge n m"".",Đạt,,
-dimacs_p_sai,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 1: dòng ""p"" phải có dạng ""p edge n m"".",Đạt,,
-dimacs_e_thieu,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,"Dòng 2: ""e 1"" phải có dạng ""e u v"".",Đạt,,
-dimacs_dinh_0,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 2: đỉnh 0 nằm ngoài phạm vi 1..3.,Đạt,,
+canh_lap,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 4: cặp 0–1 bị lặp (đã có ở dòng 2).,Đạt,,
+canh_lap_dao,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,1,0,Dòng 3: cặp 1–0 bị lặp (đã có ở dòng 2).,Đạt,,
 nhieu_loi,06_khong_hop_le,,,,,,,,,,,,,,,,,,,false,,3,0,Dòng 3: khuyên 1–1 không hợp lệ (một mẫu không thể phản ứng với chính nó).,Đạt,,
-canh_lap,06_khong_hop_le,3,2,2,ly_thuyet,2,3,2,0.001503,xong,2,0.005884,3,2,17.01,xong,2,15.63,khớp,true,0.3354,0,1,"Dòng 4: cạnh 0–1 bị lặp, đã bỏ qua.",Đạt,,
-canh_lap_dao,06_khong_hop_le,3,3,3,ly_thuyet,3,3,3,0.001259,xong,3,0.001708,3,3,16.12,xong,3,15.28,khớp,true,0.2763,0,1,"Dòng 3: cạnh 1–0 bị lặp, đã bỏ qua.",Đạt,,
-dong_dau_n_K,06_khong_hop_le,4,4,2,ly_thuyet,2,3,2,0.001437,xong,2,0.001842,4,,,không chạy,,,khớp,true,0.3655,0,1,"Dòng 1: không cần nhập số ngăn, chương trình tự xếp nên đã bỏ qua ""2"".",Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
-dimacs_m_sai,06_khong_hop_le,3,2,2,ly_thuyet,2,3,2,0.001221,xong,2,0.002244,3,,,không chạy,,,khớp,true,0.2254,0,1,"Dòng ""p"" khai báo m = 5 nhưng đọc được 2 cạnh khác nhau.",Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
-dimacs_myciel3,06_khong_hop_le,11,20,4,ly_thuyet,4,6,4,0.003078,xong,4,0.01236,82,,,không chạy,,,khớp,true,6.115,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
-dimacs_queen5_5,06_khong_hop_le,25,160,5,ly_thuyet,5,17,7,0.00833,xong,5,0.01614,63,,,không chạy,,,khớp,true,8.113,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
-chu_thich,06_khong_hop_le,10,15,3,ly_thuyet,3,4,3,0.002657,xong,3,0.002856,10,,,không chạy,,,khớp,true,0.9293,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
-crlf_tab_chu_thich,06_khong_hop_le,5,5,3,ly_thuyet,3,3,3,0.001723,xong,3,0.002006,5,,,không chạy,,,khớp,true,0.3806,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
+crlf_tab_dong_trong,06_khong_hop_le,5,5,3,ly_thuyet,3,3,3,0.003457,xong,3,0.01357,5,,,không chạy,,,khớp,true,0.7449,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++
+khoang_trang_thua,06_khong_hop_le,10,15,3,ly_thuyet,3,4,3,0.004695,xong,3,0.00916,10,,,không chạy,,,khớp,true,1.008,0,0,,Đạt,,input dạng thô (kiểm tra bộ đọc của web) nên không chạy C++

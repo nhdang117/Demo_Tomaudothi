@@ -663,9 +663,9 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
       <p class="eyebrow">Mô hình bài toán</p>
       <h2>Từ khoang chứa đến tô màu đồ thị</h2>
       <div class="io-grid">
-        <div><h3>Input</h3><p>Số mẫu vật chất n (1 ≤ n ≤ 5000) ở dòng đầu, không cần nhập số ngăn. Mỗi dòng sau là một cặp phản ứng "u v", tức một cạnh của đồ thị G = (V, E).</p></div>
+        <div><h3>Input</h3><p>Số mẫu vật chất n (1 ≤ n ≤ 5000) ở dòng đầu, không cần nhập số ngăn. Mỗi dòng sau là một cặp phản ứng "u v" (0 ≤ u, v ≤ n − 1, u ≠ v), tức một cạnh của đồ thị G = (V, E); có m dòng như vậy, 0 ≤ m ≤ n(n − 1)/2.</p></div>
         <div><h3>Output</h3><p>Số ngăn ít nhất χ(G) và phép xếp c: V → {0, …, χ − 1}, mẫu v vào ngăn c(v) + 1. Số ngăn do chương trình tự tính.</p></div>
-        <div><h3>Ràng buộc</h3><p>Với mọi cặp phản ứng (u, v) ∈ E thì c(u) ≠ c(v). Không có khuyên u–u, cặp lặp bị bỏ qua.</p></div>
+        <div><h3>Ràng buộc</h3><p>Với mọi cặp phản ứng (u, v) ∈ E thì c(u) ≠ c(v). Không có khuyên u–u, mỗi cặp chỉ xuất hiện một lần.</p></div>
       </div>
       <div class="sample">
         <figure><figcaption>Input mẫu</figcaption><pre id="sampleIn"></pre></figure>
@@ -827,8 +827,8 @@ textarea:focus{border-color:var(--line-strong);outline:none;box-shadow:0 0 0 1px
           <div class="edit-wrap">
             <textarea id="edgeText" spellcheck="false" aria-label="Danh sách cạnh"></textarea>
             <div class="fmt">
-              <p>Dòng đầu là <code>n</code> (số mẫu, không cần số ngăn, chương trình tự xếp); các mẫu đánh số <code>0 … n−1</code>. Mỗi dòng sau là một cặp phản ứng <code>u v</code>. Phần sau <code>#</code> là chú thích.</p>
-              <p>Cũng nhận định dạng DIMACS: <code>p edge n m</code> rồi các dòng <code>e u v</code> (đỉnh đánh số từ 1).</p>
+              <p>Dòng đầu: số nguyên <code>n</code> — số mẫu vật chất (1 ≤ n ≤ 5000), không cần nhập số ngăn; các mẫu đánh số <code>0 … n−1</code>.</p>
+              <p>Mỗi dòng tiếp theo: hai số nguyên <code>u v</code> (0 ≤ u, v ≤ n−1, u ≠ v) — mẫu u và mẫu v phản ứng với nhau. Mỗi cặp chỉ ghi một lần, không có chú thích. Đây cũng là input của code C++.</p>
               <div class="msgs" id="parseMsgs"></div>
               <button class="btn small" id="useText" type="button">Dùng đồ thị này</button>
             </div>
