@@ -140,7 +140,8 @@ const Solver = (() => {
    *               → bậc trong bảng luôn = số đỉnh kề CHƯA tô.
    *    Mã giả theo mô hình GREEDY(P, n) của GV (slide 14): SELECT chọn đỉnh,
    *    P = P − {v} là gán bậc −1, mỗi vòng ghi nhận đúng 1 thành phần S_i.
-   *    Độ phức tạp: O(n² + k·m), k = số màu dùng (≤ Δ + 1).
+   *    Độ phức tạp (ma trận kề, chỉ theo n): O(n³) — vòng i thử ≤ i − 1 màu,
+   *    mỗi lần trungMau quét một hàng O(n); đồ thị đầy đủ K_n đạt cận này.
    * ================================================================= */
   const GREEDY_CODE = () => [
     '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
@@ -329,7 +330,8 @@ const Solver = (() => {
    *    hơn, nên bản cài đặt dừng vòng for ngay (kết quả như for chạy hết).
    *    Không có cận dưới cho χ nên không thoát sớm được: phải vét hết
    *    cây mới khẳng định kmin là ít nhất.
-   *    Độ phức tạp xấu nhất: O(nⁿ) nút — hàm mũ (NP-khó).
+   *    Độ phức tạp xấu nhất: bước i có ≤ i lựa chọn (c <= soMau) nên ≤ 2·(n−1)!
+   *    lời gọi, mỗi lời gọi O(n²) → O(n·n!) — hàm mũ (NP-khó).
    * ================================================================= */
   const BT_CODE = () => [
     '// a: ma trận kề, a[u][v] = 1 <=> u kề v',
@@ -697,9 +699,9 @@ const Solver = (() => {
     greedy:   { name: 'Tham lam (bậc cao nhất trước)', short: 'Tham lam', run: (g, r) => greedy(g, r), code: () => GREEDY_CODE(),
                 cpp: () => GREEDY_CPP(),
                 desc: 'Theo bài giảng Buổi 10: đỉnh bậc cao nhất tô trước, thử lại màu đã dùng, đỉnh kề giảm bậc.',
-                exact: false, cx: 'O(n² + k·m)' },
+                exact: false, cx: 'O(n³)' },
     backtrack:{ name: 'Quay lui (tìm χ chính xác)', short: 'Quay lui', run: (g, r, o) => backtrack(g, r, o),
-                code: () => BT_CODE(), cpp: () => BT_CPP(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(nⁿ) xấu nhất' },
+                code: () => BT_CODE(), cpp: () => BT_CPP(), desc: 'Vét cạn theo mô hình try(i), giữ lời giải tốt nhất kmin, cắt nhánh không thể ít màu hơn.', exact: true, cx: 'O(n·n!) xấu nhất' },
   };
 
   /** Chạy thuật toán có ghi trace từng dòng của ngôn ngữ lang ('pseudo' | 'cpp'). */
