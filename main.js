@@ -1501,7 +1501,6 @@ const CX = {
     { id: 'g', name: 'Tham lam', f: 'n³', L: n => 3 * Math.log10(n) },
     { id: 'b', name: 'Quay lui', f: 'n·n!', L: n => { let s = Math.log10(n); for (let k = 2; k <= n; k++) s += Math.log10(k); return s; } },
   ],
-  OPS: 9,                                              // giả sử máy làm 10⁹ phép tính mỗi giây
 };
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 const sup = k => String(k).split('').map(c => SUP[+c]).join('');
@@ -1511,18 +1510,6 @@ function fmtPow(L) {                                   // 10^L → "8.000" hoặ
   let e = Math.floor(L), m = +(10 ** (L - e)).toFixed(1);
   if (m >= 10) { m = 1; e++; }
   return `${String(m).replace('.', ',')}·10${sup(e)}`;
-}
-function fmtDur(L) {                                   // thời gian ước tính cho 10^L phép tính
-  const ls = L - CX.OPS, s = 10 ** ls, YEAR = 3.156e7;
-  if (s < 1e-3) return `${vnNum(s * 1e6)} µs`;
-  if (s < 1) return `${vnNum(s * 1e3)} ms`;
-  if (s < 60) return `${vnNum(s)} giây`;
-  if (s < 3600) return `${vnNum(s / 60)} phút`;
-  if (s < 86400) return `${vnNum(s / 3600)} giờ`;
-  if (s < YEAR) return `${vnNum(s / 86400)} ngày`;
-  const ly = ls - Math.log10(YEAR);
-  return (ly < 6 ? `${Math.round(10 ** ly).toLocaleString('vi-VN')} năm` : `${fmtPow(ly)} năm`) +
-    (ly > Math.log10(1.38e10) ? ' — lâu hơn tuổi vũ trụ' : '');
 }
 function niceStep(x) {
   const e = 10 ** Math.floor(Math.log10(x)), m = x / e;
@@ -1553,14 +1540,6 @@ function drawCx() {
   for (let n = dx; n <= nMax; n += dx) h += `<text class="tk" x="${X(n)}" y="${H - P.b + 16}" text-anchor="middle">${n}</text>`;
   h += `<text class="tk" x="${W - P.r}" y="${H - 4}" text-anchor="end">n (số đỉnh)</text>`;
   h += `<line class="ax" x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${P.t + ih}"/><line class="ax" x1="${P.l}" x2="${W - P.r}" y1="${P.t + ih}" y2="${P.t + ih}"/>`;
-  if (log) {                                            // mốc thời gian (10⁹ phép tính/giây)
-    let lastY = Infinity;                              // bỏ mốc quá sát mốc trước (n tối đa lớn)
-    [[CX.OPS, '≈ 1 giây'], [CX.OPS + Math.log10(3600), '≈ 1 giờ'], [CX.OPS + Math.log10(3.156e7), '≈ 1 năm']].forEach(([L, lab]) => {
-      if (L >= yTop || lastY - Y(L) < 14) return;
-      lastY = Y(L);
-      h += `<line class="ref" x1="${P.l}" x2="${W - P.r}" y1="${Y(L)}" y2="${Y(L)}"/><text class="refl" x="${P.l + 6}" y="${Y(L) - 4}">${lab}</text>`;
-    });
-  }
   const n0 = st.g.n;
   if (n0 >= 2 && n0 <= nMax) {
     const right = X(n0) > W - (W < 560 ? 60 : 170);
@@ -1588,7 +1567,7 @@ function drawCx() {
   CX.X = X; CX.P = P; CX.W = W;
   $('#cxRead').innerHTML = `<span><b>n = ${n}</b></span>` + CX.curves.map(c => {
     const L = c.L(n);
-    return `<span class="${c.id}"><b>${c.name}</b> ${c.f} ${L < 6 ? '=' : '≈'} ${fmtPow(L)} phép tính · ≈ ${fmtDur(L)}</span>`;
+    return `<span class="${c.id}"><b>${c.name}</b> ${c.f} ${L < 6 ? '=' : '≈'} ${fmtPow(L)} phép tính</span>`;
   }).join('');
 }
 function cxNote() {
@@ -1596,7 +1575,7 @@ function cxNote() {
   const live = r && !r.skip && !r.aborted
     ? ` Trên đồ thị đang chọn (n = ${st.g.n}), quay lui chỉ chạy ${r.steps.toLocaleString('vi-VN')} dòng lệnh, thấp hơn cận rất xa nhờ cắt tỉa.`
     : '';
-  $('#cxNote').textContent = 'Đường cong là cận trên trong trường hợp xấu nhất (số phép tính, bỏ hằng số); thời gian ước tính với máy làm 10⁹ phép tính mỗi giây. ' +
+  $('#cxNote').textContent = 'Đường cong là cận trên trong trường hợp xấu nhất (số phép tính, bỏ hằng số). ' +
     'Tham lam là đa thức: n tăng gấp đôi thì cận tăng 8 lần. Quay lui là hàm mũ: n tăng thêm 1 thì cận nhân thêm khoảng n lần.' + live +
     ' Nhưng cắt tỉa không đổi được cận: có đồ thị chỉ 47 đỉnh (myciel5) mà quay lui C++ chạy 10 giây chưa xong.';
 }
