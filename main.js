@@ -1854,8 +1854,11 @@ function fillText(g) {                                 // ma trận n² số: đ
   ta.placeholder = big ? `Đồ thị đang chọn có n = ${g.n} > ${S.UI.TEXT_MAX_N}: ma trận ${g.n}×${g.n} quá lớn để hiện ở đây, đồ thị vẫn dùng được. Nhập ma trận mới vào ô này nếu muốn thay.` : '';
   pending.dirty = false; $('#parseMsgs').innerHTML = '';
 }
+let lastParse = null;                                   // lần đọc gần nhất: bấm Dùng / Áp dụng không phải đọc lại ma trận (n = 5000 là 50 MB chữ)
 function parseText() {
-  const r = S.parseInput($('#matText').value);
+  const text = $('#matText').value;
+  const r = lastParse && lastParse.text === text ? lastParse.r : S.parseInput(text);
+  lastParse = { text, r };
   const box = $('#parseMsgs');
   if (r.errors.length) {
     box.innerHTML = r.errors.slice(0, 6).map(t => `<span class="e">✕ ${esc(t)}</span>`).join('') +
@@ -1923,6 +1926,7 @@ function useText() {
   if (!g) { updatePending([['e', 'Ma trận kề còn lỗi, chưa thể dùng.']]); return false; }
   pending.g = g; pending.meta = { id: null, name: 'Đồ thị tự nhập', chi: null }; pending.dirty = false;
   updatePending([['ok', 'Đã nhận đồ thị từ ma trận kề.']]);
+  if (g.n > S.UI.TEXT_MAX_N) { fillText(g); lastParse = null; }   // để nguyên hàng chục MB chữ trong ô nhập thì mỗi lần trang vẽ lại chậm hẳn (đo: 10–15 s so với 1,3 s)
   return true;
 }
 $('#useText').addEventListener('click', useText);
